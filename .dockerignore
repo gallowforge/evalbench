@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+**/__pycache__
+**/node_modules
+web/test-results
+web/playwright-report
+evalbench/static
+data
+docs
+tests
+*.db
+.env

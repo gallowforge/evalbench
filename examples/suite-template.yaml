@@ -1,0 +1,83 @@
+# A suite template that uses every field and every check type. Copy it, change it, then import it
+# from the Suites page (or validate it with `evalbench validate examples/suite-template.yaml`).
+
+id: starter                      # lowercase letters, digits, ".", "_" or "-"; must be unique
+title: Starter suite
+description: Shows each check type on a small task.
+version: 1                       # free-form; bump it when you change tasks
+system: You are a concise assistant.   # optional; a task's own `system` overrides it
+
+# Dimensions human raters score on a 1-5 scale. Leave this out to use the default five:
+# instruction following, correctness, helpfulness, clarity and concision, safety.
+rubric:
+  - id: instruction_following
+    label: Instruction following
+    description: Does exactly what was asked.
+  - id: correctness
+    label: Correctness
+    description: Right answer, nothing invented.
+
+tasks:
+  - id: capital
+    title: Capital of Australia
+    category: knowledge          # anything you like; the scoreboard breaks results down by it
+    prompt: "What is the capital of Australia? End with `Answer: <city>`."
+    reference: Canberra          # shown to raters on request; never sent to the model
+    notes: Sydney is the common wrong answer.
+    checks:
+      # Compares the extracted answer after trimming, collapsing spaces and ignoring case.
+      # A numeric expect also matches the first number in the answer ("4.50 hours" = 4.5).
+      - type: exact
+        extract: final_answer    # full | last_line | final_answer | code | json
+        expect: Canberra         # or a list of accepted answers
+
+  - id: haiku
+    title: A haiku about rain
+    category: writing
+    prompt: Write a haiku about rain. Three lines, no title, and do not use the word "wet".
+    checks:
+      - type: length
+        unit: lines              # words | chars | lines | sentences
+        min: 3
+        max: 3
+      - type: not_contains       # fails if any phrase appears (case-insensitive by default)
+        expect: [wet]
+      - type: regex
+        label: No title line
+        pattern: '^(?:title|haiku)\b'
+        flags: im                # i = ignore case, m = ^ and $ per line, s = . matches newlines
+        negate: true             # pass when the pattern is NOT found
+        weight: 0.5              # counts half as much toward the task score
+
+  - id: facts
+    title: Facts as JSON
+    category: formatting
+    prompt: 'Return JSON with keys "element" and "symbol" for the element with atomic number 26. JSON only.'
+    checks:
+      - type: json               # reads the first JSON value; add `extract: full` to require JSON only
+        required: [element, symbol]
+        equals: { symbol: Fe }   # strings compare without case unless case_sensitive: true
+      - type: contains
+        mode: any                # all (default) or any
+        expect: ['"Iron"', '"iron"']
+
+  - id: fizzbuzz
+    title: FizzBuzz function
+    category: coding
+    prompt: Write a Python function fizzbuzz(n) that returns "Fizz", "Buzz", "FizzBuzz" or str(n). Reply with one ```python code block.
+    checks:
+      # The first python code block of the answer (or the whole answer if there is none) runs
+      # with these tests appended, in the sandbox. Any exception or non-zero exit fails it.
+      - type: python
+        timeout: 5               # seconds, up to 60
+        tests: |
+          assert fizzbuzz(3) == "Fizz"
+          assert fizzbuzz(5) == "Buzz"
+          assert fizzbuzz(15) == "FizzBuzz"
+          assert fizzbuzz(7) == "7"
+
+  - id: open-ended
+    title: Explain recursion
+    category: explanation
+    prompt: Explain recursion to someone who has just learned loops.
+    # No checks: this task is scored only by blind human rating.

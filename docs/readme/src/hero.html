@@ -1,0 +1,54 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face { font-family: Inter; src: url(data:…) format('woff2'); font-weight: 100 900; }
+@font-face { font-family: JBM; src: url(data:…) format('woff2'); font-weight: 100 800; }
+* { box-sizing: border-box; margin: 0; }
+html, body { background: transparent; }
+body { font-family: Inter, sans-serif; font-variant-ligatures: none; color: #eef1f5; -webkit-font-smoothing: antialiased; font-feature-settings: 'cv11', 'ss01', 'ss03'; }
+.scene { position: relative; overflow: hidden; border-radius: 28px; border: 1px solid #ffffff14;
+  background:
+    radial-gradient(var(--gw, 1000px) var(--gh, 560px) at var(--gx, 50%) var(--gy, -10%), rgba(77,163,255,.20), transparent 70%),
+    radial-gradient(700px 460px at var(--ax, 105%) var(--ay, 110%), rgba(77,163,255,.06), transparent 70%),
+    linear-gradient(180deg, #0b0f14, #07090c); }
+.scene::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,.065) 1.2px, transparent 1.6px); background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(var(--gw, 1000px) var(--gh, 560px) at var(--gx, 50%) var(--gy, -10%), #000, transparent 75%); }
+.win { position: absolute; border-radius: 14px; overflow: hidden; background: #0a0c0f;
+  box-shadow: 0 0 0 1px #ffffff1c, 0 40px 90px -30px rgba(0,0,0,.9), 0 18px 40px -18px rgba(0,0,0,.7); }
+.win .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #12151a; border-bottom: 1px solid #ffffff10; }
+.win .bar i { width: 11px; height: 11px; border-radius: 50%; background: #2b3038; }
+.win .bar .url { margin-left: 14px; flex: 1; max-width: 360px; height: 20px; border-radius: 6px; background: #0b0d10; border: 1px solid #ffffff0f;
+  font: 500 11px JBM, monospace; color: #6b7484; display: flex; align-items: center; padding: 0 10px; }
+.win img { display: block; width: 100%; }
+.phone { position: absolute; padding: 9px; border-radius: 46px;
+  background: linear-gradient(150deg, #2c3037, #17191d 38%, #0e1013);
+  box-shadow: 0 0 0 1px #000, inset 0 0 0 1.5px rgba(255,255,255,.11), 0 50px 90px -30px rgba(0,0,0,.9), 0 20px 40px -20px rgba(0,0,0,.65); }
+.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #0c0e12; padding-top: 34px; }
+.phone .scr img { display: block; width: 100%; }
+.phone .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #000; z-index: 2; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -.01em; }
+.h1 { font-weight: 700; letter-spacing: -.035em; line-height: 1.02; }
+.h1 em { font-style: normal; color: #4da3ff; }
+.sub { color: #9aa3b2; letter-spacing: -.005em; }
+.pill { display: inline-flex; align-items: center; gap: 10px; height: 46px; padding: 0 20px; border-radius: 999px; font-weight: 600; font-size: 16px; }
+.pill.primary { background: #4da3ff; color: #04111f; box-shadow: 0 10px 30px -10px #4da3ffaa, inset 0 1px 0 #ffffff66; }
+.pill.ghost { border: 1px solid #ffffff24; color: #d9dee7; background: #ffffff08; font-family: JBM, monospace; font-weight: 500; font-size: 14.5px; }
+.code { position: absolute; border-radius: 14px; background: #0b0e12; border: 1px solid #ffffff1a; padding: 0 0 16px;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,.95); font: 500 12.5px/1.7 JBM, monospace; color: #cfd8e6; overflow: hidden; }
+.code .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid #ffffff10; background: #12151a; margin-bottom: 12px; }
+.code .bar i { width: 11px; height: 11px; border-radius: 50%; background: #2b3038; }
+.code .bar span { margin-left: 10px; color: #6b7484; font-size: 11px; }
+.code pre { padding: 0 18px; white-space: pre; font: inherit; }
+.k { color: #8cc4ff; } .s { color: #cfd8e6; } .n { color: #f4b66a; } .c { color: #5e6676; } .p { color: #6b7484; } .g { color: #9fd88a; } .a { color: #4da3ff; }
+</style></head><body><div class="scene" style="width:1200px;height:1130px;--gw:1100px;--gh:620px;--gy:-8%">
+      <div style="position:absolute;top:58px;left:0;right:0;text-align:center">
+        <div class="brand" style="justify-content:center;font-size:27px"><svg width="40" height="40" viewBox="0 0 32 32"><defs><linearGradient id="lg40" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6cb6ff"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#lg40)"/><rect x="7.5" y="16" width="4" height="9" rx="2" fill="#fff" fill-opacity=".55"/><rect x="14" y="11" width="4" height="14" rx="2" fill="#fff" fill-opacity=".8"/><rect x="20.5" y="6.5" width="4" height="18.5" rx="2" fill="#fff"/></svg> Evalbench</div>
+        <div class="h1" style="font-size:66px;margin-top:30px">Know which model is <em>actually better.</em></div>
+        <div class="sub" style="font-size:21px;margin-top:20px">Tasks and rubrics, local and API models, automatic checks and blind human rating,<br>scored over time. Self-hosted, one compose file.</div>
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:30px">
+          <span class="pill primary">Open source · MIT</span>
+          <span class="pill ghost">$ docker compose up -d</span>
+        </div>
+      </div>
+      <div class="win" style="left:60px;top:420px;width:960px"><div class="bar"><i></i><i></i><i></i><div class="url">localhost:8484</div></div><img src="data:…"></div>
+      <div class="phone" style="left:878px;top:560px;width:262px"><div class="scr"><div class="island"></div><img src="data:…"></div></div>
+    </div></body></html>

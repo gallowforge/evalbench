@@ -1,0 +1,236 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --color-bg: #0a0c0f;
+  --color-rail: #0c0e12;
+  --color-panel: #111418;
+  --color-panel-2: #161a20;
+  --color-raise: #1b2028;
+  --color-line: #ffffff10;
+  --color-line-2: #ffffff1c;
+  --color-ink: #eef1f5;
+  --color-ink-2: #b4bccb;
+  --color-muted: #8a93a3;
+  --color-faint: #5e6676;
+
+  --color-accent: #4da3ff;
+  --color-accent-2: #8cc4ff;
+  --color-accent-ink: #04111f;
+
+  --color-good: #0ca30c;
+  --color-good-ink: #52d152;
+  --color-warn: #fab219;
+  --color-serious: #ec835a;
+  --color-bad: #d03b3b;
+  --color-bad-ink: #f07171;
+
+  --color-side-a: #4da3ff;
+  --color-side-b: #e9a23b;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    font-size: 14px;
+  }
+  ::selection {
+    background: #4da3ff55;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff1f transparent;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 h-9 text-[13.5px] font-medium transition-all select-none whitespace-nowrap;
+}
+
+@layer components {
+  .card {
+    @apply bg-panel border border-line rounded-[14px];
+  }
+  .card-pad {
+    @apply p-5;
+  }
+  .label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-faint;
+  }
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  .input {
+    @apply w-full rounded-[10px] bg-[#0d1014] border border-line-2 px-3 py-2 text-[13.5px] text-ink placeholder:text-faint outline-none transition-colors;
+  }
+  .input:focus {
+    @apply border-accent/70 bg-[#0e1217];
+    box-shadow: 0 0 0 3px #4da3ff1f;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-accent-ink font-semibold hover:bg-accent-2;
+    box-shadow:
+      0 6px 20px -8px #4da3ffaa,
+      inset 0 1px 0 #ffffff55;
+  }
+  .btn-primary:disabled {
+    @apply opacity-50 hover:bg-accent;
+  }
+  .btn-ghost {
+    @apply btn bg-white/[0.04] border border-line-2 text-ink-2 hover:text-ink hover:bg-white/[0.07];
+  }
+  .btn-quiet {
+    @apply btn text-muted hover:text-ink hover:bg-white/[0.05] px-2.5;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line-2 bg-white/[0.03] px-2.5 h-6 text-[12px] text-ink-2 whitespace-nowrap;
+  }
+  .kbd {
+    @apply inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-[5px] border border-line-2 bg-white/[0.04] font-mono text-[10.5px] text-muted;
+  }
+  .prose-answer {
+    @apply text-[13.5px] leading-[1.65] text-ink-2;
+  }
+  .prose-answer p {
+    @apply my-2.5;
+  }
+  .prose-answer p:first-child {
+    @apply mt-0;
+  }
+  .prose-answer ul,
+  .prose-answer ol {
+    @apply my-2.5 pl-5;
+  }
+  .prose-answer ul {
+    list-style: disc;
+  }
+  .prose-answer ol {
+    list-style: decimal;
+  }
+  .prose-answer li {
+    @apply my-1;
+  }
+  .prose-answer strong {
+    @apply text-ink font-semibold;
+  }
+  .prose-answer code {
+    @apply font-mono text-[12.5px] text-[#d6deeb] bg-white/[0.06] rounded-[5px] px-1 py-[1px];
+  }
+  .prose-answer pre {
+    @apply my-3 rounded-[10px] border border-line bg-[#0b0e12] p-3.5 overflow-x-auto;
+  }
+  .prose-answer pre code {
+    @apply bg-transparent p-0 text-[12.5px] leading-[1.6];
+  }
+  .prose-answer h1,
+  .prose-answer h2,
+  .prose-answer h3 {
+    @apply text-ink font-semibold mt-4 mb-2;
+  }
+  .prose-answer table {
+    @apply my-3 text-[12.5px];
+  }
+  .prose-answer td,
+  .prose-answer th {
+    @apply border border-line px-2 py-1;
+  }
+}
+
+/* highlight.js, tuned to the palette */
+.hljs-keyword,
+.hljs-built_in,
+.hljs-literal {
+  color: #c4a7ff;
+}
+.hljs-string,
+.hljs-regexp {
+  color: #9fd88a;
+}
+.hljs-number {
+  color: #f4b66a;
+}
+.hljs-comment {
+  color: #5e6676;
+  font-style: italic;
+}
+.hljs-title,
+.hljs-title.function_ {
+  color: #7cc0ff;
+}
+.hljs-params {
+  color: #d6deeb;
+}
+.hljs-attr,
+.hljs-property {
+  color: #8cc4ff;
+}
+
+.bg-grid {
+  background-image: radial-gradient(#ffffff0d 1px, transparent 1.2px);
+  background-size: 22px 22px;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.animate-pulse-soft {
+  animation: pulse-soft 1.6s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.cm-editor {
+  font-size: 12.5px;
+  height: 100%;
+}
+.cm-editor.cm-focused {
+  outline: none;
+}
+
+/* Code reads character by character: no ligatures turning == into one glyph. */
+.font-mono,
+code,
+pre,
+textarea,
+.cm-editor {
+  font-variant-ligatures: none;
+}
