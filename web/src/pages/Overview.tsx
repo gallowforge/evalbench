@@ -28,8 +28,8 @@ export function Overview() {
     return (
       <>
         <PageHeader
-          title="Welcome to Evalbench"
-          subtitle="Write tasks, run them against any model, grade them automatically and by blind rating, and watch every score over time."
+          title="Judge the answer, not the name."
+          subtitle="Write tasks, run them on any model, grade every answer, and rate them blind. Three steps to the first verdict."
         />
         <div className="card relative overflow-hidden p-8 md:p-10">
           <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-accent/20 blur-[90px]" />
@@ -151,7 +151,7 @@ export function Overview() {
                         <span className="h-[7px] flex-1 overflow-hidden rounded-full bg-white/[0.05]">
                           <span className="block h-full rounded-full" style={{ width: `${(m.auto?.pass_rate ?? 0) * 100}%`, background: m.color }} />
                         </span>
-                        <span className="num w-10 text-right text-[13px] font-semibold">{pct(m.auto?.pass_rate)}</span>
+                        <span className="slab w-11 text-right text-[16px] font-bold">{pct(m.auto?.pass_rate)}</span>
                       </span>
                       <span className="hidden justify-end sm:flex">
                         <Sparkline values={trend} color={m.color} />

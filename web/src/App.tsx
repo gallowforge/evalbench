@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { BarChart3, Boxes, Database, FileStack, Gauge, LayoutGrid, Lock, Play, Scale, Settings as SettingsIcon } from 'lucide-react';
-import { type ReactNode, useEffect, useId, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import { Link, Route, Switch, useLocation } from 'wouter';
 import { api, type Overview as OverviewData } from './api';
 import { cx, ErrorNote, Loading } from './components/ui';
@@ -17,20 +17,18 @@ import { SettingsPage } from './pages/Settings';
 import { SuiteDetail } from './pages/SuiteDetail';
 import { Suites } from './pages/Suites';
 
+/** Two tasting cards: one still face-down, one turned over and ticked by the judge. */
 export function Logo({ size = 28 }: { size?: number }) {
-  const id = useId();
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#6cb6ff" />
-          <stop offset="1" stopColor="#2563eb" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="8" fill={`url(#${id})`} />
-      <rect x="7.5" y="16" width="4" height="9" rx="2" fill="#fff" fillOpacity=".55" />
-      <rect x="14" y="11" width="4" height="14" rx="2" fill="#fff" fillOpacity=".8" />
-      <rect x="20.5" y="6.5" width="4" height="18.5" rx="2" fill="#fff" />
+      <rect width="32" height="32" rx="8" fill="#16171b" />
+      <g transform="rotate(-11 11.5 17)">
+        <rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#4da3ff" />
+      </g>
+      <g transform="rotate(8 20.5 15.5)">
+        <rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="#f1eee6" />
+        <path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#e04a36" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
     </svg>
   );
 }

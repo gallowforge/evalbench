@@ -312,7 +312,7 @@ export function Stat({ label, value, hint, accent }: { label: string; value: Rea
     <div className="card p-5 relative overflow-hidden">
       {accent && <div className="pointer-events-none absolute -top-16 -right-10 h-40 w-40 rounded-full bg-accent/15 blur-3xl" />}
       <div className="label">{label}</div>
-      <div className={cx('num mt-2.5 text-[30px] leading-none font-semibold tracking-[-0.02em]', accent ? 'text-accent' : 'text-ink')}>{value}</div>
+      <div className={cx('slab mt-2.5 text-[36px] leading-none font-bold', accent ? 'text-accent' : 'text-ink')}>{value}</div>
       {hint && <div className="mt-2 text-[12.5px] text-muted">{hint}</div>}
     </div>
   );

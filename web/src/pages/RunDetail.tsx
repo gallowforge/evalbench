@@ -108,7 +108,7 @@ export function RunDetailPage({ id }: { id: number }) {
                 <span className="truncate">{m.label}</span>
               </div>
               <div className="mt-3 flex items-baseline gap-2">
-                <span className="num text-[32px] font-semibold leading-none tracking-[-0.02em]">{pct(s.pass_rate)}</span>
+                <span className="slab text-[40px] font-bold leading-none">{pct(s.pass_rate)}</span>
                 <span className="num text-[12.5px] text-muted">
                   {s.passed}/{s.attempted} passed
                 </span>

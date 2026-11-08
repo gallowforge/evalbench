@@ -1,22 +1,27 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/inter';
+@import '@fontsource-variable/schibsted-grotesk';
+@import '@fontsource/zilla-slab/latin-600.css';
+@import '@fontsource/zilla-slab/latin-700.css';
 @import '@fontsource-variable/jetbrains-mono';
 
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Schibsted Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-slab: 'Zilla Slab', ui-serif, Georgia, serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
-  --color-bg: #0a0c0f;
-  --color-rail: #0c0e12;
-  --color-panel: #111418;
-  --color-panel-2: #161a20;
-  --color-raise: #1b2028;
+  /* Evalbench: a blind tasting for models. Chalk on a dark judging table, azure for the blind
+     side of the cards, scorecard red for the marks a judge makes. */
+  --color-bg: #0d0e10;
+  --color-rail: #101113;
+  --color-panel: #141518;
+  --color-panel-2: #191a1e;
+  --color-raise: #1e2025;
   --color-line: #ffffff10;
   --color-line-2: #ffffff1c;
-  --color-ink: #eef1f5;
-  --color-ink-2: #b4bccb;
-  --color-muted: #8a93a3;
-  --color-faint: #5e6676;
+  --color-ink: #efebe2;
+  --color-ink-2: #c3beb3;
+  --color-muted: #8f8a80;
+  --color-faint: #625e57;
 
   --color-accent: #4da3ff;
   --color-accent-2: #8cc4ff;
@@ -26,8 +31,9 @@
   --color-good-ink: #52d152;
   --color-warn: #fab219;
   --color-serious: #ec835a;
-  --color-bad: #d03b3b;
-  --color-bad-ink: #f07171;
+  --color-bad: #d23c2a;
+  --color-bad-ink: #ef6f5c;
+  --color-mark: #e04a36;
 
   --color-side-a: #4da3ff;
   --color-side-b: #e9a23b;
@@ -41,7 +47,6 @@
   }
   body {
     @apply bg-bg text-ink font-sans antialiased;
-    font-feature-settings: 'cv11', 'ss01', 'ss03';
     font-size: 14px;
   }
   ::selection {
@@ -80,6 +85,12 @@
   }
   .num {
     font-variant-numeric: tabular-nums;
+  }
+  /* Scores are set in the slab, like figures on a judge's card. */
+  .slab {
+    font-family: var(--font-slab);
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.01em;
   }
   .input {
     @apply w-full rounded-[10px] bg-[#0d1014] border border-line-2 px-3 py-2 text-[13.5px] text-ink placeholder:text-faint outline-none transition-colors;
@@ -233,4 +244,19 @@ pre,
 textarea,
 .cm-editor {
   font-variant-ligatures: none;
+}
+
+/* The reveal at the end of a blind queue: each card turns over to show who wrote it. */
+@keyframes flip-in {
+  from {
+    opacity: 0;
+    transform: perspective(600px) rotateY(88deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(600px) rotateY(0);
+  }
+}
+.animate-flip {
+  animation: flip-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }

@@ -34,7 +34,7 @@ export function RunRow({ run, compact = false }: { run: RunListItem; compact?: b
                 <ModelDot color={m.color} size={6} />
                 <span className="truncate">{m.label}</span>
               </span>
-              <span className="num font-semibold text-ink">{pct(m.pass_rate)}</span>
+              <span className="slab text-[14px] font-bold text-ink">{pct(m.pass_rate)}</span>
             </div>
             <div className="mt-1.5 h-[5px] overflow-hidden rounded-full bg-white/[0.05]">
               <div className="h-full rounded-full" style={{ width: `${(m.pass_rate ?? 0) * 100}%`, background: m.color }} />

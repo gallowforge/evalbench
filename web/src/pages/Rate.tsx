@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronDown, Eye, PartyPopper, Scale, SkipForward } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
-import { api, type NextPair, type Overview, type Pair, type RunListItem } from '../api';
+import { api, type Model, type NextPair, type Overview, type Pair, type RatingRow, type RunListItem } from '../api';
 import { Markdown } from '../components/Markdown';
-import { cx, Empty, ErrorNote, Loading, PageHeader, Segmented } from '../components/ui';
+import { cx, Empty, ErrorNote, Loading, ModelDot, PageHeader, Segmented } from '../components/ui';
 import { plural } from '../lib/format';
 import { useMeta, useRater } from '../lib/hooks';
 
@@ -53,7 +53,7 @@ function SideBadge({ side }: { side: Side }) {
   return (
     <span
       className={cx(
-        'grid h-7 w-7 place-items-center rounded-[8px] text-[13px] font-bold',
+        'slab grid h-8 w-8 place-items-center rounded-[8px] text-[17px] font-bold',
         side === 'a' ? 'bg-side-a/15 text-side-a ring-1 ring-side-a/40' : 'bg-side-b/15 text-side-b ring-1 ring-side-b/40',
       )}
     >
@@ -200,6 +200,96 @@ export function Rate() {
   );
 }
 
+/** The signature moment: once a queue is done, the cards turn over and show who wrote what. Labels
+ *  stay hidden until then, so they can never sway a rating. */
+function Reveal({ rater, runId, suiteId }: { rater: string; runId?: number; suiteId?: string }) {
+  const ratings = useQuery({
+    queryKey: ['reveal', rater, runId, suiteId],
+    queryFn: () => api.get<RatingRow[]>(`/ratings?limit=1000${suiteId ? `&suite=${suiteId}` : ''}`),
+  });
+  const models = useQuery({ queryKey: ['models-all'], queryFn: () => api.get<Model[]>('/models?archived=true') });
+  const mine = (ratings.data ?? []).filter((r) => r.rater === rater && (!runId || r.run_id === runId));
+  if (!mine.length || !models.data) return null;
+  const byId = new Map(models.data.map((m) => [m.id, m]));
+  const tally = new Map<number, { wins: number; games: number }>();
+  for (const r of mine) {
+    const sides: [number, number][] = [
+      [r.model_a, r.preference < 0 ? 1 : r.preference === 0 ? 0.5 : 0],
+      [r.model_b, r.preference > 0 ? 1 : r.preference === 0 ? 0.5 : 0],
+    ];
+    for (const [id, score] of sides) {
+      const t = tally.get(id) ?? { wins: 0, games: 0 };
+      t.wins += score;
+      t.games += 1;
+      tally.set(id, t);
+    }
+  }
+  const order = [...tally.entries()].sort((a, b) => b[1].wins / b[1].games - a[1].wins / a[1].games);
+  const card = (id: number, won: boolean, delay: number) => {
+    const m = byId.get(id);
+    return (
+      <span
+        className={cx(
+          'animate-flip relative flex min-w-0 flex-1 items-center gap-2 rounded-[9px] border px-3 py-2 text-[12.5px]',
+          won ? 'border-mark/50 bg-mark/[0.08] text-ink' : 'border-line-2 bg-white/[0.02] text-muted',
+        )}
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        {m && <ModelDot color={m.color} size={7} />}
+        <span className="truncate">{m?.label ?? `model ${id}`}</span>
+        {won && (
+          <svg className="ml-auto shrink-0" width="16" height="16" viewBox="0 0 16 16" aria-label="preferred">
+            <path d="M3 8.5l3.2 3.2L13 4.5" fill="none" stroke="var(--color-mark)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+      </span>
+    );
+  };
+  return (
+    <section className="card mt-5 p-6">
+      <h2 className="slab text-[26px] font-bold leading-tight">The labels, revealed</h2>
+      <p className="mt-1 text-[13px] text-muted">
+        You judged {mine.length} {mine.length === 1 ? 'pair' : 'pairs'} without knowing who wrote what. Here is who did.
+      </p>
+      <div className="mt-5 grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="space-y-3">
+          {order.map(([id, t]) => {
+            const m = byId.get(id);
+            return (
+              <div key={id}>
+                <div className="flex items-baseline justify-between text-[12.5px]">
+                  <span className="flex items-center gap-2 text-ink-2">
+                    {m && <ModelDot color={m.color} size={7} />}
+                    {m?.label ?? id}
+                  </span>
+                  <span className="slab text-[16px] font-bold">{Math.round((t.wins / t.games) * 100)}%</span>
+                </div>
+                <div className="mt-1.5 h-[6px] overflow-hidden rounded-full bg-white/[0.05]">
+                  <div className="h-full rounded-full" style={{ width: `${(t.wins / t.games) * 100}%`, background: m?.color }} />
+                </div>
+                <div className="mt-1 text-[11.5px] text-faint">
+                  preferred in {t.wins} of {t.games}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="space-y-1.5">
+          {mine.slice(0, 12).map((r, i) => (
+            <div key={r.id} className="flex items-center gap-2">
+              <span className="w-[130px] shrink-0 truncate font-mono text-[11px] text-faint">{r.task_id}</span>
+              <span className="slab w-4 text-center text-[13px] font-bold text-side-a">A</span>
+              {card(r.model_a, r.preference < 0, i * 70)}
+              <span className="slab w-4 text-center text-[13px] font-bold text-side-b">B</span>
+              {card(r.model_b, r.preference > 0, i * 70 + 35)}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Rater({
   rater,
   scope,
@@ -327,7 +417,7 @@ function Rater({
         <div className="card">
           <Empty
             icon={<PartyPopper size={18} />}
-            title={progress?.total ? 'Every pair is rated' : 'No pairs here'}
+            title={progress?.total ? 'Every pair is judged' : 'No pairs here'}
             action={
               <Link href="/scoreboard" className="btn-primary">
                 See the scoreboard
@@ -339,6 +429,7 @@ function Rater({
               : 'This scope needs answers from at least two models to the same task.'}
           </Empty>
         </div>
+        <Reveal rater={rater} runId={runId} suiteId={suiteId} />
       </>
     );
   }
@@ -459,7 +550,12 @@ function Rater({
                     : 'border-line-2 bg-white/[0.02] text-muted hover:border-white/20 hover:text-ink',
                 )}
               >
-                <span className={cx('text-[12px] font-bold', p.side === 'a' ? 'text-side-a' : p.side === 'b' ? 'text-side-b' : 'text-ink-2')}>
+                <span
+                  className={cx(
+                    'slab text-[16px] font-bold leading-none',
+                    p.side === 'a' ? 'text-side-a' : p.side === 'b' ? 'text-side-b' : 'text-ink-2',
+                  )}
+                >
                   {p.side ? p.side.toUpperCase() : '='}
                 </span>
                 <span className="text-[11.5px] leading-tight">{p.short}</span>

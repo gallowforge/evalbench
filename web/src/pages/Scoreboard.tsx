@@ -126,7 +126,7 @@ export function Scoreboard({ suite }: { suite?: string }) {
                       <div className="h-[7px] w-full max-w-[200px] overflow-hidden rounded-full bg-white/[0.05]">
                         <div className="h-full rounded-full" style={{ width: `${(m.auto?.pass_rate ?? 0) * 100}%`, background: m.color }} />
                       </div>
-                      <span className="num w-11 text-right text-[13.5px] font-semibold">{pct(m.auto?.pass_rate)}</span>
+                      <span className="slab w-12 text-right text-[17px] font-bold">{pct(m.auto?.pass_rate)}</span>
                     </div>
                     {m.auto && (
                       <div className="num mt-1 text-[11px] text-faint">
@@ -140,7 +140,7 @@ export function Scoreboard({ suite }: { suite?: string }) {
                   <td className="px-3 py-3.5">
                     {m.human ? (
                       <div className="flex items-center gap-3">
-                        <span className="num w-11 text-[13.5px] font-semibold">{Math.round(m.human.rating)}</span>
+                        <span className="slab w-12 text-[17px] font-bold">{Math.round(m.human.rating)}</span>
                         <RatingBar rating={m.human.rating} ci={m.human.ci} domain={domain} color={m.color} />
                       </div>
                     ) : (

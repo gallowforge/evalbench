@@ -1,6 +1,6 @@
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/hero-mobile.webp" />
-  <img src="docs/readme/hero.webp" width="100%" alt="Evalbench: know which model is actually better. A browser shows the overview with a leaderboard of four models, their pass rates and a pass-rate history chart, beside a phone in the middle of a blind rating of two anonymous answers." />
+  <img src="docs/readme/hero.webp" width="100%" alt="Evalbench: judge the answer, not the name. A judge’s scorecard of four models with their pass rates and human ratings, beside the blind rating screen, where the two anonymous answers, A and B, are circled in red." />
 </picture>
 
 <p align="center">
@@ -48,7 +48,7 @@ A suite is a list of tasks. Each task has a prompt, optional reference answer fo
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/write-mobile.webp" />
-  <img src="docs/readme/write.webp" width="100%" alt="The suite editor with the Binary search that hangs task open: prompt, reference answer and a Python tests check with five assertions, beside the same task as YAML." />
+  <img src="docs/readme/write.webp" width="100%" alt="The suite editor with the Binary search that hangs task open: prompt, reference answer and a Python tests check, with the five test assertions circled in red and the note: your tests run against the answer’s code, in a box with no way out." />
 </picture>
 
 ## Run every model on the same tasks
@@ -61,7 +61,7 @@ Add a model in a few seconds: pick LM Studio, Ollama, Anthropic, OpenAI or any O
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/run-mobile.webp" />
-  <img src="docs/readme/run.webp" width="100%" alt="Run 6 of the core battery: four model cards with pass rates of 90, 90, 55 and 35 percent and per-category bars, above a matrix of tasks by models with green passes, red failures and amber partial scores." />
+  <img src="docs/readme/run.webp" width="100%" alt="The result matrix of a run: tasks down the side, four models across, green passes, red failures and amber partial scores, with one failed cell circled in red and the note: every cell is a verdict, click one for the reason." />
 </picture>
 
 ## Read the answers side by side
@@ -70,7 +70,7 @@ Click any cell and every model's answer to that task opens in columns, with each
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/compare-mobile.webp" />
-  <img src="docs/readme/compare.webp" width="100%" alt="The Two-sentence summary task with four answers side by side, each with its check results; one answer fails because it uses three sentences. A task list on the left shows a coloured dot per model for every task." />
+  <img src="docs/readme/compare.webp" width="100%" alt="Four answers to the Two-sentence summary task side by side with their check results; the one rule Vega 8B broke, three sentences where two were allowed, is circled in red." />
 </picture>
 
 ## Rate blind, the way training teams do
@@ -83,7 +83,7 @@ Automatic checks catch wrong answers; people catch the rest. Evalbench shows two
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/rate-mobile.webp" />
-  <img src="docs/readme/rate.webp" width="100%" alt="A blind rating in progress: the prompt, one response answering 24 with a factual error flagged and low correctness, the other answering 36 with high scores, the correct one marked much better, and a written justification." />
+  <img src="docs/readme/rate.webp" width="100%" alt="A blind rating in progress: two anonymous answers scored on four rubric dimensions with a factual error flagged, the seven-step preference with the winning side circled in red, and a written justification." />
 </picture>
 
 ## One leaderboard for checks and people
@@ -96,12 +96,17 @@ The scoreboard puts the two kinds of evidence next to each other: how many tasks
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/scoreboard-mobile.webp" />
-  <img src="docs/readme/scoreboard.webp" width="100%" alt="The scoreboard: four models ranked with pass rate, score, human rating with confidence intervals, win rate and latency, above a pass-rate-over-time chart and pass rates by category." />
+  <img src="docs/readme/scoreboard.webp" width="100%" alt="The leaderboard: four models with pass rate, score, human rating with its confidence interval, win rate and latency; the interval of the top rating is circled in red with the note: a lead inside the interval is not a lead." />
 </picture>
 
 ## Catch a regression the day it lands
 
 For each model, Evalbench compares its latest run with the one before and lists every task that now fails or now passes. If the task itself was edited between the runs, the change is marked as an edit, not blamed on the model.
+
+<picture>
+  <source media="(max-width: 700px)" srcset="docs/readme/history-mobile.webp" />
+  <img src="docs/readme/history.webp" width="100%" alt="Pass rate over time for four models across six runs, with Vega 8B's drop at run 6 circled in red: the re-quantised model, caught on the chart." />
+</picture>
 
 The same check runs in CI. `evalbench run` sends a suite to one or more models headless and exits non-zero below a pass rate, so a prompt change or a new quantisation can fail a pull request:
 
@@ -116,7 +121,7 @@ evalbench run suites/support.yaml \
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/regressions-mobile.webp" />
-  <img src="docs/readme/regressions.webp" width="100%" alt="Regressions from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B, the other two models are unchanged; beside it, a head-to-head matrix of blind preference rates." />
+  <img src="docs/readme/regressions.webp" width="100%" alt="Regressions from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B, with the last one circled in red; beside it, a head-to-head matrix of blind preference rates." />
 </picture>
 
 ## Take your data with you
@@ -129,7 +134,7 @@ Everything raters and checks produce downloads in one click, and every record ca
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/data-mobile.webp" />
-  <img src="docs/readme/data.webp" width="100%" alt="The Data page with four export cards, beside the first line of the preference-pairs export showing the prompt, the chosen and rejected answers and the rating metadata." />
+  <img src="docs/readme/data.webp" width="100%" alt="The Data page with four export cards, the Preference pairs card circled in red with the note: every decisive verdict, ready to train on." />
 </picture>
 
 ## The core battery

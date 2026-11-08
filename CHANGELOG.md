@@ -9,7 +9,7 @@ First release.
 - Models: Anthropic and OpenAI through their official SDKs, and any OpenAI-compatible server such as LM Studio or Ollama. Keys are read from the environment, never stored, and bound to their provider's own API.
 - Runs with frozen suite and model settings, per-model parallel limits, live progress, cancel and resume.
 - Side-by-side answers with every check's verdict and reason.
-- Blind pairwise rating: shuffled anonymous pairs, rubric scores, issue flags, a seven-point preference, justification and confidence, with a balanced queue per rater.
+- Blind pairwise rating: shuffled anonymous pairs, rubric scores, issue flags, a seven-point preference, justification and confidence, with a balanced queue per rater, and a reveal of who wrote what once a rater's queue is done.
 - Scoreboard with pass rates, Bradley-Terry human ratings with bootstrap intervals, win rates, categories, history and regressions between runs.
 - Exports: ratings as CSV or JSONL, DPO-ready preference pairs, and run results.
 - A sandbox container for model-written code: no route out, read-only, a separate user per execution, refused by the app.

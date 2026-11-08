@@ -98,23 +98,74 @@ async function capture() {
   for (const ctx of [desk, phone]) await ctx.addInitScript(() => localStorage.setItem('evalbench:rater', 'sam'));
 
   const d = await desk.newPage();
-  const shot = async (name, url, clip, prepare) => {
+  const marks = {};
+  /** Captures a region; `mark` names the element the scene's annotation points at, stored
+   *  relative to the capture so the composer can draw to it. */
+  const shot = async (name, url, clip, prepare, mark) => {
     await d.setViewportSize({ width: 1280, height: 860 });
     await d.goto(ORIGIN + url);
     await d.waitForLoadState('networkidle');
     if (prepare) await prepare(d);
     await settle(d);
     const box = typeof clip === 'function' ? await clip(d) : clip;
+    if (mark) {
+      const r = await d.evaluate((m) => {
+        const els = [...document.querySelectorAll(m.css)].filter((el) => !m.text || el.textContent.includes(m.text));
+        const el = els[m.index === -1 ? els.length - 1 : (m.index ?? 0)];
+        if (!el) throw new Error(`no mark ${JSON.stringify(m)}`);
+        const b = el.getBoundingClientRect();
+        return { x: b.left, y: b.top, w: b.width, h: b.height };
+      }, mark);
+      marks[name] = { x: r.x - box.x, y: r.y - box.y, w: r.w, h: r.h, cw: box.width, ch: box.height };
+    }
     await d.screenshot({ path: path.join(RAW, `${name}.png`), clip: box ?? undefined });
     console.log('captured', name);
   };
 
-  await shot('overview', '/', { x: 0, y: 0, width: 1280, height: 820 });
-  await shot('run', '/runs/6', (p) => region(p, { css: 'main h1' }, { css: 'tbody tr', index: 12 }, { padTop: 70, padBottom: 14 }));
-  await shot('compare', '/runs/6/tasks/c04-summary', (p) => region(p, { css: 'main h1' }, { css: 'article', index: 3 }, { padTop: 48, padBottom: 16 }));
-  await shot('rate', '/rate?run=6', (p) => region(p, { css: 'main section' }, { css: 'main section', index: 1 }, { padTop: 16, padBottom: 16 }), (p) => rateReady(p, { fill: true }));
-  await shot('scoreboard', '/scoreboard', (p) => region(p, { css: 'main section' }, { css: 'main section', index: 2 }, { padTop: 16, padBottom: 16 }));
-  await shot('regressions', '/scoreboard', (p) => region(p, { css: 'main section', index: 3 }, { css: 'main section', index: 4 }, { padTop: 16, padBottom: 16 }));
+  await shot('run', '/runs/6', (p) => region(p, { css: 'main section' }, { css: 'tbody tr', index: 10 }, { padTop: 2, padBottom: 14 }), null, {
+    css: 'tbody tr td:last-child button[title="Failed"]',
+  });
+  await shot(
+    'compare',
+    '/runs/6/tasks/c04-summary',
+    (p) => region(p, { css: 'main article' }, { css: 'main article', index: 3 }, { padTop: 2, padBottom: 2, left: 'main article' }),
+    null,
+    { css: 'main article [title="3 sentences (max 2)"]' },
+  );
+  await shot(
+    'rate',
+    '/rate?run=6',
+    (p) => region(p, { css: 'main article' }, { css: 'main section', index: 1 }, { padTop: 2, padBottom: 2 }),
+    (p) => rateReady(p, { fill: true }),
+    { css: 'main section button.border-side-a, main section button.border-side-b' },
+  );
+  await shot(
+    'rate-pair',
+    '/rate?run=6',
+    (p) => region(p, { css: 'main article' }, { css: 'main article', index: 1 }, { padTop: 2, padBottom: 2 }),
+    (p) => rateReady(p, { fill: true }),
+    { css: 'main article header span', index: 0 },
+  );
+  await shot(
+    'rate-pair-b',
+    '/rate?run=6',
+    (p) => region(p, { css: 'main article' }, { css: 'main article', index: 1 }, { padTop: 2, padBottom: 2 }),
+    (p) => rateReady(p, { fill: true }),
+    { css: 'main article header span', index: 2 },
+  );
+  await shot('scoreboard', '/scoreboard', (p) => region(p, { css: 'main section' }, { css: 'main section', index: 0 }, { padTop: 16, padBottom: 16 }), null, {
+    css: 'main section table tbody tr td:nth-child(5) .relative',
+    index: 0,
+  });
+  await shot('history', '/scoreboard', (p) => region(p, { css: 'main section', index: 1 }, { css: 'main section', index: 1 }, { padTop: 2, padBottom: 2 }), null, {
+    css: 'main section svg circle',
+    index: -1,
+  });
+  await shot('regressions', '/scoreboard', (p) => region(p, { css: 'main section', index: 3 }, { css: 'main section', index: 3 }, { padTop: 2, padBottom: 2 }), null, {
+    css: 'main section a span',
+    text: 'now fails',
+    index: -1,
+  });
   await shot(
     'suite',
     '/suites/core-battery',
@@ -123,9 +174,14 @@ async function capture() {
       await p.getByRole('button', { name: /Binary search that hangs/ }).click();
       await p.waitForTimeout(300);
     },
+    { css: 'main .card textarea', index: -1 },
   );
-  await shot('data', '/data', (p) => region(p, { css: 'main h1' }, { css: 'main .grid > div', index: 3 }, { padTop: 40, padBottom: 16 }));
-  await shot('models', '/models', (p) => region(p, { css: 'main h1' }, { css: 'main .card', index: 2 }, { padTop: 40, padBottom: 16 }));
+  await shot('data', '/data', (p) => region(p, { css: 'main .grid > div' }, { css: 'main .grid > div', index: 3 }, { padTop: 2, padBottom: 2 }), null, {
+    css: 'main .grid div',
+    text: 'Preference pairs',
+    index: -1,
+  });
+  writeFileSync(path.join(RAW, 'marks.json'), JSON.stringify(marks, null, 2));
 
   const m = await phone.newPage();
   const pshot = async (name, url, prepare) => {
@@ -165,72 +221,78 @@ async function capture() {
   // Real output for the data scene: the first preference pair, as the export returns it.
   const pair = (await (await fetch(`${ORIGIN}/api/export/preferences.jsonl`)).text()).split('\n')[0];
   writeFileSync(path.join(RAW, 'preference.json'), pair);
-  const yaml = await (await fetch(`${ORIGIN}/api/suites/core-battery/yaml`)).text();
-  writeFileSync(path.join(RAW, 'suite.yaml'), yaml);
+  const board = await (await fetch(`${ORIGIN}/api/scoreboard/core-battery`)).json();
+  writeFileSync(path.join(RAW, 'board.json'), JSON.stringify(board));
   await browser.close();
 }
 
 // ---------------------------------------------------------------- compose
+//
+// Evalbench's identity: a blind tasting for models. Chalk is the table, ink sets the type, azure is
+// the face-down side of a card, and scorecard red is only for the judge's marks. Real screens are
+// staged on the table like objects in a product photo, and each scene has one hand-drawn note.
 
 const b64 = (file) => readFileSync(file).toString('base64');
-const font = (pkg, file) => b64(path.join(WEB, 'node_modules/@fontsource-variable', pkg, 'files', file));
+const fontFile = (pkg, file) => b64(path.join(WEB, 'node_modules', pkg, 'files', file));
 const img = (name) => `data:image/png;base64,${b64(path.join(RAW, `${name}.png`))}`;
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-const ACCENT = '#4da3ff';
+const C = { chalk: '#f1eee6', paper: '#f7f5ef', ink: '#16171b', ink2: '#45443f', muted: '#7a766d', rule: 'rgba(22,23,27,.16)', azure: '#2563eb', red: '#d23c2a' };
+
 const CSS = `
-@font-face { font-family: Inter; src: url(data:font/woff2;base64,${font('inter', 'inter-latin-wght-normal.woff2')}) format('woff2'); font-weight: 100 900; }
-@font-face { font-family: JBM; src: url(data:font/woff2;base64,${font('jetbrains-mono', 'jetbrains-mono-latin-wght-normal.woff2')}) format('woff2'); font-weight: 100 800; }
+@font-face { font-family: Grotesk; src: url(data:font/woff2;base64,${fontFile('@fontsource-variable/schibsted-grotesk', 'schibsted-grotesk-latin-wght-normal.woff2')}) format('woff2'); font-weight: 400 900; }
+@font-face { font-family: Slab; src: url(data:font/woff2;base64,${fontFile('@fontsource/zilla-slab', 'zilla-slab-latin-600-normal.woff2')}) format('woff2'); font-weight: 600; }
+@font-face { font-family: Slab; src: url(data:font/woff2;base64,${fontFile('@fontsource/zilla-slab', 'zilla-slab-latin-700-normal.woff2')}) format('woff2'); font-weight: 700; }
 * { box-sizing: border-box; margin: 0; }
 html, body { background: transparent; }
-body { font-family: Inter, sans-serif; font-variant-ligatures: none; color: #eef1f5; -webkit-font-smoothing: antialiased; font-feature-settings: 'cv11', 'ss01', 'ss03'; }
-.scene { position: relative; overflow: hidden; border-radius: 28px; border: 1px solid #ffffff14;
-  background:
-    radial-gradient(var(--gw, 1000px) var(--gh, 560px) at var(--gx, 50%) var(--gy, -10%), rgba(77,163,255,.20), transparent 70%),
-    radial-gradient(700px 460px at var(--ax, 105%) var(--ay, 110%), rgba(77,163,255,.06), transparent 70%),
-    linear-gradient(180deg, #0b0f14, #07090c); }
-.scene::before { content: ''; position: absolute; inset: 0; pointer-events: none;
-  background-image: radial-gradient(rgba(255,255,255,.065) 1.2px, transparent 1.6px); background-size: 28px 28px;
-  -webkit-mask-image: radial-gradient(var(--gw, 1000px) var(--gh, 560px) at var(--gx, 50%) var(--gy, -10%), #000, transparent 75%); }
-.win { position: absolute; border-radius: 14px; overflow: hidden; background: #0a0c0f;
-  box-shadow: 0 0 0 1px #ffffff1c, 0 40px 90px -30px rgba(0,0,0,.9), 0 18px 40px -18px rgba(0,0,0,.7); }
-.win .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: #12151a; border-bottom: 1px solid #ffffff10; }
-.win .bar i { width: 11px; height: 11px; border-radius: 50%; background: #2b3038; }
-.win .bar .url { margin-left: 14px; flex: 1; max-width: 360px; height: 20px; border-radius: 6px; background: #0b0d10; border: 1px solid #ffffff0f;
-  font: 500 11px JBM, monospace; color: #6b7484; display: flex; align-items: center; padding: 0 10px; }
-.win img { display: block; width: 100%; }
-.phone { position: absolute; padding: 9px; border-radius: 46px;
-  background: linear-gradient(150deg, #2c3037, #17191d 38%, #0e1013);
-  box-shadow: 0 0 0 1px #000, inset 0 0 0 1.5px rgba(255,255,255,.11), 0 50px 90px -30px rgba(0,0,0,.9), 0 20px 40px -20px rgba(0,0,0,.65); }
-.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #0c0e12; padding-top: 34px; }
+body { font-family: Grotesk, sans-serif; color: ${C.ink}; -webkit-font-smoothing: antialiased; }
+.scene { position: relative; overflow: hidden; border-radius: 6px; background: ${C.chalk}; }
+.slab { font-family: Slab, serif; font-variant-numeric: lining-nums; }
+.screen { position: absolute; border-radius: 12px; overflow: hidden; background: #0d0e10;
+  box-shadow: 0 0 0 1px rgba(22,23,27,.55), 0 2px 3px rgba(22,23,27,.12), 0 24px 40px -18px rgba(22,23,27,.45), 0 60px 100px -50px rgba(22,23,27,.5); }
+.screen img { display: block; width: 100%; }
+.phone { position: absolute; padding: 9px; border-radius: 46px; background: #1b1c20;
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08), 0 0 0 1px rgba(22,23,27,.6), 0 28px 50px -22px rgba(22,23,27,.55), 0 70px 110px -60px rgba(22,23,27,.55); }
+.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #101113; padding-top: 34px; }
 .phone .scr img { display: block; width: 100%; }
 .phone .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #000; z-index: 2; }
-.brand { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -.01em; }
-.h1 { font-weight: 700; letter-spacing: -.035em; line-height: 1.02; }
-.h1 em { font-style: normal; color: ${ACCENT}; }
-.sub { color: #9aa3b2; letter-spacing: -.005em; }
-.pill { display: inline-flex; align-items: center; gap: 10px; height: 46px; padding: 0 20px; border-radius: 999px; font-weight: 600; font-size: 16px; }
-.pill.primary { background: ${ACCENT}; color: #04111f; box-shadow: 0 10px 30px -10px #4da3ffaa, inset 0 1px 0 #ffffff66; }
-.pill.ghost { border: 1px solid #ffffff24; color: #d9dee7; background: #ffffff08; font-family: JBM, monospace; font-weight: 500; font-size: 14.5px; }
-.code { position: absolute; border-radius: 14px; background: #0b0e12; border: 1px solid #ffffff1a; padding: 0 0 16px;
-  box-shadow: 0 40px 80px -30px rgba(0,0,0,.95); font: 500 12.5px/1.7 JBM, monospace; color: #cfd8e6; overflow: hidden; }
-.code .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid #ffffff10; background: #12151a; margin-bottom: 12px; }
-.code .bar i { width: 11px; height: 11px; border-radius: 50%; background: #2b3038; }
-.code .bar span { margin-left: 10px; color: #6b7484; font-size: 11px; }
-.code pre { padding: 0 18px; white-space: pre; font: inherit; }
-.k { color: #8cc4ff; } .s { color: #cfd8e6; } .n { color: #f4b66a; } .c { color: #5e6676; } .p { color: #6b7484; } .g { color: #9fd88a; } .a { color: ${ACCENT}; }
+.note { position: absolute; font-family: Slab, serif; font-weight: 700; color: ${C.red}; line-height: 1.12; }
+svg.ink { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
 `;
 
-const LOGO = (size) => `<svg width="${size}" height="${size}" viewBox="0 0 32 32"><defs><linearGradient id="lg${size}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6cb6ff"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#lg${size})"/><rect x="7.5" y="16" width="4" height="9" rx="2" fill="#fff" fill-opacity=".55"/><rect x="14" y="11" width="4" height="14" rx="2" fill="#fff" fill-opacity=".8"/><rect x="20.5" y="6.5" width="4" height="18.5" rx="2" fill="#fff"/></svg>`;
+const MARK = (size) => `<svg width="${size}" height="${size}" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="${C.ink}"/><g transform="rotate(-11 11.5 17)"><rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#4da3ff"/></g><g transform="rotate(8 20.5 15.5)"><rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="${C.paper}"/><path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#e04a36" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
 
-const win = ({ name, x, y, w, url = 'localhost:8484' }) =>
-  `<div class="win" style="left:${x}px;top:${y}px;width:${w}px"><div class="bar"><i></i><i></i><i></i><div class="url">${url}</div></div><img src="${img(name)}"></div>`;
-const phoneEl = ({ name, x, y, w }) =>
-  `<div class="phone" style="left:${x}px;top:${y}px;width:${w}px"><div class="scr"><div class="island"></div><img src="${img(name)}"></div></div>`;
+const screen = ({ name, x, y, w, rotate = 0 }) =>
+  `<div class="screen" style="left:${x}px;top:${y}px;width:${w}px;transform:rotate(${rotate}deg)"><img src="${img(name)}"></div>`;
+const phoneEl = ({ name, x, y, w, rotate = 0 }) =>
+  `<div class="phone" style="left:${x}px;top:${y}px;width:${w}px;transform:rotate(${rotate}deg)"><div class="scr"><div class="island"></div><img src="${img(name)}"></div></div>`;
+
+/** A pen stroke: a gently bowed line from (x1,y1) to (x2,y2) with an open arrowhead. */
+function arrow(x1, y1, x2, y2, bow = 0.18) {
+  const mx = (x1 + x2) / 2 - (y2 - y1) * bow;
+  const my = (y1 + y2) / 2 + (x2 - x1) * bow;
+  const ang = Math.atan2(y2 - my, x2 - mx);
+  const h = 13;
+  const a1 = [x2 - h * Math.cos(ang - 0.45), y2 - h * Math.sin(ang - 0.45)];
+  const a2 = [x2 - h * Math.cos(ang + 0.45), y2 - h * Math.sin(ang + 0.45)];
+  return `<path d="M${x1},${y1} Q${mx},${my} ${x2},${y2}" fill="none" stroke="${C.red}" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M${a1[0]},${a1[1]} L${x2},${y2} L${a2[0]},${a2[1]}" fill="none" stroke="${C.red}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+
+/** A loop drawn round something, not quite closed, the way a pen does it. */
+function ring(cx, cy, rx, ry) {
+  const pts = [];
+  for (let i = 0; i <= 26; i++) {
+    const t = -0.5 + (i / 26) * (Math.PI * 2 + 0.35);
+    const wob = 1.8 * Math.sin(i * 1.7); // a steady hand's tremor, the same at any size
+    pts.push(`${(cx + (rx + wob) * Math.cos(t)).toFixed(1)},${(cy + (ry + wob) * Math.sin(t)).toFixed(1)}`);
+  }
+  return `<path d="M${pts.join(' L')}" fill="none" stroke="${C.red}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
 
 async function size(name) {
   const meta = await sharp(path.join(RAW, `${name}.png`)).metadata();
-  return { w: meta.width, h: meta.height };
+  return { w: meta.width / 2, h: meta.height / 2 }; // CSS pixels of the 2x capture
 }
 
 async function render(browser, file, html, width, height) {
@@ -241,192 +303,172 @@ async function render(browser, file, html, width, height) {
   await page.evaluate(() => document.fonts.ready);
   const png = await page.locator('.scene').screenshot({ omitBackground: true });
   await page.close();
-  if (file === 'social') {
-    await sharp(png).resize(1280, 640).png({ compressionLevel: 9 }).toFile(path.join(OUT, 'social.png'));
-  } else {
-    await sharp(png).webp({ quality: 86, effort: 6 }).toFile(path.join(OUT, `${file}.webp`));
-  }
+  if (file === 'social') await sharp(png).resize(1280, 640).png({ compressionLevel: 9 }).toFile(path.join(OUT, 'social.png'));
+  else await sharp(png).webp({ quality: 88, effort: 6 }).toFile(path.join(OUT, `${file}.webp`));
   console.log('composed', file);
 }
 
-/** A feature scene: the desktop capture in a browser window, with a phone or a code card beside it
- *  (never on top of it, so nothing in the capture is hidden). */
-async function feature(browser, file, { desk, phone = null, card = null, url, side = 'right' }) {
+const marks = () => JSON.parse(readFileSync(path.join(RAW, 'marks.json'), 'utf8'));
+
+/** A feature scene: the real screen across the table, and one note written in the margin nearest
+ *  to the thing it points at, with a single stroke and a ring. */
+async function feature(browser, file, { desk, phone, note }) {
   const W = 1400;
-  const pad = 60;
-  const gap = 36;
+  const pad = 64;
+  const margin = 170;
   const ds = await size(desk);
-  const sideW = phone ? 272 : card ? card.w : 0;
-  const winW = W - pad * 2 - (sideW ? sideW + gap : 0);
-  const winH = 34 + (winW * ds.h) / ds.w;
-  let sideH = 0;
-  if (phone) {
-    const ps = await size(phone);
-    sideH = 18 + 34 + ((sideW - 18) * ps.h) / ps.w;
-  } else if (card) sideH = card.h;
-  const H = Math.round(Math.max(winH, sideH) + pad * 2);
-  const winX = side === 'left' && sideW ? pad + sideW + gap : pad;
-  const winY = pad + Math.max(0, (sideH - winH) / 2);
-  const sideX = side === 'left' ? pad : W - pad - sideW;
-  const sideY = pad + Math.max(0, (winH - sideH) / 2);
-  const parts = [win({ name: desk, x: winX, y: winY, w: winW, url })];
-  if (phone) parts.push(phoneEl({ name: phone, x: sideX, y: sideY, w: sideW }));
-  if (card) parts.push(codeCard(card.title, card.body, sideX, sideY, sideW, card.h));
-  const html = `<div class="scene" style="width:${W}px;height:${H}px;--gw:1100px;--gx:${side === 'left' ? '62%' : '38%'};--gy:-14%">${parts.join('')}</div>`;
+  const winW = Math.min(W - pad * 2, ds.w * 1.35);
+  const scale = winW / ds.w;
+  const winH = ds.h * scale;
+  const m = marks()[desk];
+  const winX = (W - winW) / 2;
+  const tx = winX + m.x * scale;
+  const tw = m.w * scale;
+  const th = m.h * scale;
+  const above = m.y + m.h / 2 < ds.h / 2;
+  const winY = above ? margin : pad;
+  const H = Math.round(winY + winH + (above ? pad : margin));
+  const ty = winY + m.y * scale;
+  const cx = tx + tw / 2;
+  const cy = ty + th / 2;
+  const noteW = 600;
+  const noteX = Math.max(pad, Math.min(W - pad - noteW, cx - noteW * 0.62));
+  const noteY = above ? 52 : winY + winH + 54;
+  const startX = Math.min(noteX + noteW + 12, Math.max(noteX - 12, cx + (cx > noteX + noteW / 2 ? -40 : 40)));
+  const fromY = above ? noteY + 46 : noteY - 10;
+  const toY = above ? cy - th / 2 - 14 : cy + th / 2 + 14;
+  const html = `<div class="scene" style="width:${W}px;height:${H}px">
+    ${screen({ name: desk, x: winX, y: winY, w: winW })}
+    <div class="note" style="left:${noteX}px;top:${noteY}px;width:${noteW}px;font-size:30px">${note}</div>
+    <svg class="ink" width="${W}" height="${H}">${ring(cx, cy, tw / 2 + 12, th / 2 + 9)}${arrow(startX, fromY, cx + (startX < cx ? -10 : 10), toY, startX < cx ? 0.22 : -0.22)}</svg>
+  </div>`;
   await render(browser, file, html, W, H);
 
-  // Portrait version for phones: the phone capture, framed, with the window faint behind it.
-  const mobile = phone ?? card?.phone;
-  if (!mobile) return;
-  const MW = 620;
-  const mPhoneW = 330;
-  const mps = await size(mobile);
-  const mPhoneH = 18 + 34 + ((mPhoneW - 18) * mps.h) / mps.w;
-  const MH = Math.round(mPhoneH + 120);
-  const backW = 560;
-  const back = win({ name: desk, x: (MW - backW) / 2, y: 46, w: backW, url });
-  const mHtml = `<div class="scene" style="width:${MW}px;height:${MH}px;--gw:700px;--gh:520px;--gx:50%;--gy:-6%">
-    <div style="position:absolute;inset:0;opacity:.3;filter:saturate(.7)">${back}</div>
-    <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 0%,#07090ccc 55%)"></div>
-    ${phoneEl({ name: mobile, x: (MW - mPhoneW) / 2, y: 70, w: mPhoneW })}</div>`;
+  // Portrait for phones: the note on top, the phone on the table below it.
+  const MW = 720;
+  const pw = 340;
+  const ps = await size(phone);
+  const ph = 18 + 34 + ((pw - 18) * ps.h) / ps.w;
+  const MH = Math.round(ph + 240);
+  const mHtml = `<div class="scene" style="width:${MW}px;height:${MH}px">
+    <div class="note" style="left:56px;top:52px;width:${MW - 112}px;font-size:34px">${note}</div>
+    ${phoneEl({ name: phone, x: (MW - pw) / 2 + 40, y: 180, w: pw, rotate: 2 })}
+  </div>`;
   await render(browser, `${file}-mobile`, mHtml, MW, MH);
 }
 
-const codeCard = (title, body, x, y, w, h) =>
-  `<div class="code" style="left:${x}px;top:${y}px;width:${w}px;${h ? `height:${h}px;` : ''}"><div class="bar"><i></i><i></i><i></i><span>${title}</span></div><pre>${body}</pre></div>`;
-const clipLine = (s, n) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
-
-function yamlSnippet(yaml, taskId) {
-  const start = yaml.indexOf(`- id: ${taskId}`);
-  const rest = yaml.slice(start);
-  const next = rest.slice(5).search(/\n\s*- id: /);
-  const block = (next > 0 ? rest.slice(0, next + 5) : rest).trimEnd();
-  const indent = block.split('\n')[1]?.match(/^\s*/)[0].length - 2 || 0;
-  return block
-    .split('\n')
-    .map((line) => clipLine(line.slice(Math.min(indent, line.match(/^\s*/)[0].length)), 52))
-    .map((line) => {
-      const m = line.match(/^(\s*-?\s*)([\w_]+)(:)(.*)$/);
-      if (!m) return `<span class="s">${esc(line)}</span>`;
-      const value = m[4].trim();
-      const v = /^-?\d+(\.\d+)?$/.test(value) ? `<span class="n">${esc(m[4])}</span>` : `<span class="s">${esc(m[4])}</span>`;
-      return `${esc(m[1])}<span class="k">${m[2]}</span><span class="p">:</span>${v}`;
-    })
-    .join('\n');
-}
-
-function jsonSnippet(line) {
-  const o = JSON.parse(line);
-  const cut = (s, n) => (s.length > n ? `${s.slice(0, n - 1)}…` : s).replace(/\n/g, '\\n');
-  const kv = (k, v, last = false) => `  <span class="k">"${k}"</span><span class="p">:</span> ${v}${last ? '' : '<span class="p">,</span>'}`;
-  const str = (s, n = 30) => `<span class="g">"${esc(cut(s, n))}"</span>`;
-  return [
-    '<span class="p">{</span>',
-    kv('prompt', str(o.prompt)),
-    kv('chosen', str(o.chosen)),
-    kv('rejected', str(o.rejected)),
-    `  <span class="k">"meta"</span><span class="p">: {</span>`,
-    `    <span class="k">"chosen_model"</span><span class="p">:</span> ${str(o.meta.chosen_model)}<span class="p">,</span>`,
-    `    <span class="k">"rejected_model"</span><span class="p">:</span> ${str(o.meta.rejected_model)}<span class="p">,</span>`,
-    `    <span class="k">"strength"</span><span class="p">:</span> <span class="n">${o.meta.strength}</span><span class="p">,</span>`,
-    `    <span class="k">"justification"</span><span class="p">:</span> ${str(o.meta.justification, 22)}`,
-    '  <span class="p">}</span>',
-    '<span class="p">}</span>',
-  ].join('\n');
+function scorecardRows(board, { nameSize = 18, numSize = 30, rowH = 52, width = 520 }) {
+  const rows = board.models
+    .map(
+      (m, i) => `<div style="display:grid;grid-template-columns:28px 1fr 96px 96px;align-items:baseline;height:${rowH}px;border-top:1px solid ${C.rule};padding-top:12px">
+        <span class="slab" style="font-size:${nameSize - 2}px;font-weight:600;color:${C.muted}">${i + 1}</span>
+        <span style="font-size:${nameSize}px;font-weight:500">${esc(m.label)}</span>
+        <span class="slab" style="font-size:${numSize}px;font-weight:700;text-align:right">${Math.round(m.auto.pass_rate * 100)}%</span>
+        <span class="slab" style="font-size:${numSize}px;font-weight:700;text-align:right;color:${C.ink2}">${Math.round(m.human.rating)}</span>
+      </div>`,
+    )
+    .join('');
+  return `<div style="width:${width}px">
+    <div style="display:grid;grid-template-columns:28px 1fr 96px 96px;font-size:13px;font-weight:600;letter-spacing:.04em;color:${C.muted};padding-bottom:10px">
+      <span></span><span>CORE BATTERY, LATEST RUN</span><span style="text-align:right">CHECKS</span><span style="text-align:right">JUDGES</span></div>
+    ${rows}<div style="border-top:1px solid ${C.rule}"></div></div>`;
 }
 
 async function compose() {
   const browser = await launch();
+  const board = JSON.parse(readFileSync(path.join(RAW, 'board.json'), 'utf8'));
+  board.models = board.models.filter((m) => m.auto && m.human);
 
-  // Hero
+  // Hero: the claim across the top, the scorecard and the judge's view beneath it.
   {
-    const W = 1200;
-    const H = 1130;
-    const winW = 960;
-    const html = `<div class="scene" style="width:${W}px;height:${H}px;--gw:1100px;--gh:620px;--gy:-8%">
-      <div style="position:absolute;top:58px;left:0;right:0;text-align:center">
-        <div class="brand" style="justify-content:center;font-size:27px">${LOGO(40)} Evalbench</div>
-        <div class="h1" style="font-size:66px;margin-top:30px">Know which model is <em>actually better.</em></div>
-        <div class="sub" style="font-size:21px;margin-top:20px">Tasks and rubrics, local and API models, automatic checks and blind human rating,<br>scored over time. Self-hosted, one compose file.</div>
-        <div style="display:flex;gap:12px;justify-content:center;margin-top:30px">
-          <span class="pill primary">Open source · MIT</span>
-          <span class="pill ghost">$ docker compose up -d</span>
-        </div>
-      </div>
-      ${win({ name: 'overview', x: 60, y: 420, w: winW })}
-      ${phoneEl({ name: 'm-rate', x: W - 60 - 262, y: 560, w: 262 })}
+    const W = 1400;
+    const H = 930;
+    const ps = await size('rate-pair');
+    const sw = 760;
+    const sh = (ps.h * sw) / ps.w;
+    const k = sw / ps.w;
+    const sx = 584;
+    const sy = 404;
+    const mk = marks();
+    const ringAt = (mm) => ring(sx + (mm.x + mm.w / 2) * k, sy + (mm.y + mm.h / 2) * k, (mm.w * k) / 2 + 12, (mm.h * k) / 2 + 10);
+    const underline = `<svg viewBox="0 0 100 12" preserveAspectRatio="none" style="position:absolute;left:-2%;bottom:-0.16em;width:104%;height:0.16em;overflow:visible"><path d="M1,7 C25,10 60,4 99,6" fill="none" stroke="${C.red}" stroke-width="3.2" vector-effect="non-scaling-stroke" stroke-linecap="round" style="stroke-width:6px"/></svg>`;
+    const html = `<div class="scene" style="width:${W}px;height:${H}px">
+      <div style="position:absolute;left:80px;top:70px;display:flex;align-items:center;gap:14px;font-size:26px;font-weight:650;letter-spacing:-.01em">${MARK(38)} Evalbench</div>
+      <div style="position:absolute;left:74px;top:150px;font-size:112px;font-weight:760;letter-spacing:-.05em;line-height:.93;white-space:nowrap">Judge the answer,<br>not the <span style="position:relative;display:inline-block">name.${underline}</span></div>
+      <div style="position:absolute;left:80px;top:440px;width:440px;font-size:21px;line-height:1.45;color:${C.ink2}">A self-hosted workbench for testing language models on your own tasks. Run any model, grade every answer, and let people rate them blind.</div>
+      <div style="position:absolute;left:80px;top:640px">${scorecardRows(board, { nameSize: 17, numSize: 26, rowH: 48, width: 430 })}</div>
+      ${screen({ name: 'rate-pair', x: sx, y: sy, w: sw, rotate: 1.2 })}
+      <div class="note" style="left:${sx + 20}px;top:${sy + sh + 38}px;width:${sw}px;font-size:28px">No names, shuffled every time. The labels come off when you are done.</div>
+      <svg class="ink" width="${W}" height="${H}">${ringAt(mk['rate-pair'])}${ringAt(mk['rate-pair-b'])}</svg>
     </div>`;
     await render(browser, 'hero', html, W, H);
-    const MW = 620;
-    const MH = 1120;
-    const mHtml = `<div class="scene" style="width:${MW}px;height:${MH}px;--gw:700px;--gh:560px;--gy:-6%">
-      <div style="position:absolute;top:48px;left:28px;right:28px;text-align:center">
-        <div class="brand" style="justify-content:center;font-size:22px">${LOGO(34)} Evalbench</div>
-        <div class="h1" style="font-size:46px;margin-top:22px">Know which model is <em>actually better.</em></div>
-        <div class="sub" style="font-size:17px;margin-top:14px;line-height:1.45">Checks, blind human rating and scores over time, self-hosted.</div>
-      </div>
-      ${phoneEl({ name: 'm-overview', x: (MW - 330) / 2, y: 330, w: 330 })}
+
+    const MW = 720;
+    const MH = 1360;
+    const mHtml = `<div class="scene" style="width:${MW}px;height:${MH}px">
+      <div style="position:absolute;left:52px;top:56px;display:flex;align-items:center;gap:12px;font-size:24px;font-weight:650">${MARK(34)} Evalbench</div>
+      <div style="position:absolute;left:50px;top:130px;font-size:76px;font-weight:760;letter-spacing:-.05em;line-height:.93;white-space:nowrap">Judge the answer,<br>not the <span style="position:relative;display:inline-block">name.${underline}</span></div>
+      <div style="position:absolute;left:52px;top:318px;width:600px;font-size:20px;line-height:1.45;color:${C.ink2}">Run any model on your own tasks, grade every answer, and rate them blind. Self-hosted.</div>
+      ${phoneEl({ name: 'm-rate', x: 190, y: 440, w: 360, rotate: 2 })}
     </div>`;
     await render(browser, 'hero-mobile', mHtml, MW, MH);
   }
 
-  // Numbers banner (every figure comes from the code; see README "Quality")
+  // The numbers, as a judge's scorecard. Every figure is a fact of the code (see README "Quality").
   {
     const items = [
-      ['20', 'Battery tasks', 'reasoning, constraints, debugging'],
-      ['7', 'Check types', 'from exact match to Python tests'],
-      ['3', 'Provider kinds', 'Anthropic, OpenAI, any compatible'],
-      ['4', 'Export formats', 'CSV, JSONL, DPO pairs, results'],
-      ['0', 'Keys stored', 'read from the environment'],
+      ['20', 'battery tasks', 'reasoning, constraints, debugging'],
+      ['7', 'check types', 'exact match to Python tests'],
+      ['3', 'provider kinds', 'Anthropic, OpenAI, compatible'],
+      ['4', 'export formats', 'CSV, JSONL, DPO pairs, results'],
+      ['0', 'keys stored', 'read from the environment'],
     ];
-    const cell = ([n, l, c], i, accentLast) =>
-      `<div style="flex:1;padding:0 26px;${i ? 'border-left:1px solid #ffffff10;' : ''}">
-        <div style="font-size:54px;font-weight:700;letter-spacing:-.03em;line-height:1;${accentLast && i === items.length - 1 ? `color:${ACCENT}` : ''}">${n}</div>
-        <div style="font-size:18px;font-weight:600;margin-top:16px">${l}</div>
-        <div style="font-size:14.5px;color:#8a93a3;margin-top:6px">${c}</div></div>`;
-    const html = `<div class="scene" style="width:1200px;height:270px;--gw:900px;--gh:300px;--gy:-40%;--gx:30%;display:flex;align-items:center;padding:0 22px">${items.map((it, i) => cell(it, i, true)).join('')}</div>`;
-    await render(browser, 'numbers', html, 1200, 270);
-    const mHtml = `<div class="scene" style="width:620px;height:600px;--gw:600px;--gh:300px;--gy:-20%;padding:44px 36px;display:grid;grid-template-columns:1fr 1fr;gap:34px 26px;align-content:center">
-      ${items
-        .map(
-          ([n, l, c], i) =>
-            `<div style="${i === 4 ? 'grid-column:1 / -1' : ''}"><div style="font-size:46px;font-weight:700;letter-spacing:-.03em;line-height:1;${i === 4 ? `color:${ACCENT}` : ''}">${n}</div><div style="font-size:17px;font-weight:600;margin-top:12px">${l}</div><div style="font-size:14px;color:#8a93a3;margin-top:4px">${c}</div></div>`,
-        )
-        .join('')}</div>`;
-    await render(browser, 'numbers-mobile', mHtml, 620, 600);
+    const W = 1400;
+    const H = 300;
+    const col = (W - 160) / items.length;
+    const cells = items
+      .map(
+        ([n, l, c], i) => `<div style="position:absolute;left:${80 + i * col}px;top:70px;width:${col}px;padding-left:${i ? 26 : 0}px;${i ? `border-left:1px solid ${C.rule};` : ''}height:170px">
+          <div class="slab" style="font-size:84px;font-weight:700;line-height:.9;letter-spacing:-.02em">${n}</div>
+          <div style="font-size:19px;font-weight:600;margin-top:18px">${l}</div>
+          <div style="font-size:15px;color:${C.muted};margin-top:5px">${c}</div></div>`,
+      )
+      .join('');
+    const tickX = 80 + 4 * col + 26 + 66;
+    const html = `<div class="scene" style="width:${W}px;height:${H}px">${cells}
+      <svg class="ink" width="${W}" height="${H}"><path d="M${tickX},92 l14,16 l30,-38" fill="none" stroke="${C.red}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+    await render(browser, 'numbers', html, W, H);
+    const MW = 720;
+    const MH = 760;
+    const mCells = items
+      .map(
+        ([n, l, c], i) => `<div style="position:absolute;left:${56 + (i % 2) * 320}px;top:${60 + Math.floor(i / 2) * 230}px;width:290px">
+          <div class="slab" style="font-size:76px;font-weight:700;line-height:.9">${n}</div>
+          <div style="font-size:19px;font-weight:600;margin-top:14px">${l}</div>
+          <div style="font-size:15px;color:${C.muted};margin-top:4px">${c}</div></div>`,
+      )
+      .join('');
+    const mHtml = `<div class="scene" style="width:${MW}px;height:${MH}px">${mCells}
+      <svg class="ink" width="${MW}" height="${MH}"><path d="M118,${60 + 2 * 230 + 20} l14,16 l30,-38" fill="none" stroke="${C.red}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+    await render(browser, 'numbers-mobile', mHtml, MW, MH);
   }
 
-  // Feature scenes
-  const yaml = readFileSync(path.join(RAW, 'suite.yaml'), 'utf8');
-  const pref = readFileSync(path.join(RAW, 'preference.json'), 'utf8');
-  const yamlBody = yamlSnippet(yaml, 'd03-binary-search');
-  await feature(browser, 'write', {
-    desk: 'suite',
-    url: 'localhost:8484/suites/core-battery',
-    card: { title: 'core-battery.yaml', body: yamlBody, w: 440, h: 70 + yamlBody.split('\n').length * 21.25, phone: 'm-suite' },
-  });
-  await feature(browser, 'run', { desk: 'run', phone: 'm-run', url: 'localhost:8484/runs/6' });
-  await feature(browser, 'compare', { desk: 'compare', phone: 'm-compare', url: 'localhost:8484/runs/6/tasks/c04-summary', side: 'left' });
-  await feature(browser, 'rate', { desk: 'rate', phone: 'm-rate', url: 'localhost:8484/rate?run=6' });
-  await feature(browser, 'scoreboard', { desk: 'scoreboard', phone: 'm-scoreboard', url: 'localhost:8484/scoreboard', side: 'left' });
-  await feature(browser, 'regressions', { desk: 'regressions', phone: 'm-regressions', url: 'localhost:8484/scoreboard' });
-  const prefBody = jsonSnippet(pref);
-  await feature(browser, 'data', {
-    desk: 'data',
-    url: 'localhost:8484/data',
-    card: { title: 'curl …/api/export/preferences.jsonl', body: prefBody, w: 470, h: 70 + prefBody.split('\n').length * 21.25, phone: 'm-data' },
-  });
+  await feature(browser, 'write', { desk: 'suite', phone: 'm-suite', note: 'Your tests run against the answer’s code, in a box with no way out.' });
+  await feature(browser, 'run', { desk: 'run', phone: 'm-run', note: 'Every cell is a verdict. Click one for the reason.' });
+  await feature(browser, 'compare', { desk: 'compare', phone: 'm-compare', note: 'Not just red: the exact rule it broke.' });
+  await feature(browser, 'rate', { desk: 'rate', phone: 'm-rate', note: 'Seven steps, from A by a mile to B by a mile.' });
+  await feature(browser, 'scoreboard', { desk: 'scoreboard', phone: 'm-scoreboard', note: 'A lead inside the interval is not a lead.' });
+  await feature(browser, 'history', { desk: 'history', phone: 'm-regressions', note: 'Run 6: the re-quantised model drops, and the chart says so.' });
+  await feature(browser, 'regressions', { desk: 'regressions', phone: 'm-regressions', note: 'The day it breaks, not the week after.' });
+  await feature(browser, 'data', { desk: 'data', phone: 'm-data', note: 'Every decisive verdict, ready to train on.' });
 
-  // Social preview, 1280x640
+  // Social preview, 1280x640: the claim and the judge's view.
   {
-    const html = `<div class="scene" style="width:1280px;height:640px;border-radius:0;--gw:1000px;--gh:600px;--gx:24%;--gy:-20%">
-      <div style="position:absolute;left:84px;top:96px;width:560px">
-        <div class="brand" style="font-size:34px">${LOGO(52)} Evalbench</div>
-        <div class="h1" style="font-size:64px;margin-top:40px">Know which model is <em>actually better.</em></div>
-        <div class="sub" style="font-size:24px;margin-top:26px;line-height:1.4">Checks, blind human rating and regression tracking. Self-hosted.</div>
-      </div>
-      ${phoneEl({ name: 'm-rate', x: 760, y: 70, w: 300 })}
-      <div style="position:absolute;left:1000px;top:250px;width:220px;opacity:.9">${phoneEl({ name: 'm-scoreboard', x: 0, y: 0, w: 230 }).replace('position:absolute;', '')}</div>
+    const html = `<div class="scene" style="width:1280px;height:640px;border-radius:0">
+      <div style="position:absolute;left:80px;top:74px;display:flex;align-items:center;gap:14px;font-size:28px;font-weight:650">${MARK(42)} Evalbench</div>
+      <div style="position:absolute;left:76px;top:160px;font-size:82px;font-weight:760;letter-spacing:-.05em;line-height:.93;white-space:nowrap">Judge the answer,<br>not the <span style="position:relative;display:inline-block">name.<svg viewBox="0 0 100 12" preserveAspectRatio="none" style="position:absolute;left:-2%;bottom:-0.16em;width:104%;height:0.16em;overflow:visible"><path d="M1,7 C25,10 60,4 99,6" fill="none" stroke="${C.red}" vector-effect="non-scaling-stroke" stroke-linecap="round" style="stroke-width:5px"/></svg></span></div>
+      <div style="position:absolute;left:80px;top:372px;width:440px;font-size:24px;line-height:1.4;color:${C.ink2}">Self-hosted LLM evaluation: automatic checks, blind rating, regressions.</div>
+      ${screen({ name: 'rate-pair', x: 640, y: 300, w: 700, rotate: 1.4 })}
     </div>`;
     await render(browser, 'social', html, 1280, 640);
   }
@@ -434,5 +476,5 @@ async function compose() {
 }
 
 if (!COMPOSE_ONLY) await capture();
-if (!existsSync(path.join(RAW, 'overview.png'))) throw new Error('no captures: run without --compose first');
+if (!existsSync(path.join(RAW, 'marks.json'))) throw new Error('no captures: run without --compose first');
 await compose();
