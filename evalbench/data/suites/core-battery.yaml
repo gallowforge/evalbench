@@ -1,0 +1,392 @@
+id: core-battery
+title: Core battery
+description: Twenty short tasks that separate careful models from fluent ones. Seven reasoning problems with one right answer, seven instructions with hard constraints, and six Python bugs graded by running tests.
+version: 1
+rubric:
+  - id: instruction_following
+    label: Instruction following
+    description: Follows every instruction, including format, length, required wording and anything forbidden.
+  - id: correctness
+    label: Correctness
+    description: The final answer, reasoning or code is right, and nothing is invented.
+  - id: explanation
+    label: Explanation
+    description: Shows the steps a reader needs to trust the answer, without padding.
+  - id: concision
+    label: Concision
+    description: No filler, no repeated caveats, nothing the prompt did not ask for.
+tasks:
+  # ---------------------------------------------------------------- reasoning
+  - id: r01-ages
+    title: Ages in twelve years
+    category: reasoning
+    prompt: |
+      Mira is three times as old as her nephew Teo. In 12 years, Mira will be twice as old as Teo. How old is Mira now?
+
+      Show your reasoning briefly, then end with a final line in the form `Answer: <number>`.
+    reference: "36. Teo is t and Mira is 3t, so 3t + 12 = 2(t + 12), t = 12 and Mira is 36."
+    checks:
+      - type: exact
+        extract: final_answer
+        expect: "36"
+
+  - id: r02-standups
+    title: The 15th stand-up
+    category: reasoning
+    prompt: |
+      A team stand-up is held every 9 days. The first one falls on a Monday. On which day of the week is the 15th stand-up?
+
+      End with a final line in the form `Answer: <weekday>`.
+    reference: "Monday. The 15th is 14 intervals after the first: 14 x 9 = 126 days, and 126 is a multiple of 7."
+    checks:
+      - type: exact
+        extract: final_answer
+        expect: Monday
+
+  - id: r03-seating
+    title: Who sits in chair 1
+    category: reasoning
+    prompt: |
+      Four colleagues, Ana, Ben, Chloe and Dev, sit in a row of four chairs numbered 1 to 4 from left to right.
+
+      - Ben is not in an end chair.
+      - Chloe sits immediately to the right of Ana.
+      - Dev sits next to Ben.
+      - Ana is not in chair 1.
+
+      Who sits in chair 1? End with a final line in the form `Answer: <name>`.
+    reference: "Dev. The only arrangement is Dev, Ben, Ana, Chloe."
+    checks:
+      - type: exact
+        extract: final_answer
+        expect: Dev
+
+  - id: r04-marbles
+    title: Two marbles, same colour
+    category: reasoning
+    prompt: |
+      A bag holds 4 red and 6 blue marbles. You draw two marbles without replacement. What is the probability that both are the same colour?
+
+      Give the answer as a fraction in lowest terms, ending with a final line in the form `Answer: <fraction>`.
+    reference: "7/15. P(both red) = 12/90, P(both blue) = 30/90, total 42/90 = 7/15."
+    checks:
+      - type: regex
+        label: 7/15 in lowest terms
+        extract: final_answer
+        pattern: '7\s*/\s*15'
+        fullmatch: true
+
+  - id: r05-tank
+    title: Two pipes and a drain
+    category: reasoning
+    prompt: |
+      Pipe A fills a tank in 6 hours and pipe B fills it in 9 hours. A drain empties a full tank in 18 hours. The tank starts empty and both pipes and the drain are opened together. How many hours does the tank take to fill?
+
+      End with a final line in the form `Answer: <hours>`, written as a decimal.
+    reference: "4.5. The combined rate is 1/6 + 1/9 - 1/18 = 2/9 of the tank per hour."
+    checks:
+      - type: exact
+        extract: final_answer
+        expect: "4.5"
+
+  - id: r06-sevens
+    title: Integers with a 7
+    category: reasoning
+    prompt: |
+      How many positive integers less than 1000 contain the digit 7 at least once?
+
+      End with a final line in the form `Answer: <number>`.
+    reference: "271. Of 0 to 999 there are 9^3 = 729 with no 7, so 728 of 1 to 999 have none and 999 - 728 = 271 do."
+    checks:
+      - type: exact
+        extract: final_answer
+        expect: "271"
+
+  - id: r07-clock
+    title: Clock hands at 3:15
+    category: reasoning
+    prompt: |
+      What is the smaller angle, in degrees, between the hour hand and the minute hand of an analogue clock at 3:15?
+
+      End with a final line in the form `Answer: <degrees>`.
+    reference: "7.5. The minute hand is at 90 degrees; the hour hand has moved a quarter of the way from 3 to 4, to 97.5 degrees."
+    checks:
+      - type: exact
+        extract: final_answer
+        expect: "7.5"
+
+  # -------------------------------------------------------------- constraints
+  - id: c01-bullets
+    title: Three short bullets
+    category: constraints
+    prompt: |
+      Give exactly three bullet points on why regular walking is good for you.
+
+      Rules: each bullet starts with "- ", each bullet is at most 12 words, and there is no text before or after the list.
+    checks:
+      - type: regex
+        label: Exactly three bullets, nothing else
+        pattern: '- [^\n]+(?:\n- [^\n]+){2}'
+        fullmatch: true
+      - type: regex
+        label: Every bullet 12 words or fewer
+        pattern: '^- (?:\S+[ \t]+){12}\S+'
+        flags: m
+        negate: true
+
+  - id: c02-json
+    title: JSON only
+    category: constraints
+    prompt: |
+      Return a JSON object describing the capital of Japan with exactly these keys: "city" (string), "country" (string) and "population_millions" (number, metro area, one decimal place).
+
+      Output the JSON only: no code fences and no explanation.
+    checks:
+      - type: json
+        label: Parses, with the right city and country
+        extract: full
+        required: [city, country, population_millions]
+        equals: { city: Tokyo, country: Japan }
+      - type: not_contains
+        label: No code fences
+        expect: "```"
+      - type: regex
+        label: Population has one decimal place
+        pattern: '"population_millions"\s*:\s*\d+\.\d\s*[,}\n]'
+
+  - id: c03-lipogram
+    title: No letter e
+    category: constraints
+    prompt: |
+      Write one sentence of 10 to 20 words about the ocean without using the letter "e" anywhere. Output only the sentence.
+    checks:
+      - type: regex
+        label: No letter e
+        pattern: '[eE]'
+        negate: true
+      - type: length
+        unit: words
+        min: 10
+        max: 20
+      - type: length
+        label: One sentence
+        unit: sentences
+        max: 1
+
+  - id: c04-summary
+    title: Two-sentence summary
+    category: constraints
+    prompt: |
+      Summarise the paragraph below in exactly two sentences and fewer than 40 words in total. Do not use the word "very".
+
+      The town of Harlow Bay replaced its diesel ferry with a battery-electric one in the spring. The new ferry is very quiet, and regular passengers say the crossing feels calmer. It charges for twelve minutes at each end of the route, which matches the time needed to unload and board cars. Fuel costs fell by about two thirds in the first six months, although the batteries are expected to need replacing within ten years. The council says the savings will pay for a second electric ferry within eight years.
+    checks:
+      - type: length
+        label: Exactly two sentences
+        unit: sentences
+        min: 2
+        max: 2
+      - type: length
+        label: Under 40 words
+        unit: words
+        max: 39
+      - type: regex
+        label: Avoids "very"
+        pattern: '\bvery\b'
+        flags: i
+        negate: true
+
+  - id: c05-primes
+    title: Primes in brackets
+    category: constraints
+    prompt: |
+      List the first five prime numbers in ascending order as a comma-separated list inside square brackets. Output nothing else.
+    checks:
+      - type: regex
+        label: Exactly [2, 3, 5, 7, 11]
+        pattern: '\[\s*2\s*,\s*3\s*,\s*5\s*,\s*7\s*,\s*11\s*\]'
+        fullmatch: true
+
+  - id: c06-explain
+    title: Hash maps for a ten-year-old
+    category: constraints
+    prompt: |
+      Explain what a hash map is to a ten-year-old in under 60 words. Do not use the words "array", "key" or "function".
+    checks:
+      - type: length
+        label: 20 to 59 words
+        unit: words
+        min: 20
+        max: 59
+      - type: regex
+        label: Avoids the banned words
+        pattern: '\b(?:arrays?|keys?|functions?)\b'
+        flags: i
+        negate: true
+
+  - id: c07-weekdays
+    title: Weekdays, reversed
+    category: constraints
+    prompt: |
+      Write the seven days of the week in reverse alphabetical order, one per line, in capital letters, with no numbering or other text.
+    reference: "WEDNESDAY, TUESDAY, THURSDAY, SUNDAY, SATURDAY, MONDAY, FRIDAY, one per line."
+    checks:
+      - type: exact
+        case_sensitive: true
+        expect: |
+          WEDNESDAY
+          TUESDAY
+          THURSDAY
+          SUNDAY
+          SATURDAY
+          MONDAY
+          FRIDAY
+
+  # ---------------------------------------------------------------- debugging
+  - id: d01-window
+    title: Off-by-one window
+    category: debugging
+    prompt: |
+      This function should return the average of every full window of `window` consecutive values, but `moving_average([1, 2, 3, 4], 2)` returns `[1.5, 2.5]` instead of `[1.5, 2.5, 3.5]`.
+
+      ```python
+      def moving_average(values, window):
+          averages = []
+          for i in range(len(values) - window):
+              chunk = values[i:i + window]
+              averages.append(sum(chunk) / window)
+          return averages
+      ```
+
+      Find and fix the bug. Reply with the corrected function in a single ```python code block.
+    reference: "range(len(values) - window + 1)"
+    checks:
+      - type: python
+        tests: |
+          assert moving_average([1, 2, 3, 4], 2) == [1.5, 2.5, 3.5]
+          assert moving_average([5, 5, 5], 3) == [5.0]
+          assert moving_average([1, 2], 3) == []
+
+  - id: d02-default-arg
+    title: Mutable default argument
+    category: debugging
+    prompt: |
+      Calling `add_tag("a")` and then `add_tag("b")` returns `["a", "b"]` on the second call instead of `["b"]`.
+
+      ```python
+      def add_tag(tag, tags=[]):
+          tags.append(tag)
+          return tags
+      ```
+
+      Fix it so that each call without a `tags` argument starts from an empty list, and a list passed in by the caller is never modified. Reply with the corrected function in a single ```python code block.
+    reference: "Default to None, and build a new list: return [*(tags or []), tag]."
+    checks:
+      - type: python
+        tests: |
+          assert add_tag("a") == ["a"]
+          assert add_tag("b") == ["b"]
+          mine = ["x"]
+          assert add_tag("y", mine) == ["x", "y"]
+          assert mine == ["x"], "the caller's list was modified"
+
+  - id: d03-binary-search
+    title: Binary search that hangs
+    category: debugging
+    prompt: |
+      `first_index([1, 3, 3, 5], 5)` never returns. It should give the index of the first occurrence of `target` in the sorted list, or -1.
+
+      ```python
+      def first_index(items, target):
+          lo, hi = 0, len(items) - 1
+          while lo < hi:
+              mid = (lo + hi) // 2
+              if items[mid] < target:
+                  lo = mid
+              else:
+                  hi = mid
+          return lo if items and items[lo] == target else -1
+      ```
+
+      Fix the function. Reply with the corrected function in a single ```python code block.
+    reference: "lo = mid + 1"
+    checks:
+      - type: python
+        timeout: 3
+        tests: |
+          assert first_index([1, 3, 3, 5], 5) == 3
+          assert first_index([1, 3, 3, 5], 3) == 1
+          assert first_index([1, 3, 3, 5], 4) == -1
+          assert first_index([], 1) == -1
+          assert first_index([2, 2, 2], 2) == 0
+
+  - id: d04-durations
+    title: Multi-digit durations
+    category: debugging
+    prompt: |
+      `parse_duration("1h30m15s")` returns 3605 instead of 5415.
+
+      ```python
+      def parse_duration(text):
+          units = {"h": 3600, "m": 60, "s": 1}
+          total = 0
+          for i, ch in enumerate(text):
+              if ch in units:
+                  total += int(text[i - 1]) * units[ch]
+          return total
+      ```
+
+      Fix it. Reply with the corrected function in a single ```python code block.
+    reference: "Accumulate digits into a number and apply it when a unit letter arrives."
+    checks:
+      - type: python
+        tests: |
+          assert parse_duration("1h30m15s") == 5415
+          assert parse_duration("45s") == 45
+          assert parse_duration("2h") == 7200
+          assert parse_duration("10m5s") == 605
+          assert parse_duration("") == 0
+
+  - id: d05-dict-mutation
+    title: Deleting while iterating
+    category: debugging
+    prompt: |
+      `drop_empty({"a": 1, "b": None, "c": ""})` raises `RuntimeError: dictionary changed size during iteration`.
+
+      ```python
+      def drop_empty(record):
+          for key, value in record.items():
+              if value is None or value == "":
+                  del record[key]
+          return record
+      ```
+
+      Fix it so it removes values that are None or the empty string, keeps other falsy values such as 0 and False, and returns the result. Reply with the corrected function in a single ```python code block.
+    checks:
+      - type: python
+        tests: |
+          assert drop_empty({"a": 1, "b": None, "c": ""}) == {"a": 1}
+          assert drop_empty({"zero": 0, "no": False, "blank": ""}) == {"zero": 0, "no": False}
+          assert drop_empty({}) == {}
+
+  - id: d06-late-binding
+    title: Late-binding closures
+    category: debugging
+    prompt: |
+      What does this program print, and why?
+
+      ```python
+      handlers = []
+      for i in range(3):
+          handlers.append(lambda: i * 10)
+      print([h() for h in handlers])
+      ```
+
+      Explain in one or two sentences, then end with a final line in the form `Answer: <the exact printed output>`.
+    reference: "[20, 20, 20]. Each lambda looks up i when it is called, after the loop has left i at 2."
+    checks:
+      - type: regex
+        label: Prints [20, 20, 20]
+        extract: final_answer
+        pattern: '\[\s*20\s*,\s*20\s*,\s*20\s*\]'
+        fullmatch: true

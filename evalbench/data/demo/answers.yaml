@@ -1,0 +1,614 @@
+# Scripted answers for the demo workspace. The demo models are fictional; each one picks among
+# these variants run by run, and the real check engine grades whatever it picked.
+#   q     how a careful human would rate it: 3 strong, 2 correct but thin, 1 weak, 0 wrong
+#   note  what a rater would say about it, used to write the demo justifications
+#   flags issues a rater would tick
+
+r01-ages:
+  - id: full
+    q: 3
+    note: sets up 3t + 12 = 2(t + 12), gets 36 and checks it against both conditions
+    text: |
+      Let Teo's age be t, so Mira is 3t.
+
+      In 12 years: 3t + 12 = 2(t + 12)
+      3t + 12 = 2t + 24
+      t = 12
+
+      Mira is 3 × 12 = 36. Check: in 12 years she is 48 and Teo is 24, exactly twice his age.
+
+      Answer: 36
+  - id: brief
+    q: 3
+    note: solves it in two clean lines and lands on 36
+    text: |
+      Teo = t, Mira = 3t. Then 3t + 12 = 2(t + 12), so t = 12 and Mira is 36.
+
+      Answer: 36
+  - id: terse
+    q: 2
+    note: gives 36 with no working at all
+    text: "Answer: 36"
+  - id: slip
+    q: 0
+    note: slips in the algebra (t = 8) and answers 24
+    flags: [factual_error]
+    text: |
+      Let Teo be t, so Mira is 3t. In 12 years Mira is twice Teo: 3t + 12 = 2(t + 12), which gives t = 8.
+
+      So Mira is 3 × 8 = 24.
+
+      Answer: 24
+
+r02-standups:
+  - id: full
+    q: 3
+    note: counts 14 gaps, not 15, and sees that 126 days is exactly 18 weeks
+    text: |
+      The 15th stand-up comes 14 intervals after the first, so 14 × 9 = 126 days later.
+      126 = 18 × 7, a whole number of weeks, so it lands on the same weekday as the first.
+
+      Answer: Monday
+  - id: brief
+    q: 3
+    note: works out 126 days and 126 mod 7 = 0
+    text: |
+      14 gaps × 9 days = 126 days; 126 mod 7 = 0.
+
+      Answer: Monday
+  - id: fencepost
+    q: 0
+    note: counts 15 intervals instead of 14 and ends on Wednesday
+    flags: [factual_error]
+    text: |
+      15 stand-ups at 9-day intervals is 15 × 9 = 135 days. 135 mod 7 = 2, so two days after Monday.
+
+      Answer: Wednesday
+  - id: guess
+    q: 0
+    note: asserts an answer without any arithmetic, and it is wrong
+    flags: [factual_error]
+    text: |
+      Every 9 days shifts the weekday by two, so after a few cycles it comes round to a Tuesday.
+
+      Answer: Tuesday
+
+r03-seating:
+  - id: full
+    q: 3
+    note: tests both places for Ben, rules each one out cleanly and finds Dev, Ben, Ana, Chloe
+    text: |
+      Ben must be in chair 2 or 3.
+
+      - Ben in 3: Dev is in 2 or 4. Ana and Chloe need two adjacent free chairs with Ana on the left. Dev in 4 leaves chairs 1 and 2, but Ana cannot be in chair 1. Dev in 2 leaves 1 and 4, which are not adjacent. No solution.
+      - Ben in 2: Dev is in 1 or 3. Dev in 3 leaves 1 and 4, not adjacent. Dev in 1 leaves 3 and 4: Ana 3, Chloe 4. This works.
+
+      The row is Dev, Ben, Ana, Chloe.
+
+      Answer: Dev
+  - id: brief
+    q: 3
+    note: gives the full arrangement and why the other placement fails
+    text: |
+      Ben in chair 3 fails (Ana would have to take chair 1), so Ben is in 2, Dev in 1, Ana in 3 and Chloe in 4.
+
+      Answer: Dev
+  - id: wrong
+    q: 0
+    note: drops the "Ana is not in chair 1" clue and seats Ana first
+    flags: [factual_error, ignores_constraint]
+    text: |
+      Put Ana and Chloe together on the left: Ana 1, Chloe 2. Ben goes in 3 and Dev in 4, next to Ben.
+
+      Answer: Ana
+
+r04-marbles:
+  - id: full
+    q: 3
+    note: adds both cases, 12/90 + 30/90, and reduces 42/90 to 7/15
+    text: |
+      Both red: (4/10) × (3/9) = 12/90
+      Both blue: (6/10) × (5/9) = 30/90
+      Same colour: 42/90 = 7/15
+
+      Answer: 7/15
+  - id: unreduced
+    q: 1
+    note: gets the right value but leaves it as 14/30, which is not in lowest terms
+    flags: [ignores_constraint]
+    text: |
+      P(RR) = 4/10 × 3/9 and P(BB) = 6/10 × 5/9. Adding gives 14/30.
+
+      Answer: 14/30
+  - id: replacement
+    q: 0
+    note: treats the draws as with replacement and gets 13/25
+    flags: [factual_error]
+    text: |
+      P(both red) = (4/10)² = 0.16 and P(both blue) = (6/10)² = 0.36, so 0.52.
+
+      Answer: 13/25
+
+r05-tank:
+  - id: full
+    q: 3
+    note: combines the rates to 2/9 of the tank per hour and inverts it to 4.5
+    text: |
+      Rates per hour: A fills 1/6, B fills 1/9, the drain removes 1/18.
+      Net: 3/18 + 2/18 − 1/18 = 4/18 = 2/9 of the tank per hour.
+      Time: 9/2 = 4.5 hours.
+
+      Answer: 4.5
+  - id: brief
+    q: 3
+    note: gets the net rate of 2/9 per hour and 4.5 hours in one line
+    text: |
+      1/6 + 1/9 − 1/18 = 2/9 per hour, so 4.5 hours.
+
+      Answer: 4.5
+  - id: drain
+    q: 0
+    note: adds the drain instead of subtracting it and answers 3
+    flags: [factual_error]
+    text: |
+      1/6 + 1/9 + 1/18 = 6/18 = 1/3 of the tank per hour, so it takes 3 hours.
+
+      Answer: 3
+
+r06-sevens:
+  - id: full
+    q: 3
+    note: counts the complement (728 numbers with no 7) and subtracts from 999
+    text: |
+      Count the numbers from 1 to 999 with no 7 and subtract.
+      Treat each as three digits from 000 to 999: 9 choices per digit gives 9³ = 729 strings with no 7, including 000.
+      So 728 numbers from 1 to 999 have no 7, and 999 − 728 = 271 have at least one.
+
+      Answer: 271
+  - id: brief
+    q: 3
+    note: uses 1000 − 9³ = 271 and notes that 000 is not a 7 anyway
+    text: |
+      Of the 1,000 three-digit strings 000 to 999, 9³ = 729 contain no 7, so 271 do; 000 has no 7, so all 271 are positive.
+
+      Answer: 271
+  - id: overlap
+    q: 0
+    note: adds 100 + 100 + 100 and double counts the overlaps
+    flags: [factual_error]
+    text: |
+      A 7 can be in the hundreds, tens or units place, and each place has 100 numbers with a 7 there, so 300.
+
+      Answer: 300
+
+r07-clock:
+  - id: full
+    q: 3
+    note: moves the hour hand a quarter of the way to 4 and gets 7.5 degrees
+    text: |
+      The minute hand at 15 minutes points at 90°.
+      The hour hand moves 30° per hour, and at a quarter past it has gone a quarter of the way from 3 to 4: 90° + 7.5° = 97.5°.
+      The angle between them is 7.5°.
+
+      Answer: 7.5
+  - id: brief
+    q: 3
+    note: notes the hour hand drifts 0.5 degrees a minute and gets 7.5
+    text: |
+      The hour hand drifts 0.5° per minute, so at 3:15 it is 7.5° past the 3, where the minute hand points.
+
+      Answer: 7.5
+  - id: zero
+    q: 0
+    note: assumes both hands point at the 3 and answers 0
+    flags: [factual_error]
+    text: |
+      At 3:15 the minute hand points at the 3, and so does the hour hand, so they overlap.
+
+      Answer: 0
+
+c01-bullets:
+  - id: clean
+    q: 3
+    note: gives three tight bullets with nothing around them
+    text: |
+      - Strengthens your heart and lowers blood pressure over time.
+      - Lifts your mood and helps you sleep more deeply.
+      - Keeps joints moving and builds bone density without strain.
+  - id: plain
+    q: 3
+    note: keeps to three bullets under twelve words each
+    text: |
+      - It improves heart health and circulation.
+      - It reduces stress and improves mood.
+      - It helps with weight management and joint health.
+  - id: preamble
+    q: 1
+    note: opens with a sentence of preamble the rules forbid
+    flags: [ignores_constraint]
+    text: |
+      Here are three benefits of regular walking:
+
+      - Improves cardiovascular fitness and circulation.
+      - Boosts mood and reduces anxiety.
+      - Supports healthy weight and strong bones.
+  - id: long
+    q: 1
+    note: runs the second bullet well past twelve words
+    flags: [ignores_constraint, verbose]
+    text: |
+      - Walking strengthens your heart.
+      - It gives your mind a break from screens, lowers stress hormones and often helps you think through problems more clearly.
+      - It keeps your joints mobile.
+
+c02-json:
+  - id: clean
+    q: 3
+    note: returns bare JSON with all three keys and one decimal place
+    text: '{"city": "Tokyo", "country": "Japan", "population_millions": 37.4}'
+  - id: pretty
+    q: 3
+    note: returns valid, readable JSON and nothing else
+    text: |
+      {
+        "city": "Tokyo",
+        "country": "Japan",
+        "population_millions": 37.1
+      }
+  - id: fenced
+    q: 1
+    note: wraps the JSON in a code fence after being told not to
+    flags: [formatting, ignores_constraint]
+    text: |
+      ```json
+      {"city": "Tokyo", "country": "Japan", "population_millions": 37.4}
+      ```
+  - id: chatty
+    q: 1
+    note: adds a sentence of explanation and writes the population as an integer
+    flags: [ignores_constraint, formatting]
+    text: |
+      Here is the JSON you asked for:
+      {"city": "Tokyo", "country": "Japan", "population_millions": 37}
+
+c03-lipogram:
+  - id: good
+    q: 3
+    note: writes a vivid sentence with no letter e in the right length
+    text: A vast, cold, dark mass of salt and foam roams around this world, day and night.
+  - id: good2
+    q: 3
+    note: keeps to one sentence, no e, and still sounds natural
+    text: Calm or wild, it holds coral, sharks, squid and stars of light at its floor.
+  - id: slip
+    q: 0
+    note: lets several words with an e slip through, starting with "blue"
+    flags: [ignores_constraint]
+    text: Big blue waves roll in from the far horizon, slapping cliffs and rocky shores.
+  - id: two
+    q: 1
+    note: avoids the letter but writes two sentences
+    flags: [ignores_constraint]
+    text: Salt and wind drift on a vast, dark plain. It is calm, cold and still.
+
+c04-summary:
+  - id: good
+    q: 3
+    note: covers the switch, the charging and the savings in two short sentences
+    text: Harlow Bay swapped its diesel ferry for a quiet battery-electric one that charges while cars load. Fuel costs fell by two thirds, and the savings should fund a second electric ferry.
+  - id: good2
+    q: 3
+    note: keeps both sentences under the limit and keeps the battery caveat
+    text: Harlow Bay's new battery-electric ferry is quiet and recharges during loading. It cut fuel costs by two thirds, though its batteries will need replacing within ten years.
+  - id: very
+    q: 1
+    note: copies "very quiet" from the source, which the prompt banned
+    flags: [ignores_constraint]
+    text: Harlow Bay's new electric ferry is very quiet and charges during loading. Fuel costs fell by two thirds and will fund a second ferry.
+  - id: three
+    q: 1
+    note: uses three sentences when exactly two were asked for
+    flags: [ignores_constraint]
+    text: Harlow Bay now runs a battery-electric ferry. It charges for twelve minutes at each end. Lower fuel costs will pay for a second one.
+
+c05-primes:
+  - id: good
+    q: 3
+    note: outputs exactly [2, 3, 5, 7, 11]
+    text: "[2, 3, 5, 7, 11]"
+  - id: compact
+    q: 3
+    note: outputs the list with no extra text
+    text: "[2,3,5,7,11]"
+  - id: one
+    q: 0
+    note: starts the list at 1, which is not prime
+    flags: [factual_error]
+    text: "[1, 2, 3, 5, 7]"
+  - id: prose
+    q: 1
+    note: wraps the list in a sentence
+    flags: [ignores_constraint]
+    text: "The first five primes are [2, 3, 5, 7, 11]."
+
+c06-explain:
+  - id: good
+    q: 3
+    note: uses a lockers analogy a child would get and avoids every banned word
+    text: Imagine a wall of lockers, each with a name on it. To store your lunch, you look up your name and go straight to your locker, without checking every other one. A hash map does that for a computer, so it can find things almost instantly.
+  - id: good2
+    q: 3
+    note: explains it with a labelled-boxes picture in plain words
+    text: A hash map is like a big set of labelled boxes. You give each thing a label, and a quick trick turns that label into a box number, so the computer can jump straight to the right box instead of searching them all.
+  - id: banned
+    q: 1
+    note: uses the word "key" twice, which the prompt banned
+    flags: [ignores_constraint]
+    text: A hash map is like a dictionary. Every word is a key, and the meaning is the value. When you know the key, you can find the value right away without reading every page.
+  - id: jargon
+    q: 1
+    note: slips into "hash function" and "array", too technical for the reader
+    flags: [ignores_constraint]
+    text: A hash map stores pairs of things. It runs your label through a hash function to get a number, then uses that number as a position in an array, so lookups are fast.
+
+c07-weekdays:
+  - id: good
+    q: 3
+    note: gets the order exactly right in capitals, one per line
+    text: |
+      WEDNESDAY
+      TUESDAY
+      THURSDAY
+      SUNDAY
+      SATURDAY
+      MONDAY
+      FRIDAY
+  - id: swap
+    q: 0
+    note: puts THURSDAY before TUESDAY
+    flags: [factual_error]
+    text: |
+      WEDNESDAY
+      THURSDAY
+      TUESDAY
+      SUNDAY
+      SATURDAY
+      MONDAY
+      FRIDAY
+  - id: numbered
+    q: 1
+    note: numbers the lines when told not to
+    flags: [formatting, ignores_constraint]
+    text: |
+      1. WEDNESDAY
+      2. TUESDAY
+      3. THURSDAY
+      4. SUNDAY
+      5. SATURDAY
+      6. MONDAY
+      7. FRIDAY
+
+d01-window:
+  - id: good
+    q: 3
+    note: fixes the range to len(values) - window + 1 and explains the off-by-one
+    text: |
+      The loop stops one window early: there are `len(values) - window + 1` full windows, not `len(values) - window`.
+
+      ```python
+      def moving_average(values, window):
+          averages = []
+          for i in range(len(values) - window + 1):
+              chunk = values[i:i + window]
+              averages.append(sum(chunk) / window)
+          return averages
+      ```
+  - id: good2
+    q: 3
+    note: rewrites it as a comprehension with the corrected bound
+    text: |
+      ```python
+      def moving_average(values, window):
+          return [sum(values[i:i + window]) / window
+                  for i in range(len(values) - window + 1)]
+      ```
+      The range needs `+ 1` so the last full window is included.
+  - id: partial
+    q: 0
+    note: changes the slice instead of the range, so windows run off the end
+    flags: [factual_error]
+    text: |
+      The slice should include one more value:
+
+      ```python
+      def moving_average(values, window):
+          averages = []
+          for i in range(len(values) - window):
+              chunk = values[i:i + window + 1]
+              averages.append(sum(chunk) / window)
+          return averages
+      ```
+
+d02-default-arg:
+  - id: good
+    q: 3
+    note: defaults to None and builds a new list, so the caller's list is untouched
+    text: |
+      A default list is created once and shared between calls. Default to `None` and build a new list each time:
+
+      ```python
+      def add_tag(tag, tags=None):
+          return [*(tags or []), tag]
+      ```
+  - id: good2
+    q: 3
+    note: copies the input list before appending, which meets both requirements
+    text: |
+      ```python
+      def add_tag(tag, tags=None):
+          result = list(tags) if tags is not None else []
+          result.append(tag)
+          return result
+      ```
+      Copying with `list(tags)` keeps the caller's list unchanged.
+  - id: mutates
+    q: 1
+    note: fixes the shared default but still appends to the caller's list
+    flags: [ignores_constraint]
+    text: |
+      Use `None` as the default:
+
+      ```python
+      def add_tag(tag, tags=None):
+          if tags is None:
+              tags = []
+          tags.append(tag)
+          return tags
+      ```
+
+d03-binary-search:
+  - id: good
+    q: 3
+    note: changes lo = mid to lo = mid + 1 and says why the loop stalled
+    text: |
+      When `hi = lo + 1` and `items[mid] < target`, `lo = mid` leaves `lo` unchanged, so the loop never ends. Move past `mid`:
+
+      ```python
+      def first_index(items, target):
+          lo, hi = 0, len(items) - 1
+          while lo < hi:
+              mid = (lo + hi) // 2
+              if items[mid] < target:
+                  lo = mid + 1
+              else:
+                  hi = mid
+          return lo if items and items[lo] == target else -1
+      ```
+  - id: bisect
+    q: 3
+    note: replaces it with bisect_left, which is correct and simpler
+    text: |
+      ```python
+      from bisect import bisect_left
+
+      def first_index(items, target):
+          i = bisect_left(items, target)
+          return i if i < len(items) and items[i] == target else -1
+      ```
+  - id: wrong
+    q: 0
+    note: changes hi instead of lo, so it still hangs
+    flags: [factual_error]
+    text: |
+      ```python
+      def first_index(items, target):
+          lo, hi = 0, len(items) - 1
+          while lo < hi:
+              mid = (lo + hi) // 2
+              if items[mid] < target:
+                  lo = mid
+              else:
+                  hi = mid - 1
+          return lo if items and items[lo] == target else -1
+      ```
+
+d04-durations:
+  - id: good
+    q: 3
+    note: accumulates digits into a number before each unit letter
+    text: |
+      `text[i - 1]` only reads one digit. Accumulate the number instead:
+
+      ```python
+      def parse_duration(text):
+          units = {"h": 3600, "m": 60, "s": 1}
+          total, number = 0, ""
+          for ch in text:
+              if ch.isdigit():
+                  number += ch
+              elif ch in units:
+                  total += int(number) * units[ch]
+                  number = ""
+          return total
+      ```
+  - id: regex
+    q: 3
+    note: parses value-unit pairs with a regex, which handles every case
+    text: |
+      ```python
+      import re
+
+      def parse_duration(text):
+          units = {"h": 3600, "m": 60, "s": 1}
+          return sum(int(n) * units[u] for n, u in re.findall(r"(\d+)([hms])", text))
+      ```
+  - id: wrong
+    q: 0
+    note: reads two characters before each unit, which breaks single digits
+    flags: [factual_error]
+    text: |
+      ```python
+      def parse_duration(text):
+          units = {"h": 3600, "m": 60, "s": 1}
+          total = 0
+          for i, ch in enumerate(text):
+              if ch in units:
+                  total += int(text[i - 2:i]) * units[ch]
+          return total
+      ```
+
+d05-dict-mutation:
+  - id: good
+    q: 3
+    note: builds a new dict with a comprehension and keeps 0 and False
+    text: |
+      You can't delete from a dict while iterating over it. Build a new one:
+
+      ```python
+      def drop_empty(record):
+          return {k: v for k, v in record.items() if v is not None and v != ""}
+      ```
+  - id: good2
+    q: 3
+    note: iterates over a copy of the items and deletes safely in place
+    text: |
+      ```python
+      def drop_empty(record):
+          for key, value in list(record.items()):
+              if value is None or value == "":
+                  del record[key]
+          return record
+      ```
+  - id: falsy
+    q: 1
+    note: filters on truthiness, which also drops 0 and False
+    flags: [ignores_constraint]
+    text: |
+      ```python
+      def drop_empty(record):
+          return {k: v for k, v in record.items() if v}
+      ```
+
+d06-late-binding:
+  - id: good
+    q: 3
+    note: explains that every lambda reads i after the loop ends, so all return 20
+    text: |
+      Each lambda looks up `i` when it is called, not when it is created. By then the loop has finished and `i` is 2, so every handler returns 20.
+
+      Answer: [20, 20, 20]
+  - id: brief
+    q: 3
+    note: names late binding and gives the exact output
+    text: |
+      Late binding: the closures share one `i`, which is 2 when they run.
+
+      Answer: [20, 20, 20]
+  - id: naive
+    q: 0
+    note: assumes each lambda captured its own value of i
+    flags: [factual_error]
+    text: |
+      Each lambda multiplies its loop value by 10, giving 0, 10 and 20.
+
+      Answer: [0, 10, 20]
