@@ -16,3 +16,4 @@ docs/readme/.raw/
 *.egg-info/
 dist/
 .e2e-*/
+*.tsbuildinfo
