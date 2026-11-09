@@ -7,7 +7,7 @@
 - Charts, the head-to-head ramp, model colours, code, the YAML editor, the judging cards, the reveal and the sign-in card each have their own dark values rather than an inverted copy. Model colours take the categorical palette's validated dark step.
 - Accessibility: axe runs on every screen in both themes in the browser tests, including the sign-in steps, a marked-up judging card, the reveal and the theme menu. That run fixed four things that were already there in light: verdict buttons whose spoken name differed from their text, an unlabelled run picker and suite filter, code blocks that could not be scrolled from the keyboard, and a muted grey that fell just short of AA on segmented controls. Chart end labels are now set in ink beside a stroke of the model's colour, and reduced motion lands every animation at once.
 - A few light-theme values moved for contrast too: the head-to-head cells from 60% to 80% now use ink on their pale azure, zero regressions on the overview read at 3:1 instead of fading out, and code comments are a shade darker.
-- The menu theme toggle opens from the arrow keys as well as Enter, and on a phone the top bar's sideways-scrolling menu keeps the page you are on in view.
+- The theme menu also opens from the arrow keys, and on a phone the top bar's sideways-scrolling menu keeps the page you are on in view.
 
 ## 1.1.0
 
