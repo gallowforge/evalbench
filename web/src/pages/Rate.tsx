@@ -7,6 +7,7 @@ import { Markdown } from '../components/Markdown';
 import { cx, Empty, ErrorNote, Loading, ModelDot, PageHeader, PenRing, PenTick, Segmented } from '../components/ui';
 import { plural } from '../lib/format';
 import { useMeta, useRater } from '../lib/hooks';
+import { tone } from '../lib/theme';
 
 type Side = 'a' | 'b';
 
@@ -87,7 +88,7 @@ function ScoreRow({
               className={cx(
                 'num h-[30px] w-[30px] rounded-[7px] border text-[13px] font-semibold transition-all',
                 on
-                  ? 'border-transparent text-white shadow-[0_2px_6px_-2px_rgba(23,24,28,0.4)]'
+                  ? 'border-transparent text-on-side shadow-[0_2px_6px_-2px_rgb(var(--shade)/0.4)]'
                   : under
                     ? 'border-transparent'
                     : 'border-line-2 bg-panel text-faint hover:border-ink/40 hover:text-ink',
@@ -114,7 +115,12 @@ function ScopePicker({ value, onChange }: { value: string; onChange: (v: string)
   const runs = useQuery({ queryKey: ['runs'], queryFn: () => api.get<RunListItem[]>('/runs') });
   return (
     <div className="relative">
-      <select className="input h-10 appearance-none py-0 pr-9 text-[14px] font-medium" value={value} onChange={(e) => onChange(e.target.value)}>
+      <select
+        aria-label="What to judge"
+        className="input h-10 appearance-none py-0 pr-9 text-[14px] font-medium"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
         <optgroup label="Latest answer per model">
           {overview.data?.rating.map((r) => (
             <option key={r.suite_id} value={`suite:${r.suite_id}`}>
@@ -264,7 +270,7 @@ function Reveal({ rater, runId, suiteId }: { rater: string; runId?: number; suit
                   <span className="slab text-[24px] leading-none font-semibold">{Math.round(share * 100)}%</span>
                 </div>
                 <div className="mt-2 h-[6px] overflow-hidden rounded-full bg-ink/[0.07]">
-                  <div className="h-full rounded-full" style={{ width: `${share * 100}%`, background: m?.color }} />
+                  <div className="h-full rounded-full" style={{ width: `${share * 100}%`, background: tone(m?.color) }} />
                 </div>
                 <div className="mt-1.5 text-[12.5px] text-muted">
                   picked in {Number.isInteger(t.wins) ? t.wins : t.wins.toFixed(1)} of {t.games}
@@ -313,7 +319,7 @@ function TastingCard({
     <article
       className={cx(
         'card animate-deal relative flex flex-col overflow-hidden transition-[border-color,box-shadow] duration-300',
-        chosen && 'border-ink/60 shadow-[0_18px_40px_-24px_rgba(23,24,28,0.55)]',
+        chosen && 'border-ink/60 shadow-[0_18px_40px_-24px_rgb(var(--shade)/0.55)]',
       )}
       style={{ ['--deal-rot' as string]: side === 'a' ? '-1.2deg' : '1.2deg', animationDelay: side === 'a' ? '0ms' : '70ms' }}
     >
@@ -324,7 +330,7 @@ function TastingCard({
         </span>
         <span className="text-[13px] font-medium text-muted">Answer {letter}</span>
         {chosen && (
-          <span className="ml-auto flex items-center gap-1.5 text-[13px] font-semibold text-mark">
+          <span className="ml-auto flex items-center gap-1.5 text-[13px] font-semibold text-mark-ink">
             <PenTick size={20} /> your pick
           </span>
         )}
@@ -592,7 +598,6 @@ function Rater({
                   key={s.value}
                   type="button"
                   aria-pressed={on}
-                  aria-label={`Verdict: ${s.label}`}
                   onClick={() => setPreference(s.value)}
                   className="group relative flex flex-col items-center gap-2.5 pb-1"
                 >
@@ -611,9 +616,12 @@ function Rater({
                     )}
                     style={s.side && on ? { color: sideColor(s.side) } : undefined}
                   >
+                    <span className="sr-only">Verdict: </span>
                     {s.label}
                   </span>
-                  <span className="kbd hidden h-[18px] min-w-[18px] text-[10px] md:inline-flex">{i + 1}</span>
+                  <span aria-hidden className="kbd hidden h-[18px] min-w-[18px] text-[10px] md:inline-flex">
+                    {i + 1}
+                  </span>
                   {on && <PenRing className="-inset-x-1 -top-3 -bottom-1" />}
                 </button>
               );

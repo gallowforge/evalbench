@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Board, ModelRef } from '../api';
 import { pct, shortDate } from '../lib/format';
 import { ModelDot } from './ui';
+import { tone } from '../lib/theme';
 
 /** Pass rate per model across runs: one line per model, labelled at its end, with a hover rule. */
 export function HistoryChart({ board, height = 260 }: { board: Board; height?: number }) {
@@ -78,7 +79,7 @@ export function HistoryChart({ board, height = 260 }: { board: Board; height?: n
         <svg width={w} height={h} className="block" role="img" aria-label="Pass rate by run for each model">
           {[0, 0.25, 0.5, 0.75, 1].map((t) => (
             <g key={t}>
-              <line x1={pad.l} x2={w - pad.r} y1={y(t)} y2={y(t)} stroke="#17181c" strokeOpacity={t === 0 ? 0.22 : 0.07} />
+              <line x1={pad.l} x2={w - pad.r} y1={y(t)} y2={y(t)} className="stroke-ink" strokeOpacity={t === 0 ? 0.22 : 0.07} />
               <text x={pad.l - 10} y={y(t) + 4} textAnchor="end" className="num fill-faint text-[11px]">
                 {t * 100}%
               </text>
@@ -90,33 +91,53 @@ export function HistoryChart({ board, height = 260 }: { board: Board; height?: n
             </text>
           ))}
           {hover !== null && (
-            <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + innerH} stroke="#17181c" strokeOpacity={0.25} strokeDasharray="3 3" />
+            <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + innerH} className="stroke-ink" strokeOpacity={0.25} strokeDasharray="3 3" />
           )}
           {series.map(({ model, pts }) => (
             <g key={model.id}>
               <path
                 d={pts.map((p, k) => `${k ? 'L' : 'M'}${x(p.i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')}
                 fill="none"
-                stroke={model.color}
+                style={{ stroke: tone(model.color) }}
                 strokeWidth={2.5}
                 strokeLinejoin="round"
                 strokeLinecap="round"
               />
               {pts.map((p) => (
-                <circle key={p.i} cx={x(p.i)} cy={y(p.v)} r={hover === p.i ? 5 : 3.5} fill={model.color} stroke="#fffdf8" strokeWidth={2} />
+                <circle
+                  key={p.i}
+                  cx={x(p.i)}
+                  cy={y(p.v)}
+                  r={hover === p.i ? 5 : 3.5}
+                  className="stroke-panel"
+                  style={{ fill: tone(model.color) }}
+                  strokeWidth={2}
+                />
               ))}
             </g>
           ))}
           {labelled &&
             ends.map((e) => (
-              <text key={e.model.id} x={w - pad.r + 12} y={e.y + 4} className="text-[12px] font-semibold" fill={e.model.color}>
-                {e.model.label}
-              </text>
+              // The label is set in ink; the short stroke beside it carries the model's colour.
+              <g key={e.model.id}>
+                <line
+                  x1={w - pad.r + 10}
+                  x2={w - pad.r + 20}
+                  y1={e.y}
+                  y2={e.y}
+                  style={{ stroke: tone(e.model.color) }}
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                />
+                <text x={w - pad.r + 26} y={e.y + 4} className="fill-ink-2 text-[12px] font-semibold">
+                  {e.model.label}
+                </text>
+              </g>
             ))}
         </svg>
         {hp && hover !== null && (
           <div
-            className="pointer-events-none absolute z-10 min-w-[200px] rounded-[12px] border border-line bg-panel px-3.5 py-3 shadow-[0_16px_40px_-16px_rgba(23,24,28,0.45)]"
+            className="pointer-events-none absolute z-10 min-w-[200px] rounded-[12px] border border-line bg-panel px-3.5 py-3 shadow-[0_16px_40px_-16px_rgb(var(--shade)/0.45)]"
             style={{ left: Math.min(x(hover) + 14, w - 220), top: 6 }}
           >
             <div className="mb-2 text-[12px] text-muted">
@@ -145,7 +166,7 @@ export function Legend({ models }: { models: ModelRef[] }) {
     <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
       {models.map((m) => (
         <span key={m.id} className="inline-flex items-center gap-2 text-[13px] text-ink-2">
-          <span className="h-[3px] w-4 rounded-full" style={{ background: m.color }} />
+          <span className="h-[3px] w-4 rounded-full" style={{ background: tone(m.color) }} />
           {m.label}
         </span>
       ))}
@@ -161,8 +182,8 @@ export function Sparkline({ values, color, width = 104, height = 30 }: { values:
   const last = values[values.length - 1];
   return (
     <svg width={width} height={height} aria-hidden>
-      <path d={d} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={x(values.length - 1)} cy={y(last)} r={3} fill={color} stroke="#fffdf8" strokeWidth={1.5} />
+      <path d={d} fill="none" style={{ stroke: tone(color) }} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={x(values.length - 1)} cy={y(last)} r={3} className="stroke-panel" style={{ fill: tone(color) }} strokeWidth={1.5} />
     </svg>
   );
 }
@@ -191,7 +212,7 @@ export function CategoryBars({ board }: { board: Board }) {
                   <div className="relative h-[8px] flex-1 rounded-full bg-ink/[0.06]">
                     <div
                       className="h-full rounded-full transition-[width,opacity] duration-500"
-                      style={{ width: `${Math.max(v * 100, 1.5)}%`, background: m.color, opacity: hover && hover !== key ? 0.4 : 1 }}
+                      style={{ width: `${Math.max(v * 100, 1.5)}%`, background: tone(m.color), opacity: hover && hover !== key ? 0.4 : 1 }}
                     />
                   </div>
                   <span className={`num w-11 text-right text-[12.5px] font-semibold ${hover === key ? 'text-ink' : 'text-muted'}`}>{pct(v)}</span>
@@ -217,8 +238,8 @@ export function WinMatrix({ board }: { board: Board }) {
     const lowWins = c.wins / c.games;
     return { rate: a < b ? lowWins : 1 - lowWins, games: c.games };
   };
-  const ramp = ['#eef2fd', '#d3defb', '#a9bff6', '#6f93ee', '#2457f0'];
-  const shade = (v: number) => ramp[Math.min(ramp.length - 1, Math.floor(v * ramp.length))];
+  // One azure ramp, light to deep on paper and dark to bright after dark (index.css, --heat-*).
+  const step = (v: number) => Math.min(5, Math.floor(v * 5) + 1);
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-separate" style={{ borderSpacing: 4 }}>
@@ -256,9 +277,9 @@ export function WinMatrix({ board }: { board: Board }) {
                     title={c ? `${row.label} preferred over ${col.label} in ${pct(c.rate)} of ${c.games} ratings` : 'No ratings yet'}
                     className="num h-11 min-w-16 rounded-[8px] text-center text-[13.5px] font-bold transition-[filter]"
                     style={{
-                      background: c ? shade(c.rate) : '#17181c08',
-                      color: c && c.rate >= 0.6 ? '#ffffff' : '#17181c',
-                      filter: hover === key ? 'brightness(0.94)' : undefined,
+                      background: c ? `var(--heat-${step(c.rate)})` : 'var(--heat-0)',
+                      color: c && step(c.rate) === 5 ? 'var(--heat-ink-5)' : 'var(--heat-ink)',
+                      filter: hover === key ? 'var(--heat-hover)' : undefined,
                     }}
                   >
                     {c ? pct(c.rate) : '–'}
@@ -284,12 +305,12 @@ export function RatingBar({ rating, ci, domain, color }: { rating: number; ci: [
       {ci && (
         <div
           className="absolute top-1/2 h-[8px] -translate-y-1/2 rounded-full"
-          style={{ left: pos(ci[0]), width: `calc(${pos(ci[1])} - ${pos(ci[0])})`, background: color, opacity: 0.25 }}
+          style={{ left: pos(ci[0]), width: `calc(${pos(ci[1])} - ${pos(ci[0])})`, background: tone(color), opacity: 0.25 }}
         />
       )}
       <div
         className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] border-panel"
-        style={{ left: pos(rating), background: color }}
+        style={{ left: pos(rating), background: tone(color) }}
       />
     </div>
   );

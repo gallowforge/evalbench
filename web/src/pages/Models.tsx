@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api, type Model, type Preset, type Provider } from '../api';
 import { cx, Empty, ErrorNote, Field, Loading, Modal, ModelDot, PageHeader } from '../components/ui';
 import { useMeta } from '../lib/hooks';
+import { tone } from '../lib/theme';
 
 const PROVIDER_LABEL: Record<Provider, string> = { anthropic: 'Anthropic', openai: 'OpenAI', 'openai-compatible': 'OpenAI-compatible' };
 
@@ -274,7 +275,7 @@ function ModelCard({ m, onEdit }: { m: Model; onEdit: () => void }) {
   const r = test.data;
   return (
     <div className="card relative flex flex-col overflow-hidden p-5">
-      <div className="absolute inset-x-0 top-0 h-[2px]" style={{ background: m.color }} />
+      <div className="absolute inset-x-0 top-0 h-[2px]" style={{ background: tone(m.color) }} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">

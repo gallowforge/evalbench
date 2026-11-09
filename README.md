@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/gallowforge/evalbench/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gallowforge/evalbench/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="107 tests passing" src="https://img.shields.io/badge/tests-107_passing-2457f0?labelColor=17181c" />
+  <img alt="112 tests passing" src="https://img.shields.io/badge/tests-112_passing-2457f0?labelColor=17181c" />
   <img alt="One compose file" src="https://img.shields.io/badge/deploy-one_compose_file-2457f0?labelColor=17181c" />
   <img alt="Code sandbox with no network" src="https://img.shields.io/badge/code_sandbox-no_network-2457f0?labelColor=17181c" />
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-9c988f?labelColor=17181c" />
@@ -296,7 +296,7 @@ CI checks the network layer, the app's refusal and the per-run users on every pu
 | --- | --- |
 | 93 Python tests | Suite parsing and error messages, every check type, the sandbox limits (no fork, no processes, memory and output caps, empty environment, timeouts), early-exit tricks that must not pass, Bradley-Terry and bootstrap maths, pair blindness and balance, rating validation and duplicates, the API end to end through the real Anthropic and OpenAI SDKs against a local fake server, keys that cannot be redirected, first-run account setup, wrong usernames that look exactly like wrong passwords, throttling, the one-time username step for 1.0 installs, localhost-only mode, runs without a sandbox, provider errors, exports and the CLI gate. |
 | Battery consistency | Every scripted demo answer is graded by the real engine: strong answers must pass every check and weak ones must fail one, which keeps the suite, the checks and the demo honest with each other. |
-| 8 end-to-end tests | Playwright against the built app: the overview, the result matrix and side-by-side answers, a complete blind rating with no model name on screen, editing a task in the form and reading it back as YAML, the exports, and sign-in filled the way a password manager fills it, with values set directly and no key events, on a new install, a returning one and one upgrading from 1.0. |
+| 13 end-to-end tests | Playwright against the built app: the overview, the result matrix and side-by-side answers, a complete blind rating with no model name on screen, editing a task in the form and reading it back as YAML, the exports, and sign-in filled the way a password manager fills it, with values set directly and no key events, on a new install, a returning one and one upgrading from 1.0. The theme follows the device, a chosen one survives a reload, and the theme menu works from the keyboard. axe checks every screen against WCAG 2.1 AA, contrast included, in the dark theme and the light one: all eleven pages, the sign-in steps, a marked-up judging card, the reveal and the open theme menu. |
 | 6 web unit tests | Formatting of rates, durations and relative times, and the sanitiser: highlighted code survives, remote images, scripts, styles, forms and borrowed layout classes do not. |
 | Docker in CI | Builds the image, starts the compose stack, signs in with a username and password, loads the demo through the sandbox container, and proves the sandbox has no route out, is refused by the app and runs each execution as its own user. |
 | Lint and format | Ruff for Python; TypeScript strict mode and Prettier for the web app. |
@@ -352,6 +352,12 @@ The images in this README come from `npm --prefix web run readme:visuals`, which
 <summary><b>Are the screenshots real?</b></summary>
 <br />
 Yes. They are captures of the app running the bundled demo workspace. The four demo models (Nimbus Pro, Atlas 70B, Orion Mini, Vega 8B) are fictional and their answers are scripted, but every check result, pass rate, rating and regression in the images is computed by the same code that grades real runs.
+</details>
+
+<details>
+<summary><b>Is there a dark theme?</b></summary>
+<br />
+Yes. Evalbench follows your device's light or dark setting by default. Pick light, dark or system from the sun or moon in the top bar, or in Settings; the choice is remembered in that browser. Both themes keep AA contrast, and the browser tests check it on every screen.
 </details>
 
 <details>

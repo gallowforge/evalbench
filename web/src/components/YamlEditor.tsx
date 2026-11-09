@@ -6,30 +6,38 @@ import { tags as t } from '@lezer/highlight';
 import { basicSetup } from 'codemirror';
 import { useEffect, useRef } from 'react';
 
-const theme = EditorView.theme(
-  {
-    '&': { backgroundColor: '#fffdf8', color: '#17181c', height: '100%' },
-    '.cm-scroller': { fontFamily: "'JetBrains Mono Variable', ui-monospace, monospace", lineHeight: '1.7' },
-    '.cm-content': { padding: '16px 0', caretColor: '#17181c' },
-    '.cm-gutters': { backgroundColor: '#f9f6ef', color: '#b3ada2', border: 'none', borderRight: '1px solid #e6e0d3', paddingRight: '4px' },
-    '.cm-activeLine': { backgroundColor: '#17181c08' },
-    '.cm-activeLineGutter': { backgroundColor: 'transparent', color: '#6c6b67' },
-    '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': { backgroundColor: '#2457f02e !important' },
-    '.cm-cursor': { borderLeftColor: '#17181c', borderLeftWidth: '2px' },
-    '.cm-foldGutter span': { color: '#b3ada2' },
-    '.cm-matchingBracket': { backgroundColor: '#2457f01f', outline: 'none' },
+// Colours come from the page's tokens, so the editor follows the light and dark themes.
+const theme = EditorView.theme({
+  '&': { backgroundColor: 'var(--color-panel)', color: 'var(--color-ink)', height: '100%' },
+  '.cm-scroller': { fontFamily: "'JetBrains Mono Variable', ui-monospace, monospace", lineHeight: '1.7' },
+  '.cm-content': { padding: '16px 0', caretColor: 'var(--color-ink)' },
+  '.cm-gutters': {
+    backgroundColor: 'var(--color-panel-2)',
+    color: 'var(--color-faint)',
+    border: 'none',
+    borderRight: '1px solid var(--color-line)',
+    paddingRight: '4px',
   },
-  { dark: false },
-);
+  '.cm-activeLine': { backgroundColor: 'color-mix(in srgb, var(--color-ink) 3%, transparent)' },
+  '.cm-activeLineGutter': { backgroundColor: 'transparent', color: 'var(--color-ink-2)' },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': {
+    backgroundColor: 'color-mix(in srgb, var(--color-accent) 20%, transparent) !important',
+  },
+  '.cm-cursor': { borderLeftColor: 'var(--color-ink)', borderLeftWidth: '2px' },
+  '.cm-foldGutter span': { color: 'var(--color-faint)' },
+  '.cm-matchingBracket': { backgroundColor: 'color-mix(in srgb, var(--color-accent) 14%, transparent)', outline: 'none' },
+  '.cm-tooltip, .cm-panels': { backgroundColor: 'var(--color-panel)', color: 'var(--color-ink)', border: '1px solid var(--color-line-2)' },
+  '.cm-searchMatch': { backgroundColor: 'color-mix(in srgb, var(--color-warn) 25%, transparent)' },
+});
 
 const highlight = HighlightStyle.define([
-  { tag: [t.propertyName, t.definition(t.propertyName)], color: '#2457f0', fontWeight: '600' },
-  { tag: [t.string, t.special(t.string)], color: '#17181c' },
-  { tag: [t.number, t.bool, t.null], color: '#b4531c' },
-  { tag: t.comment, color: '#9c988f', fontStyle: 'italic' },
-  { tag: [t.punctuation, t.separator, t.squareBracket, t.brace], color: '#9c988f' },
-  { tag: [t.keyword, t.labelName, t.typeName], color: '#b4531c' },
-  { tag: t.content, color: '#17181c' },
+  { tag: [t.propertyName, t.definition(t.propertyName)], color: 'var(--color-accent)', fontWeight: '600' },
+  { tag: [t.string, t.special(t.string)], color: 'var(--color-ink)' },
+  { tag: [t.number, t.bool, t.null], color: 'var(--code-keyword)' },
+  { tag: t.comment, color: 'var(--code-comment)', fontStyle: 'italic' },
+  { tag: [t.punctuation, t.separator, t.squareBracket, t.brace], color: 'var(--code-comment)' },
+  { tag: [t.keyword, t.labelName, t.typeName], color: 'var(--code-keyword)' },
+  { tag: t.content, color: 'var(--color-ink)' },
 ]);
 
 export function YamlEditor({ value, onChange, minHeight = 420 }: { value: string; onChange: (v: string) => void; minHeight?: number }) {

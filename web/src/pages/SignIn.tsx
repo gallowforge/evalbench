@@ -2,6 +2,7 @@ import { KeyRound, UserRound } from 'lucide-react';
 import { type FormEvent, type ReactNode, useState } from 'react';
 import { api } from '../api';
 import { Logo } from '../components/Logo';
+import { ThemeMenu } from '../components/ThemeMenu';
 import { ErrorNote } from '../components/ui';
 
 export type SignInMode = 'setup' | 'login' | 'username';
@@ -71,10 +72,13 @@ export function SignIn({
 
   const copy = COPY[mode === 'login' && legacy ? 'legacy' : mode];
   return (
-    <div className="grid min-h-full place-items-center overflow-x-clip px-5 py-12">
+    <div className="relative grid min-h-full place-items-center overflow-x-clip px-5 py-12">
+      <div className="absolute top-4 right-4 sm:top-5 sm:right-6">
+        <ThemeMenu />
+      </div>
       <div className="relative w-full max-w-[430px] animate-rise">
         {/* The face-down card underneath: the same pair as the mark. */}
-        <div aria-hidden className="absolute inset-0 -rotate-[4deg] rounded-[18px] bg-accent shadow-[0_24px_50px_-30px_rgba(23,24,28,0.55)]" />
+        <div aria-hidden className="absolute inset-0 -rotate-[4deg] rounded-[18px] bg-azure shadow-[0_24px_50px_-30px_rgb(var(--shade)/0.55)]" />
         <form method="post" noValidate onSubmit={submit} className="card relative p-7 sm:p-9" aria-labelledby="sign-in-title">
           <div className="flex items-center gap-2.5">
             <Logo size={30} />

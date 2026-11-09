@@ -62,7 +62,7 @@ export function DataPage() {
         title="Data"
         subtitle="Everything raters and checks produce, in formats you can analyse or train on. Each record carries the prompt and both answers."
         actions={
-          <select className="input h-9 w-auto py-0" value={suite} onChange={(e) => setSuite(e.target.value)}>
+          <select aria-label="Suite" className="input h-9 w-auto py-0" value={suite} onChange={(e) => setSuite(e.target.value)}>
             <option value="">All suites</option>
             {s.data?.suites.map((x) => (
               <option key={x.id} value={x.id}>

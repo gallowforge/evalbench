@@ -30,7 +30,8 @@ const marked = new Marked({
     code({ text, lang }) {
       const language = (lang || '').split(/\s/)[0];
       const html = language && hljs.getLanguage(language) ? hljs.highlight(text, { language }).value : escape(text);
-      return `<pre><code class="hljs">${html}</code></pre>`;
+      // Focusable, so a long line can be scrolled from the keyboard too.
+      return `<pre tabindex="0"><code class="hljs">${html}</code></pre>`;
     },
   },
 });

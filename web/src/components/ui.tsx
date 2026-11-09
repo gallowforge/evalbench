@@ -1,6 +1,7 @@
 import { AlertTriangle, Check, Loader2, X } from 'lucide-react';
 import { type ReactNode, useEffect, useRef } from 'react';
 import type { ModelRef, Result, RunStatus } from '../api';
+import { tone } from '../lib/theme';
 
 export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');
@@ -57,7 +58,7 @@ export function Card({
 }
 
 export function ModelDot({ color, size = 9 }: { color: string; size?: number }) {
-  return <span className="inline-block shrink-0 rounded-full" style={{ width: size, height: size, background: color }} />;
+  return <span className="inline-block shrink-0 rounded-full" style={{ width: size, height: size, background: tone(color) }} />;
 }
 
 export function ModelChip({ model, className }: { model: ModelRef; className?: string }) {
@@ -174,7 +175,7 @@ export function ResultCell({ result, onClick, active }: { result?: Result; onCli
       title={title}
       onClick={onClick}
       className={cx(
-        'grid h-9 w-full min-w-12 place-items-center rounded-[8px] border transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-6px_rgba(23,24,28,0.4)]',
+        'grid h-9 w-full min-w-12 place-items-center rounded-[8px] border transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-6px_rgb(var(--shade)/0.4)]',
         tone,
         active && 'ring-2 ring-accent ring-offset-2 ring-offset-panel',
       )}
@@ -210,12 +211,12 @@ export function Modal({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 grid place-items-center p-4">
-      <div className="absolute inset-0 bg-ink/30 backdrop-blur-[3px]" onClick={onClose} />
+      <div className="absolute inset-0 bg-scrim backdrop-blur-[3px]" onClick={onClose} />
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
-        className="animate-rise card relative flex max-h-[88vh] w-full flex-col shadow-[0_40px_100px_-30px_rgba(23,24,28,0.55)]"
+        className="animate-rise card relative flex max-h-[88vh] w-full flex-col shadow-[0_40px_100px_-30px_rgb(var(--shade)/0.55)]"
         style={{ maxWidth: width }}
       >
         <div className="flex items-center justify-between border-b border-line px-6 py-4">
@@ -263,7 +264,7 @@ export function Segmented<T extends string | number>({
           className={cx(
             'rounded-[8px] font-semibold transition-all',
             size === 'sm' ? 'h-7 px-3 text-[12.5px]' : 'h-8 px-3.5 text-[13.5px]',
-            value === o.value ? 'bg-panel text-ink shadow-[0_1px_3px_rgba(23,24,28,0.15)]' : 'text-muted hover:text-ink',
+            value === o.value ? 'bg-panel text-ink shadow-[0_1px_3px_rgb(var(--shade)/0.15)]' : 'text-muted hover:text-ink',
           )}
         >
           {o.label}

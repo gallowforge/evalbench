@@ -43,7 +43,7 @@ function clean<T extends object>(obj: T): T {
 function Toggle({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
   return (
     <label className="inline-flex cursor-pointer select-none items-center gap-2 text-[12.5px] text-ink-2">
-      <input type="checkbox" className="h-3.5 w-3.5 accent-[#17181c]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <input type="checkbox" className="h-3.5 w-3.5 accent-ink" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {children}
     </label>
   );
@@ -531,7 +531,7 @@ export function SuiteDetail({ id }: { id: string }) {
       )}
 
       {dirty && (
-        <div className="sticky bottom-4 z-20 mt-5 flex items-center justify-between gap-3 rounded-[14px] border border-line-2 bg-panel px-5 py-3 shadow-[0_20px_50px_-24px_rgba(23,24,28,0.5)] backdrop-blur animate-rise">
+        <div className="sticky bottom-4 z-20 mt-5 flex items-center justify-between gap-3 rounded-[14px] border border-line-2 bg-panel px-5 py-3 shadow-[0_20px_50px_-24px_rgb(var(--shade)/0.5)] backdrop-blur animate-rise">
           <span className="text-[13px] text-ink-2">Unsaved changes{tab !== 'yaml' ? ' · saving rewrites the YAML from the form' : ''}</span>
           <div className="flex gap-2">
             <button

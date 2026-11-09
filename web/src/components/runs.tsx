@@ -6,6 +6,7 @@ import { api, type Model, type RunListItem, type SuiteSummary } from '../api';
 import { ago, duration, pct } from '../lib/format';
 import { useNow } from '../lib/hooks';
 import { cx, ErrorNote, Field, ModelDot, Modal, StatusPill } from './ui';
+import { tone } from '../lib/theme';
 
 export function RunRow({ run }: { run: RunListItem; compact?: boolean }) {
   const now = useNow();
@@ -37,7 +38,7 @@ export function RunRow({ run }: { run: RunListItem; compact?: boolean }) {
               <span className="slab text-[17px] leading-none font-semibold text-ink">{pct(m.pass_rate)}</span>
             </div>
             <div className="mt-2 h-[4px] overflow-hidden rounded-full bg-ink/[0.07]">
-              <div className="h-full rounded-full" style={{ width: `${(m.pass_rate ?? 0) * 100}%`, background: m.color }} />
+              <div className="h-full rounded-full" style={{ width: `${(m.pass_rate ?? 0) * 100}%`, background: tone(m.color) }} />
             </div>
           </div>
         ))}

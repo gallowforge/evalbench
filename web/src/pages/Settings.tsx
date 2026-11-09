@@ -2,8 +2,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, KeyRound, LogOut, ShieldCheck, Sparkles, XCircle } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { api } from '../api';
-import { Card, ErrorNote, Field, Loading, PageHeader } from '../components/ui';
+import { THEME_OPTIONS } from '../components/ThemeMenu';
+import { Card, ErrorNote, Field, Loading, PageHeader, Segmented } from '../components/ui';
 import { useMeta, useRater } from '../lib/hooks';
+import { useTheme } from '../lib/theme';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -27,6 +29,7 @@ export function SettingsPage() {
   const meta = useMeta();
   const qc = useQueryClient();
   const [rater, setRater] = useRater();
+  const { pref, theme, setPref } = useTheme();
   const [name, setName] = useState(rater);
   const demo = useMutation({ mutationFn: () => api.post('/demo'), onSuccess: () => qc.invalidateQueries() });
   const logout = useMutation({ mutationFn: () => api.post('/auth/logout'), onSuccess: () => qc.invalidateQueries() });
@@ -81,6 +84,25 @@ export function SettingsPage() {
               </span>
             </Row>
           ))}
+        </Card>
+        <Card title="Appearance">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <p className="text-[13px] leading-relaxed text-muted">
+              {pref === 'system' ? `Following this device, which asks for ${theme}.` : `Always ${theme}.`} Saved in this browser.
+            </p>
+            <Segmented
+              value={pref}
+              onChange={setPref}
+              options={THEME_OPTIONS.map((o) => ({
+                value: o.value,
+                label: (
+                  <span className="inline-flex items-center gap-1.5">
+                    <o.icon size={14} /> {o.label}
+                  </span>
+                ),
+              }))}
+            />
+          </div>
         </Card>
         <Card title="Rater">
           <Field label="Your name or initials" hint="Saved in this browser. Ratings are labelled with it and each rater gets their own queue.">

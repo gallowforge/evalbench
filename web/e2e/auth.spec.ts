@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { expectAccessible } from './a11y';
 
 const LEGACY = 'http://127.0.0.1:8497/';
 
@@ -15,6 +16,16 @@ async function autofill(page: Page, values: Record<string, string>) {
 
 const signedIn = (page: Page) => expect(page.getByRole('heading', { level: 1 })).toContainText('leads the core battery');
 
+/** The sign-in card in the device's dark theme, then in light. */
+async function bothThemes(page: Page, where: string) {
+  for (const colorScheme of ['dark', 'light'] as const) {
+    await page.emulateMedia({ colorScheme });
+    await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe(colorScheme);
+    await expectAccessible(page, `${where} (${colorScheme})`);
+  }
+  await page.emulateMedia({ colorScheme: 'dark' });
+}
+
 test.describe.configure({ mode: 'serial' });
 
 test('first visit makes the owner account, filled without a single key event', async ({ page }) => {
@@ -25,6 +36,7 @@ test('first visit makes the owner account, filled without a single key event', a
   await expect(page.locator('form input[name="password-again"]')).toHaveAttribute('autocomplete', 'new-password');
   const create = page.getByRole('button', { name: 'Create account and continue' });
   await expect(create).toBeEnabled(); // never waits for typing
+  await bothThemes(page, 'first visit');
 
   await autofill(page, { username: 'alex42', password: 'correct horse', 'password-again': 'correct horse' });
   await create.click();
@@ -42,6 +54,7 @@ test('sign-in is a real form a password manager can fill', async ({ page }) => {
   await autofill(page, { username: 'someone', password: 'correct horse' });
   await signIn.click();
   await expect(page.getByText('wrong username or password')).toBeVisible();
+  await bothThemes(page, 'sign-in with an error');
 
   await autofill(page, { username: 'Alex42', password: 'correct horse' });
   await signIn.click();
@@ -56,6 +69,7 @@ test('an install from before usernames picks one once, after signing in', async 
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page.getByRole('heading', { name: 'Pick a username' })).toBeVisible();
+  await bothThemes(page, 'pick a username');
   await expect(page.locator('form input[name="username"]')).toHaveAttribute('autocomplete', 'username');
   await expect(page.locator('form input[name="password"]')).toHaveAttribute('autocomplete', 'current-password');
   await autofill(page, { username: 'alex42', password: 'e2e-old-password' });

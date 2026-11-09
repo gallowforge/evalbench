@@ -6,6 +6,7 @@ import { api, type Result, type RunDetail } from '../api';
 import { cx, ErrorNote, Loading, ModelDot, ResultCell, StatusPill } from '../components/ui';
 import { ago, compact, duration, ms, pct, plural } from '../lib/format';
 import { useNow } from '../lib/hooks';
+import { tone } from '../lib/theme';
 
 export function RunDetailPage({ id }: { id: number }) {
   const qc = useQueryClient();
@@ -127,7 +128,7 @@ export function RunDetailPage({ id }: { id: number }) {
                   <div key={c} className="grid grid-cols-[86px_minmax(0,1fr)_38px] items-center gap-2.5 text-[12.5px]">
                     <span className="capitalize text-muted">{c}</span>
                     <div className="h-[5px] overflow-hidden rounded-full bg-ink/[0.07]">
-                      <div className="h-full rounded-full" style={{ width: `${(s.categories[c] ?? 0) * 100}%`, background: m.color }} />
+                      <div className="h-full rounded-full" style={{ width: `${(s.categories[c] ?? 0) * 100}%`, background: tone(m.color) }} />
                     </div>
                     <span className="num text-right font-semibold text-ink-2">{pct(s.categories[c])}</span>
                   </div>

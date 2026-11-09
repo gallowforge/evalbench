@@ -6,6 +6,7 @@ import { api, type Result, type RunDetail, type TaskAnswers } from '../api';
 import { Markdown, Raw } from '../components/Markdown';
 import { cx, ErrorNote, Loading, ModelDot, Segmented } from '../components/ui';
 import { compact, ms } from '../lib/format';
+import { tone } from '../lib/theme';
 
 function dotFor(r?: Result) {
   if (!r || r.status !== 'done') return 'bg-ink/15';
@@ -115,7 +116,7 @@ export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
             const m = modelOf(a.model_id);
             return (
               <article key={a.id} className="card relative flex min-w-0 flex-col overflow-hidden">
-                <div className="absolute inset-x-0 top-0 h-[4px]" style={{ background: m.color }} />
+                <div className="absolute inset-x-0 top-0 h-[4px]" style={{ background: tone(m.color) }} />
                 <header className="px-6 pt-6 pb-4">
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="flex min-w-0 items-center gap-2">

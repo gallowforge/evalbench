@@ -7,6 +7,7 @@ import { HistoryChart, Sparkline } from '../components/charts';
 import { NewRunModal, RunRow } from '../components/runs';
 import { Card, cx, ErrorNote, Loading, ModelDot } from '../components/ui';
 import { ago, ms, pct, plural } from '../lib/format';
+import { tone } from '../lib/theme';
 
 type Row = Board['models'][number];
 
@@ -78,7 +79,7 @@ function Scorecard({ board }: { board: Board & { id: string; title: string } }) 
                 )}
               </span>
               <span className="mt-2.5 hidden h-[5px] max-w-[190px] overflow-hidden rounded-full bg-ink/[0.07] sm:block">
-                <span className="block h-full rounded-full" style={{ width: `${(m.auto?.pass_rate ?? 0) * 100}%`, background: m.color }} />
+                <span className="block h-full rounded-full" style={{ width: `${(m.auto?.pass_rate ?? 0) * 100}%`, background: tone(m.color) }} />
               </span>
             </span>
             <span className="hidden md:block">
@@ -121,7 +122,7 @@ function SinceLastRun({ board }: { board: Board }) {
         const failing = r.changes.filter((c) => c.kind === 'regression');
         return (
           <div key={r.model_id} className="grid grid-cols-[52px_minmax(0,1fr)] gap-x-4 py-4 first:pt-0 last:pb-0">
-            <span className={cx('slab text-[40px] leading-[0.9] font-semibold', r.regressed ? 'text-mark' : 'text-line-2')}>{r.regressed}</span>
+            <span className={cx('slab text-[40px] leading-[0.9] font-semibold', r.regressed ? 'text-mark-ink' : 'text-quiet')}>{r.regressed}</span>
             <span className="min-w-0">
               <span className="flex items-center gap-2 text-[15px] font-semibold">
                 <ModelDot color={m.color} /> {m.label}
@@ -198,7 +199,7 @@ export function Overview() {
             <div className="text-[19px] font-semibold tracking-[-0.01em]">See it with data first</div>
             <div className="mt-1 text-[14.5px] text-panel/65">Six weekly runs, four fictional models and 88 blind verdicts. No keys needed.</div>
           </div>
-          <button className="btn h-11 bg-panel px-5 text-ink hover:bg-white" onClick={() => demo.mutate()} disabled={demo.isPending}>
+          <button className="btn h-11 bg-panel px-5 text-ink hover:bg-panel-2" onClick={() => demo.mutate()} disabled={demo.isPending}>
             {demo.isPending ? 'Setting the table' : 'Load the demo workspace'} <ArrowRight size={16} />
           </button>
         </div>

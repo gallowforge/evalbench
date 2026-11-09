@@ -5,9 +5,10 @@ import { api, type Board, type SuiteSummary } from '../api';
 import { CategoryBars, HistoryChart, RatingBar, WinMatrix } from '../components/charts';
 import { Card, cx, Empty, ErrorNote, Loading, ModelDot, PageHeader } from '../components/ui';
 import { ms, pct, plural } from '../lib/format';
+import { tone } from '../lib/theme';
 
 const KIND: Record<string, { label: string; tone: string }> = {
-  regression: { label: 'now fails', tone: 'text-mark' },
+  regression: { label: 'now fails', tone: 'text-mark-ink' },
   fixed: { label: 'now passes', tone: 'text-good' },
   errored: { label: 'now errors', tone: 'text-serious' },
   task_changed: { label: 'task edited', tone: 'text-muted' },
@@ -139,7 +140,7 @@ export function Scoreboard({ suite }: { suite?: string }) {
                       )}
                     </div>
                     <div className="mt-2.5 h-[5px] max-w-[220px] overflow-hidden rounded-full bg-ink/[0.07]">
-                      <div className="h-full rounded-full" style={{ width: `${(m.auto?.pass_rate ?? 0) * 100}%`, background: m.color }} />
+                      <div className="h-full rounded-full" style={{ width: `${(m.auto?.pass_rate ?? 0) * 100}%`, background: tone(m.color) }} />
                     </div>
                   </td>
                   <td className="px-4 py-5">
