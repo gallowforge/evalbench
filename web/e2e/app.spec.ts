@@ -61,7 +61,7 @@ test('a task can be edited in the form and saved back to YAML', async ({ page, r
   await expect(page.getByText('Unsaved changes')).toHaveCount(0);
   const yaml = await (await request.get('/api/suites/core-battery/yaml')).text();
   expect(yaml).toContain('title: First five primes');
-  await page.getByRole('button', { name: 'YAML' }).click();
+  await page.getByRole('tab', { name: 'YAML' }).click();
   await expect(page.locator('.cm-content')).toContainText('id: core-battery');
 });
 
