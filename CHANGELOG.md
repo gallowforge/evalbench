@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Sign-in is now a username and a password, so password managers save and fill the whole login. The first-visit page creates the owner account; `EVALBENCH_USERNAME` sits beside `EVALBENCH_PASSWORD` to set it from the environment.
+- A wrong username gets exactly the answer a wrong password gets: the same message, delay and back-off, with both checked in constant time. Usernames ignore case.
+- The sign-in forms read their values when submitted and never wait for typing, so autofill that sets values without key events works. A browser test proves it.
+- Installs from 1.0 keep their password: after upgrading, everyone signs in once more, and the owner picks a username.
+
 ## 1.0.0
 
 First release.

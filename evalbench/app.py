@@ -19,7 +19,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Res
 from fastapi.staticfiles import StaticFiles
 
 from evalbench import __version__, export, ratings, stats, store
-from evalbench.auth import COOKIE, MIN_PASSWORD, SESSION_DAYS, Auth
+from evalbench.auth import COOKIE, MIN_PASSWORD, SESSION_DAYS, Auth, clean_username, username_key
 from evalbench.config import Settings, load_settings
 from evalbench.db import Database
 from evalbench.providers import PRESETS, PROVIDERS, ProviderError, ProviderPool, key_status
@@ -132,14 +132,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         resp.set_cookie(COOKIE, state.auth.new_session(), max_age=SESSION_DAYS * 86400, httponly=True, samesite="lax", secure=secure)
         return resp
 
+    async def _refuse(client: str, message: str) -> None:
+        """Every failed credential check looks the same from outside: same delay, same back-off."""
+        state.auth.failed(client)
+        await asyncio.sleep(0.4)
+        raise HTTPException(401, message)
+
     @app.post("/api/auth/setup")
     def setup(request: Request, body: dict = Body(...)) -> Response:
         if not state.auth.setup_required:
-            raise HTTPException(409, "a password is already set")
+            raise HTTPException(409, "an account already exists")
+        expected = state.settings.username
+        if expected:
+            # The environment names the account; the form only has to agree with it.
+            if username_key(str(body.get("username") or "")) != username_key(expected):
+                raise HTTPException(422, "use the username set in EVALBENCH_USERNAME")
+            username = expected
+        else:
+            try:
+                username = clean_username(body.get("username"))
+            except ValueError as e:
+                raise HTTPException(422, str(e)) from None
         password = str(body.get("password") or "")
         if len(password) < MIN_PASSWORD:
-            raise HTTPException(422, f"use at least {MIN_PASSWORD} characters")
-        state.auth.set_password(password)
+            raise HTTPException(422, f"use at least {MIN_PASSWORD} characters for the password")
+        if not state.auth.create_account(username, password):
+            raise HTTPException(409, "an account already exists")
         return _session(request)
 
     @app.post("/api/auth/login")
@@ -149,11 +167,33 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         client = request.client.host if request.client else ""
         if state.auth.throttled(client):
             raise HTTPException(429, "too many attempts; wait a minute")
-        if not state.auth.verify(str(body.get("password") or "")):
-            state.auth.failed(client)
-            await asyncio.sleep(0.4)
-            raise HTTPException(401, "wrong password")
+        if not state.auth.verify(str(body.get("username") or ""), str(body.get("password") or "")):
+            await _refuse(
+                client, "wrong password" if state.auth.username_required else "wrong username or password"
+            )
         state.auth.succeeded(client)
+        return _session(request)
+
+    @app.post("/api/auth/username")
+    async def choose_username(request: Request, body: dict = Body(...)) -> Response:
+        """Once, for installs from before usernames: the owner, signed in, picks a username and
+        confirms the password, so a password manager sees the full pair and can save it."""
+        if not state.auth.enabled or not state.auth.valid(request.cookies.get(COOKIE)):
+            raise HTTPException(401, "sign in first")
+        if not state.auth.username_required:
+            raise HTTPException(409, "a username is already set")
+        client = request.client.host if request.client else ""
+        if state.auth.throttled(client):
+            raise HTTPException(429, "too many attempts; wait a minute")
+        try:
+            username = clean_username(body.get("username"))
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from None
+        if not state.auth.verify("", str(body.get("password") or "")):
+            await _refuse(client, "wrong password")
+        state.auth.succeeded(client)
+        if not state.auth.set_username(username):
+            raise HTTPException(409, "a username is already set")
         return _session(request)
 
     @app.post("/api/auth/logout")
@@ -176,12 +216,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "version": __version__,
             "auth": state.auth.enabled,
             "setup_required": state.auth.setup_required,
+            "username_required": state.auth.username_required,
+            "username_from_env": bool(s.username),
             "password_from_env": bool(s.password),
             "authenticated": authed,
         }
         if authed:
             out.update(
                 {
+                    "username": state.auth.username if state.auth.enabled else None,
                     "demo": state.db.get_meta("demo") == "1",
                     "data_dir": str(s.data_dir),
                     "concurrency": s.concurrency,

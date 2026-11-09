@@ -26,6 +26,7 @@ class Settings:
     auth: bool = True
     sandbox_local: bool = False
     allowed_hosts: tuple[str, ...] = field(default_factory=tuple)
+    username: str | None = None
 
     @property
     def db_path(self) -> Path:
@@ -59,4 +60,5 @@ def load_settings() -> Settings:
         auth=not auth_off,
         sandbox_local=os.environ.get("EVALBENCH_SANDBOX", "").strip().lower() == "local",
         allowed_hosts=tuple(h.strip().lower() for h in os.environ.get("EVALBENCH_ALLOWED_HOSTS", "").split(",") if h.strip()),
+        username=os.environ.get("EVALBENCH_USERNAME", "").strip() or None,
     )

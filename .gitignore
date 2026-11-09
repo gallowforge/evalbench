@@ -15,4 +15,4 @@ web/playwright-report/
 docs/readme/.raw/
 *.egg-info/
 dist/
-.e2e-data/
+.e2e-*/

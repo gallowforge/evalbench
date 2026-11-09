@@ -5,6 +5,7 @@ import json
 from fastapi.testclient import TestClient
 
 from evalbench.app import create_app
+from evalbench.auth import COOKIE, hash_password
 from tests.conftest import make_settings, wait_for_run
 
 
@@ -117,30 +118,126 @@ def test_provider_errors_are_recorded_not_fatal(tmp_path, fake_server):
         assert any("no choices" in e for e in errors)
 
 
-def test_first_visit_creates_the_password(tmp_path):
+def test_first_visit_creates_the_owner_account(tmp_path):
     with TestClient(create_app(make_settings(tmp_path, auth=True))) as client:
         meta = client.get("/api/meta").json()
         assert meta["auth"] and meta["setup_required"] and not meta["authenticated"] and "keys" not in meta
+        assert not meta["username_required"] and "username" not in meta
         assert client.get("/api/suites").status_code == 401
-        assert client.post("/api/auth/setup", json={"password": "short"}).status_code == 422
-        assert client.post("/api/auth/setup", json={"password": "correct horse"}).status_code == 200
-        assert client.get("/api/suites").status_code == 200, "setting the password signs you in"
-        assert client.post("/api/auth/setup", json={"password": "another one"}).status_code == 409
+        assert client.post("/api/auth/setup", json={"username": "ali", "password": "short"}).status_code == 422
+        assert client.post("/api/auth/setup", json={"username": "", "password": "correct horse"}).status_code == 422
+        assert client.post("/api/auth/setup", json={"username": "a li", "password": "correct horse"}).status_code == 422
+        assert client.post("/api/auth/setup", json={"username": "alex42", "password": "correct horse"}).status_code == 200
+        assert client.get("/api/suites").status_code == 200, "creating the account signs you in"
+        meta = client.get("/api/meta").json()
+        assert meta["username"] == "alex42" and not meta["username_required"]
+        assert client.post("/api/auth/setup", json={"username": "intruder", "password": "another one"}).status_code == 409
+        assert client.post("/api/auth/username", json={"username": "x", "password": "correct horse"}).status_code == 409
         client.post("/api/auth/logout")
         assert client.get("/api/suites").status_code == 401
-        for _ in range(5):
-            assert client.post("/api/auth/login", json={"password": "nope nope"}).status_code == 401
-        assert client.post("/api/auth/login", json={"password": "correct horse"}).status_code == 429, "throttled after five misses"
+        assert client.post("/api/auth/login", json={"password": "correct horse"}).status_code == 401, "the username is required"
+        ok = client.post("/api/auth/login", json={"username": " Alex42 ", "password": "correct horse"})
+        assert ok.status_code == 200, "case and stray spaces from a phone keyboard do not matter"
 
 
-def test_password_from_the_environment(tmp_path):
-    with TestClient(create_app(make_settings(tmp_path, auth=True, password="correct horse"))) as client:
+def test_wrong_username_and_wrong_password_look_the_same(tmp_path):
+    with TestClient(create_app(make_settings(tmp_path, auth=True))) as client:
+        client.post("/api/auth/setup", json={"username": "owner", "password": "correct horse"})
+        client.post("/api/auth/logout")
+        wrong_user = client.post("/api/auth/login", json={"username": "someone", "password": "correct horse"})
+        wrong_pass = client.post("/api/auth/login", json={"username": "owner", "password": "nope nope"})
+        assert wrong_user.status_code == wrong_pass.status_code == 401
+        assert wrong_user.json() == wrong_pass.json() == {"detail": "wrong username or password"}
+        for _ in range(3):
+            client.post("/api/auth/login", json={"username": "someone", "password": "x"})
+        throttled = client.post("/api/auth/login", json={"username": "owner", "password": "correct horse"})
+        assert throttled.status_code == 429, "both kinds of miss count toward the same back-off"
+
+
+def test_password_only_install_picks_a_username_once(tmp_path):
+    with TestClient(create_app(make_settings(tmp_path, auth=True))) as client:
+        # An install from 1.0: a password hash and no username.
+        client.app.state.evalbench.db.set_meta("password_hash", hash_password("correct horse"))
         meta = client.get("/api/meta").json()
-        assert meta["auth"] and not meta["setup_required"] and meta["password_from_env"]
+        assert not meta["setup_required"] and meta["username_required"]
+        assert client.post("/api/auth/username", json={"username": "ali", "password": "correct horse"}).status_code == 401
+        assert client.post("/api/auth/login", json={"password": "nope nope"}).json()["detail"] == "wrong password"
+        assert client.post("/api/auth/login", json={"username": "", "password": "correct horse"}).status_code == 200
+        assert client.get("/api/meta").json()["username_required"]
+        assert client.post("/api/auth/username", json={"username": "", "password": "correct horse"}).status_code == 422
+        assert client.post("/api/auth/username", json={"username": "ali", "password": "nope nope"}).status_code == 401
+        assert client.post("/api/auth/username", json={"username": "alex42", "password": "correct horse"}).status_code == 200
+        assert client.get("/api/suites").status_code == 200, "the new session cookie follows the new account"
+        meta = client.get("/api/meta").json()
+        assert meta["username"] == "alex42" and not meta["username_required"]
+        assert client.post("/api/auth/username", json={"username": "again", "password": "correct horse"}).status_code == 409
+        client.post("/api/auth/logout")
+        assert client.post("/api/auth/login", json={"username": "alex42", "password": "correct horse"}).status_code == 200
+
+
+def test_old_sessions_end_when_the_username_is_picked(tmp_path):
+    with TestClient(create_app(make_settings(tmp_path, auth=True))) as client:
+        auth = client.app.state.evalbench.auth
+        auth.db.set_meta("password_hash", hash_password("correct horse"))
+        client.post("/api/auth/login", json={"password": "correct horse"})
+        old = client.cookies.get(COOKIE)
+        assert auth.valid(old)
+        client.post("/api/auth/username", json={"username": "owner", "password": "correct horse"})
+        assert client.get("/api/suites").status_code == 200
+        assert not auth.valid(old), "a session from before the username no longer counts"
+
+
+def test_account_from_the_environment(tmp_path):
+    settings = make_settings(tmp_path, auth=True, username="owner", password="correct horse")
+    with TestClient(create_app(settings)) as client:
+        meta = client.get("/api/meta").json()
+        assert meta["auth"] and not meta["setup_required"] and not meta["username_required"]
+        assert meta["password_from_env"] and meta["username_from_env"]
         assert client.get("/api/health").status_code == 200
         assert client.get("/api/suites").status_code == 401
-        assert client.post("/api/auth/login", json={"password": "correct horse"}).status_code == 200
+        assert client.post("/api/auth/login", json={"username": "other", "password": "correct horse"}).status_code == 401
+        assert client.post("/api/auth/login", json={"username": "owner", "password": "correct horse"}).status_code == 200
         assert client.get("/api/suites").status_code == 200
+
+
+def test_password_from_the_environment_without_a_username(tmp_path):
+    with TestClient(create_app(make_settings(tmp_path, auth=True, password="correct horse"))) as client:
+        assert client.get("/api/meta").json()["username_required"]
+        assert client.post("/api/auth/login", json={"password": "correct horse"}).status_code == 200
+        assert client.post("/api/auth/username", json={"username": "owner", "password": "correct horse"}).status_code == 200
+        client.post("/api/auth/logout")
+        assert client.post("/api/auth/login", json={"username": "owner", "password": "correct horse"}).status_code == 200
+
+
+def test_any_username_from_the_environment_can_finish_setup(tmp_path):
+    with TestClient(create_app(make_settings(tmp_path, auth=True, username="Ali Husain"))) as client:
+        assert client.post("/api/auth/setup", json={"username": "ali husain", "password": "correct horse"}).status_code == 200
+        assert client.get("/api/meta").json()["username"] == "Ali Husain"
+
+
+def test_odd_unicode_is_a_wrong_answer_not_a_crash(tmp_path):
+    for settings in (
+        make_settings(tmp_path / "env", auth=True, username="owner", password="correct horse"),
+        make_settings(tmp_path / "db", auth=True),
+    ):
+        settings.data_dir.mkdir()
+        with TestClient(create_app(settings)) as client:
+            if not settings.password:
+                client.post("/api/auth/setup", json={"username": "owner", "password": "correct horse"})
+                client.post("/api/auth/logout")
+            # A lone surrogate, sent the only way JSON can carry one: as an escape.
+            for body in (rb'{"username": "owner", "password": "\ud800"}', rb'{"username": "\ud800", "password": "correct horse"}'):
+                sent = client.post("/api/auth/login", content=body, headers={"content-type": "application/json"})
+                assert sent.status_code == 401
+
+
+def test_username_from_the_environment_at_first_visit(tmp_path):
+    with TestClient(create_app(make_settings(tmp_path, auth=True, username="owner"))) as client:
+        meta = client.get("/api/meta").json()
+        assert meta["setup_required"] and meta["username_from_env"]
+        bad = client.post("/api/auth/setup", json={"username": "someone", "password": "correct horse"})
+        assert bad.status_code == 422 and "EVALBENCH_USERNAME" in bad.json()["detail"]
+        assert client.post("/api/auth/setup", json={"username": "Owner", "password": "correct horse"}).status_code == 200
 
 
 def test_sign_in_off_means_localhost_only(tmp_path):

@@ -1,9 +1,10 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Lock, Settings as SettingsIcon } from 'lucide-react';
-import { type ReactNode, useEffect, useState } from 'react';
+import { Settings as SettingsIcon } from 'lucide-react';
+import { type ReactNode, useEffect } from 'react';
 import { Link, Route, Switch, useLocation } from 'wouter';
 import { api, type Overview as OverviewData } from './api';
-import { cx, ErrorNote, Loading } from './components/ui';
+import { Logo } from './components/Logo';
+import { cx, Loading } from './components/ui';
 import { useMeta, useRater } from './lib/hooks';
 import { Compare } from './pages/Compare';
 import { DataPage } from './pages/Data';
@@ -14,24 +15,9 @@ import { RunDetailPage } from './pages/RunDetail';
 import { Runs } from './pages/Runs';
 import { Scoreboard } from './pages/Scoreboard';
 import { SettingsPage } from './pages/Settings';
+import { SignIn } from './pages/SignIn';
 import { SuiteDetail } from './pages/SuiteDetail';
 import { Suites } from './pages/Suites';
-
-/** Two tasting cards: one still face down, one turned over and ticked by the judge. */
-export function Logo({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="8" fill="#17181c" />
-      <g transform="rotate(-11 11.5 17)">
-        <rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#2457f0" />
-      </g>
-      <g transform="rotate(8 20.5 15.5)">
-        <rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="#fffdf8" />
-        <path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#d23c2a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      </g>
-    </svg>
-  );
-}
 
 const NAV: { href: string; label: string; exact?: boolean }[] = [
   { href: '/', label: 'Overview', exact: true },
@@ -110,77 +96,6 @@ function TopBar() {
   );
 }
 
-function Login({ onDone, setup }: { onDone: () => void; setup: boolean }) {
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState<unknown>(null);
-  const [busy, setBusy] = useState(false);
-  const mismatch = setup && confirm.length > 0 && confirm !== password;
-  const ready = setup ? password.length >= 8 && confirm === password : password.length > 0;
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      await api.post(setup ? '/auth/setup' : '/auth/login', { password });
-      onDone();
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <div className="grid min-h-full place-items-center p-6">
-      <form onSubmit={submit} className="card w-full max-w-[420px] p-8 animate-rise">
-        <Logo size={40} />
-        <h1 className="mt-6 text-[30px] leading-tight font-bold tracking-[-0.03em]">{setup ? 'Set the house password' : 'Welcome back'}</h1>
-        <p className="mt-2 text-[14.5px] leading-relaxed text-muted">
-          {setup
-            ? 'Evalbench can spend your API credits and run model-written code, so it asks for a password. You set it once, here.'
-            : 'Sign in to judge, run and read the scores.'}
-        </p>
-        <label htmlFor="password" className="mt-7 mb-1.5 flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-2">
-          <Lock size={14} /> Password
-        </label>
-        <input
-          id="password"
-          className="input"
-          type="password"
-          autoFocus
-          autoComplete={setup ? 'new-password' : 'current-password'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        {setup && (
-          <>
-            <label htmlFor="password-again" className="mt-4 mb-1.5 block text-[13.5px] font-semibold text-ink-2">
-              Once more
-            </label>
-            <input
-              id="password-again"
-              className="input"
-              type="password"
-              autoComplete="new-password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-            />
-            <div className={`mt-2 text-[12.5px] ${mismatch ? 'text-bad-ink' : 'text-muted'}`}>
-              {mismatch ? 'The two passwords differ.' : 'At least 8 characters.'}
-            </div>
-          </>
-        )}
-        <div className="mt-4">
-          <ErrorNote error={error} />
-        </div>
-        <button className="btn-primary mt-5 w-full" disabled={busy || !ready}>
-          {setup ? 'Set password and continue' : 'Sign in'}
-        </button>
-      </form>
-    </div>
-  );
-}
-
 export function App() {
   const meta = useMeta();
   const qc = useQueryClient();
@@ -191,7 +106,13 @@ export function App() {
   }, [qc]);
 
   if (meta.isLoading) return <Loading label="Starting" />;
-  if (meta.data?.auth && !meta.data.authenticated) return <Login setup={!!meta.data.setup_required} onDone={() => qc.invalidateQueries()} />;
+  const m = meta.data;
+  // Each step gets its own form (the key), so one step's state and field values never leak into the next.
+  if (m?.auth && !m.authenticated) {
+    const mode = m.setup_required ? 'setup' : 'login';
+    return <SignIn key={mode} mode={mode} legacy={m.username_required} usernameFromEnv={m.username_from_env} onDone={() => qc.invalidateQueries()} />;
+  }
+  if (m?.auth && m.username_required) return <SignIn key="username" mode="username" onDone={() => qc.invalidateQueries()} />;
 
   return (
     <div className="min-h-full">

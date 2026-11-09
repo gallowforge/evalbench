@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/gallowforge/evalbench/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gallowforge/evalbench/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="97 tests passing" src="https://img.shields.io/badge/tests-97_passing-2457f0?labelColor=17181c" />
+  <img alt="107 tests passing" src="https://img.shields.io/badge/tests-107_passing-2457f0?labelColor=17181c" />
   <img alt="One compose file" src="https://img.shields.io/badge/deploy-one_compose_file-2457f0?labelColor=17181c" />
   <img alt="Code sandbox with no network" src="https://img.shields.io/badge/code_sandbox-no_network-2457f0?labelColor=17181c" />
   <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-9c988f?labelColor=17181c" />
@@ -178,7 +178,7 @@ curl -O https://raw.githubusercontent.com/gallowforge/evalbench/main/compose.yam
 docker compose up -d
 ```
 
-Open **http://localhost:8484** and create a password: Evalbench can spend API credits and run model-written code, so sign-in is on from the first visit. To look around before connecting a model, choose **Load the demo workspace**.
+Open **http://localhost:8484** and create the owner account, a username and a password: Evalbench can spend API credits and run model-written code, so sign-in is on from the first visit. It is an ordinary login form, so your password manager saves it and fills it next time. To look around before connecting a model, choose **Load the demo workspace**.
 
 To use API models, put the keys in a `.env` file next to `compose.yaml` (see [`.env.example`](.env.example)) and run `docker compose up -d` again. To use LM Studio or Ollama on the same machine, add a model with the base URL `http://host.docker.internal:1234/v1` or `http://host.docker.internal:11434/v1`; compose already maps that name to the host.
 
@@ -209,7 +209,8 @@ Without the sandbox container there is nowhere safe to run model-written code, s
 | --- | --- | --- |
 | `EVALBENCH_DATA` | `./data` (`/data` in Docker) | Where the SQLite file lives |
 | `EVALBENCH_PORT` | `8484` | Port to listen on |
-| `EVALBENCH_PASSWORD` | unset | Use this password instead of creating one in the browser |
+| `EVALBENCH_USERNAME` | unset | The owner account's username, instead of choosing it in the browser |
+| `EVALBENCH_PASSWORD` | unset | The owner account's password, instead of creating it in the browser |
 | `EVALBENCH_AUTH` | on | `off` disables sign-in; Evalbench then accepts only requests addressed to localhost |
 | `EVALBENCH_ALLOWED_HOSTS` | unset | Extra host names to accept while sign-in is off |
 | `EVALBENCH_SANDBOX_URL` | unset (`http://sandbox:8485` in compose) | Run Python checks in the sandbox service |
@@ -266,7 +267,7 @@ flowchart LR
 
 **Keys.** Models store the name of an environment variable, never its value. The value is read per request, held only by the SDK client, and never returned by the API, written to SQLite, logged or exported. A key can only go where it belongs: `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` are sent only to Anthropic's and OpenAI's own APIs, so no model setting can point them at another server; any other endpoint uses its own variable ending in `_API_KEY` or `_TOKEN`, and `EVALBENCH_` settings are never accepted as keys. The server process is marked non-dumpable, so other processes of the same user cannot read its environment.
 
-**Access.** Sign-in is on by default. The password comes from `EVALBENCH_PASSWORD` or is created in the browser on first visit and stored as a scrypt hash. Sessions are signed, HTTP-only cookies tied to the current password, so changing it signs everyone out, and five failed attempts a minute pause further tries. With sign-in turned off, only requests addressed to localhost are served, which also stops DNS-rebinding pages. Compose binds the port to this machine unless you change it.
+**Access.** Sign-in is on by default, with one owner account. The username and password come from `EVALBENCH_USERNAME` and `EVALBENCH_PASSWORD`, or are created in the browser on first visit, with the password stored as a scrypt hash next to the username. Both are checked in constant time, and a wrong username gets exactly the answer a wrong password gets, with the same message, delay and back-off, so nobody can learn whether a username exists. Usernames ignore case, because phone keyboards capitalise the first letter. Sessions are signed, HTTP-only cookies tied to the current account, so changing it signs everyone out, and five failed attempts a minute pause further tries. An install from 1.0 keeps its password: after upgrading, sign in once more and pick a username. With sign-in turned off, only requests addressed to localhost are served, which also stops DNS-rebinding pages. Compose binds the port to this machine unless you change it.
 
 **Model-written code.** Python checks run in a separate container from the same image, with layers that each stop a different escape:
 
@@ -293,11 +294,11 @@ CI checks the network layer, the app's refusal and the per-run users on every pu
 
 | Check | What it covers |
 | --- | --- |
-| 86 Python tests | Suite parsing and error messages, every check type, the sandbox limits (no fork, no processes, memory and output caps, empty environment, timeouts), early-exit tricks that must not pass, Bradley-Terry and bootstrap maths, pair blindness and balance, rating validation and duplicates, the API end to end through the real Anthropic and OpenAI SDKs against a local fake server, keys that cannot be redirected, first-run password setup and throttling, localhost-only mode, runs without a sandbox, provider errors, exports and the CLI gate. |
+| 93 Python tests | Suite parsing and error messages, every check type, the sandbox limits (no fork, no processes, memory and output caps, empty environment, timeouts), early-exit tricks that must not pass, Bradley-Terry and bootstrap maths, pair blindness and balance, rating validation and duplicates, the API end to end through the real Anthropic and OpenAI SDKs against a local fake server, keys that cannot be redirected, first-run account setup, wrong usernames that look exactly like wrong passwords, throttling, the one-time username step for 1.0 installs, localhost-only mode, runs without a sandbox, provider errors, exports and the CLI gate. |
 | Battery consistency | Every scripted demo answer is graded by the real engine: strong answers must pass every check and weak ones must fail one, which keeps the suite, the checks and the demo honest with each other. |
-| 5 end-to-end tests | Playwright against the built app: the overview, the result matrix and side-by-side answers, a complete blind rating with no model name on screen, editing a task in the form and reading it back as YAML, and the exports. |
+| 8 end-to-end tests | Playwright against the built app: the overview, the result matrix and side-by-side answers, a complete blind rating with no model name on screen, editing a task in the form and reading it back as YAML, the exports, and sign-in filled the way a password manager fills it, with values set directly and no key events, on a new install, a returning one and one upgrading from 1.0. |
 | 6 web unit tests | Formatting of rates, durations and relative times, and the sanitiser: highlighted code survives, remote images, scripts, styles, forms and borrowed layout classes do not. |
-| Docker in CI | Builds the image, starts the compose stack, signs in, loads the demo through the sandbox container, and proves the sandbox has no route out, is refused by the app and runs each execution as its own user. |
+| Docker in CI | Builds the image, starts the compose stack, signs in with a username and password, loads the demo through the sandbox container, and proves the sandbox has no route out, is refused by the app and runs each execution as its own user. |
 | Lint and format | Ruff for Python; TypeScript strict mode and Prettier for the web app. |
 
 </details>
@@ -368,7 +369,7 @@ Elo depends on the order ratings arrive in, so the same ratings shuffled give di
 <details>
 <summary><b>Can several people rate?</b></summary>
 <br />
-Yes. Everyone signs in with the install's password, sets a rater name in their browser, and gets their own queue of unrated pairs; every rating records who made it, and nobody can rate the same pair twice.
+Yes. Everyone signs in with the install's one login, sets a rater name in their browser, and gets their own queue of unrated pairs; every rating records who made it, and nobody can rate the same pair twice.
 </details>
 
 <details>

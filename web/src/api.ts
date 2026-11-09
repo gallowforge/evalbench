@@ -15,7 +15,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     body: body === undefined ? undefined : JSON.stringify(body),
     credentials: 'same-origin',
   });
-  if (res.status === 401 && path !== '/auth/login') {
+  if (res.status === 401 && path !== '/auth/login' && path !== '/auth/setup') {
     window.dispatchEvent(new Event('evalbench:auth'));
   }
   if (!res.ok) {
@@ -51,8 +51,12 @@ export interface Meta {
   version: string;
   auth: boolean;
   setup_required: boolean;
+  /** An install from before usernames, waiting for its owner to pick one. */
+  username_required: boolean;
+  username_from_env: boolean;
   password_from_env: boolean;
   authenticated: boolean;
+  username?: string | null;
   demo?: boolean;
   data_dir?: string;
   concurrency?: number;

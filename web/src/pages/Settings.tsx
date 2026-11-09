@@ -55,7 +55,10 @@ export function SettingsPage() {
           <Row label="Sign-in">
             {m.auth ? (
               <span className="inline-flex items-center gap-3">
-                <Ok ok>{m.password_from_env ? 'on, password from EVALBENCH_PASSWORD' : 'on'}</Ok>
+                <Ok ok>
+                  {m.username ? <>as {m.username}</> : 'on'}
+                  {m.username_from_env || m.password_from_env ? ', from the environment' : ''}
+                </Ok>
                 <button className="btn-quiet h-7 text-[12px]" onClick={() => logout.mutate()}>
                   <LogOut size={13} /> Sign out
                 </button>
