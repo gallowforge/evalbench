@@ -9,7 +9,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "e2e": "playwright test",
-    "readme:visuals": "node scripts/readme-visuals.mjs",
+    "readme:visuals": "bash ../docs/readme/src/build.sh",
     "format": "prettier --write src scripts",
     "format:check": "prettier --check src"
   },
@@ -41,7 +41,6 @@
     "@vitejs/plugin-react": "^6.2.1",
     "jsdom": "^31.0.0",
     "prettier": "^3.9.10",
-    "sharp": "^0.35.5",
     "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.6",

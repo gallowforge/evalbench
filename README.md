@@ -1,124 +1,34 @@
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/hero-mobile.webp" />
-  <img src="docs/readme/hero.webp" width="100%" alt="Evalbench: judge the answer, not the name. On an azure field, the judging screen with two anonymous answers, A and B, each circled in red, beside a paper scorecard slip of four models with their pass rates and judge ratings." />
-</picture>
+<a href="https://github.com/gallowforge/evalbench/releases#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/hero-dark-phone.webp 2.835x"><source srcset="docs/readme/hero-dark.webp 2x"><img src="docs/readme/hero-dark.webp" width="840" alt="Evalbench. Evaluate language models on your own tasks, with sandboxed checks and blind judging. The overview, headlined Nimbus Pro leads the core battery, floats at the centre as a glass window in the app&#39;s dark theme, with the leading model&#39;s row lifted out. Around it: the judging screen on a phone, two answers side by side, the suite editor, the scoreboard and the result matrix."></picture></a><a href="https://github.com/gallowforge/evalbench/releases#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/hero-light-phone.webp 2.835x"><source srcset="docs/readme/hero-light.webp 2x"><img src="docs/readme/hero-light.webp" width="840" alt="Evalbench. Evaluate language models on your own tasks, with sandboxed checks and blind judging. The overview, headlined Nimbus Pro leads the core battery, floats at the centre as a glass window in the app&#39;s dark theme, with the leading model&#39;s row lifted out. Around it: the judging screen on a phone, two answers side by side, the suite editor, the scoreboard and the result matrix."></picture></a>
 
-<p align="center">
-  <a href="#quickstart"><b>Quickstart</b></a>
-  &nbsp;·&nbsp;
-  <a href="#write-the-test-before-you-trust-the-model">Write a suite</a>
-  &nbsp;·&nbsp;
-  <a href="#judge-blind-the-way-training-teams-do">Blind judging</a>
-  &nbsp;·&nbsp;
-  <a href="#under-the-hood">How it works</a>
-  &nbsp;·&nbsp;
-  <a href="#quality">Tests</a>
-  &nbsp;·&nbsp;
-  <a href="https://gallowforge.github.io">More projects</a>
-</p>
+Picking a model by vibes is easy and wrong: a few chats feel convincing, a leaderboard measured someone else's tasks, and the next update quietly breaks the one prompt your product depends on. **Evalbench is a self-hosted workbench for evaluating language models on your own tasks.** Write tasks and rubrics in YAML or in the browser, run them against local models in LM Studio or Ollama and API models from Anthropic and OpenAI, grade every answer with automatic checks, rate pairs of answers blind, and watch both scores move from run to run. It runs from one compose file, keeps everything in one SQLite file, and never stores an API key.
 
-<p align="center">
-  <a href="https://github.com/gallowforge/evalbench/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gallowforge/evalbench/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="112 tests passing" src="https://img.shields.io/badge/tests-112_passing-2457f0?labelColor=17181c" />
-  <img alt="One compose file" src="https://img.shields.io/badge/deploy-one_compose_file-2457f0?labelColor=17181c" />
-  <img alt="Code sandbox with no network" src="https://img.shields.io/badge/code_sandbox-no_network-2457f0?labelColor=17181c" />
-  <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-9c988f?labelColor=17181c" />
-</p>
+<p align="center"><a href="#quickstart">Quickstart</a> &nbsp;·&nbsp; <a href="#how-it-works">How it works</a> &nbsp;·&nbsp; <a href="https://github.com/gallowforge/evalbench/releases">Releases</a></p>
 
-<br />
+<a href="evalbench/data/suites/core-battery.yaml#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/numbers-dark-phone.webp 2.835x"><source srcset="docs/readme/numbers-dark.webp 2x"><img src="docs/readme/numbers-dark.webp" width="840" alt="20 tasks in the core battery, 7 kinds of automatic check, 112 tests in CI, and 0 API keys stored, because keys are read from the environment." loading="lazy"></picture></a><a href="evalbench/data/suites/core-battery.yaml#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/numbers-light-phone.webp 2.835x"><source srcset="docs/readme/numbers-light.webp 2x"><img src="docs/readme/numbers-light.webp" width="840" alt="20 tasks in the core battery, 7 kinds of automatic check, 112 tests in CI, and 0 API keys stored, because keys are read from the environment." loading="lazy"></picture></a>
 
-Picking a model by vibes is easy and wrong. A few chats feel convincing, a leaderboard measured someone else's tasks, and the next model update quietly breaks the one prompt your product depends on. Doing it properly means a spreadsheet of prompts, a script per provider, answers pasted side by side, and ratings nobody can trust because the rater knew which model wrote what.
+<a href="web/src/pages/Overview.tsx#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/overview-dark-phone.webp 2.835x"><source srcset="docs/readme/overview-dark.webp 2x"><img src="docs/readme/overview-dark.webp" width="840" alt="Know what happened before you scroll. The overview in glass, headlined Nimbus Pro leads the core battery, with the leading row lifted out: 90% of checks passed, a judge rating of 1142, picked in 71% of blind pairs. Beside it, the same overview on a phone. 90% of checks passed by the leader, 71% of blind pairs went to it, 3 tasks Vega 8B dropped." loading="lazy"></picture></a><a href="web/src/pages/Overview.tsx#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/overview-light-phone.webp 2.835x"><source srcset="docs/readme/overview-light.webp 2x"><img src="docs/readme/overview-light.webp" width="840" alt="Know what happened before you scroll. The overview in glass, headlined Nimbus Pro leads the core battery, with the leading row lifted out: 90% of checks passed, a judge rating of 1142, picked in 71% of blind pairs. Beside it, the same overview on a phone. 90% of checks passed by the leader, 71% of blind pairs went to it, 3 tasks Vega 8B dropped." loading="lazy"></picture></a>
 
-**Evalbench is a self-hosted workbench for evaluating language models on your own tasks.** Write tasks and rubrics in YAML or in the browser, run them against local models in LM Studio or Ollama and API models from Anthropic and OpenAI, grade every answer with automatic checks, rate pairs of answers blind, and watch both scores move from run to run. It runs from one compose file, keeps everything in a single SQLite file, and never stores an API key.
+Under the headline sits a scorecard of every model: pass rate, judge rating, the last six runs and median latency.
 
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/numbers-mobile.webp" />
-  <img src="docs/readme/numbers.webp" width="100%" alt="20 battery tasks across reasoning, constraints and debugging; 7 check types from exact match to Python tests; 3 provider kinds: Anthropic, OpenAI and any OpenAI-compatible server; 4 export formats; and 0 keys stored, circled, because keys are read from the environment." />
-</picture>
-
-<br />
-
-## Know what happened before you scroll
-
-The overview opens on a headline written from your latest run: who leads, by how much, what the judges think, and what broke since last time. Under it, a scorecard of every model with its pass rate, judge rating, trend and speed.
-
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/overview-mobile.webp" />
-  <img src="docs/readme/overview.webp" width="100%" alt="The overview, headlined Nimbus Pro leads the core battery, underlined in red with the note: it writes the headline for you, from the latest run; below it, a scorecard of four models with pass rates, judge ratings, six-run trends and median latency." />
-</picture>
-
-## Write the test before you trust the model
-
-A suite is a list of tasks. Each task has a prompt, optional reference answer for raters, and any number of automatic checks. Keep suites as YAML in git, or edit them in the browser: the form and the YAML are the same document, validated on every keystroke with errors that point at the exact field.
+<a href="examples/suite-template.yaml#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/write-dark-phone.webp 2.835x"><source srcset="docs/readme/write-dark.webp 2x"><img src="docs/readme/write-dark.webp" width="840" alt="Write the test before you trust the model. The suite editor with the Binary search that hangs task open, and its Python tests check lifted out of the form: five assertions that run against the answer&#39;s code in the sandbox. 7 check types, 5 parts of an answer a check can read, 0 routes out of the code sandbox." loading="lazy"></picture></a><a href="examples/suite-template.yaml#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/write-light-phone.webp 2.835x"><source srcset="docs/readme/write-light.webp 2x"><img src="docs/readme/write-light.webp" width="840" alt="Write the test before you trust the model. The suite editor with the Binary search that hangs task open, and its Python tests check lifted out of the form: five assertions that run against the answer&#39;s code in the sandbox. 7 check types, 5 parts of an answer a check can read, 0 routes out of the code sandbox." loading="lazy"></picture></a>
 
 - **Seven check types.** Exact answer (numbers compare by value, so `4.50 hours` matches `4.5`), contains, avoids, regular expression, length in words, characters, lines or sentences, JSON with required keys and values, and Python tests that run the answer's code in the sandbox.
-- **Grade the part that matters.** Each check can read the whole answer, the last line, an `Answer:` line, the first code block or the first JSON value. Reasoning blocks that some local models print (`<think>…</think>`) are removed first.
+- **Grade the part that matters.** A check can read the whole answer, the last line, an `Answer:` line, the first code block or the first JSON value. Reasoning blocks that some local models print (`<think>…</think>`) are removed first.
 - **Rubrics for people.** Each suite defines the dimensions raters score from 1 to 5, such as instruction following, correctness and concision. A task can override them.
 
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/write-mobile.webp" />
-  <img src="docs/readme/write.webp" width="100%" alt="The suite editor with the Binary search that hangs task open: prompt, reference answer and a Python tests check, its five assertions underlined in red, with the note: your tests run against the answer’s code, in a box with no way out." />
-</picture>
+<a href="evalbench/ratings.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/judge-dark-phone.webp 2.835x"><source srcset="docs/readme/judge-dark.webp 2x"><img src="docs/readme/judge-dark.webp" width="840" alt="Judge blind, the way training teams do. Two anonymous answers, A and B, scored on the rubric with a factual error ticked, and the seven-stop verdict scale lifted out with the judge&#39;s red loop around B, clearly. 7 stops from A, clearly to B, clearly, 0 model names on screen, 1 to 5 on every rubric line." loading="lazy"></picture></a><a href="evalbench/ratings.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/judge-light-phone.webp 2.835x"><source srcset="docs/readme/judge-light.webp 2x"><img src="docs/readme/judge-light.webp" width="840" alt="Judge blind, the way training teams do. Two anonymous answers, A and B, scored on the rubric with a factual error ticked, and the seven-stop verdict scale lifted out with the judge&#39;s red loop around B, clearly. 7 stops from A, clearly to B, clearly, 0 model names on screen, 1 to 5 on every rubric line." loading="lazy"></picture></a>
 
-## Run every model on the same tasks
+- **The questions rating platforms ask.** Score each answer from 1 to 5 on every rubric dimension, tick issues such as a factual error or an ignored constraint, choose a side on a seven-point scale, and write a justification. Confidence and time spent are recorded too.
+- **A queue that stays balanced.** The next pair is always the least-rated one, so every pair of models gets coverage. Each rater has their own queue, and skipped pairs come back last. Keys `1` to `7` choose, `S` skips, `Ctrl`+`Enter` submits.
+- **The labels come off at the end.** When your queue is done, the cards turn over: every pair you judged shows who wrote what. Never before, so it can never sway a verdict.
 
-Add a model in a few seconds: pick LM Studio, Ollama, Anthropic, OpenAI or any OpenAI-compatible server, find its model ids with one click, and test the connection without spending a token. Start a run and answers are graded the moment they arrive.
+<a href="evalbench/stats.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/board-dark-phone.webp 2.835x"><source srcset="docs/readme/board-dark.webp 2x"><img src="docs/readme/board-dark.webp" width="840" alt="One leaderboard for checks and people. The scoreboard with Nimbus Pro&#39;s row lifted out: 90% of checks passed, a judge rating of 1142 with its 95% interval, picked in 71% of 48 pairs, 1.1 s median. 95% interval on every rating, 200 bootstrap resamples, 88 blind verdicts in the demo." loading="lazy"></picture></a><a href="evalbench/stats.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/board-light-phone.webp 2.835x"><source srcset="docs/readme/board-light.webp 2x"><img src="docs/readme/board-light.webp" width="840" alt="One leaderboard for checks and people. The scoreboard with Nimbus Pro&#39;s row lifted out: 90% of checks passed, a judge rating of 1142 with its 95% interval, picked in 71% of 48 pairs, 1.1 s median. 95% interval on every rating, 200 bootstrap resamples, 88 blind verdicts in the demo." loading="lazy"></picture></a>
 
-- **Keys stay in the environment.** A model stores the *name* of its key variable, such as `ANTHROPIC_API_KEY`. The value is read when a request is made and is never written to the database, the logs or an export.
-- **Fair to slow hardware.** Each model has its own parallel limit, so a local model on one GPU runs one request at a time while API models run several, under one global cap.
-- **History that cannot drift.** A run freezes the suite text and every model's settings when it starts. Edit a task tomorrow and last week's results still mean what they meant.
+Preferences are fitted with a Bradley-Terry model and shown on an Elo-like scale with a 95% bootstrap interval, so a lead inside the noise looks like one. Pass rates by category, head-to-head win rates, latency and output tokens sit beside it.
 
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/run-mobile.webp" />
-  <img src="docs/readme/run.webp" width="100%" alt="Every verdict in a run: tasks down the side, four models across, green ticks, red crosses and amber partial scores, with one failed square circled in red and the note: every square is a verdict, click one for the reason." />
-</picture>
+<a href="evalbench/stats.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/changes-dark-phone.webp 2.835x"><source srcset="docs/readme/changes-dark.webp 2x"><img src="docs/readme/changes-dark.webp" width="840" alt="Catch a regression the day it lands. Pass rate over time for four models across six runs, with Vega 8B dropping at run 6, and in front of it what changed from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B. 3 tasks Vega 8B now fails, 6 runs on one chart, 1 flag to fail CI below a pass rate." loading="lazy"></picture></a><a href="evalbench/stats.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/changes-light-phone.webp 2.835x"><source srcset="docs/readme/changes-light.webp 2x"><img src="docs/readme/changes-light.webp" width="840" alt="Catch a regression the day it lands. Pass rate over time for four models across six runs, with Vega 8B dropping at run 6, and in front of it what changed from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B. 3 tasks Vega 8B now fails, 6 runs on one chart, 1 flag to fail CI below a pass rate." loading="lazy"></picture></a>
 
-## Read the answers side by side
-
-Click any cell and every model's answer to that task opens in columns, with each check's verdict and the reason for it: `3 sentences (max 2)`, `AssertionError: the caller's list was modified`, `expected "36", got "24"`. Answers render as Markdown with highlighted code, or as raw text.
-
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/compare-mobile.webp" />
-  <img src="docs/readme/compare.webp" width="100%" alt="Two answers to the Two-sentence summary task with their check results; the one rule Vega 8B broke, three sentences where two were allowed, is circled in red." />
-</picture>
-
-## Judge blind, the way training teams do
-
-Automatic checks catch wrong answers; people catch the rest. Evalbench deals two answers to the same task from two different models, like tasting cards turned face up: random order, nothing that names either model.
-
-- **The questions rating platforms ask.** Score each response from 1 to 5 on every rubric dimension, tick issues such as a factual error or an ignored constraint, choose a side on a seven-point scale from "A is much better" to "B is much better", and write a justification. Confidence and time spent are recorded too.
-- **A queue that stays balanced.** The next pair is always the least-rated one, so every pair of models gets coverage. Each rater has their own queue, and skipped pairs come back last.
-- **Fast with a keyboard.** Keys `1` to `7` choose, `S` skips, `Ctrl`+`Enter` submits.
-- **The labels come off at the end.** When your queue is done, the cards turn over: every pair you judged shows who wrote what, with a tally of which model you kept picking. Never before, so it can never sway a verdict.
-
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/rate-mobile.webp" />
-  <img src="docs/readme/rate.webp" width="100%" alt="The judging screen: two anonymous answers, A and B, scored on a paper-form rubric with a factual error ticked, the seven-stop verdict scale with the judge’s red loop around the choice, and the written reason." />
-</picture>
-
-## One leaderboard for checks and people
-
-The scoreboard puts the two kinds of evidence next to each other: how many tasks each model passes, and how often people prefer its answers.
-
-- **A rating you can trust.** Preferences are fitted with a Bradley-Terry model and shown on an Elo-like scale with a 95% bootstrap interval, so a lead inside the noise looks like one.
-- **Where each model is strong.** Pass rates by category, win rates head to head, median latency and output tokens.
-- **Every run on one chart.** Pass rate per model across runs, with the run label on hover.
-
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/scoreboard-mobile.webp" />
-  <img src="docs/readme/scoreboard.webp" width="100%" alt="The leaderboard: four models with pass rate, judge rating with its confidence interval, picks and latency; the interval of the top rating is circled in red with the note: a lead inside the interval is not a lead." />
-</picture>
-
-## Catch a regression the day it lands
-
-For each model, Evalbench compares its latest run with the one before and lists every task that now fails or now passes. If the task itself was edited between the runs, the change is marked as an edit, not blamed on the model.
-
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/history-mobile.webp" />
-  <img src="docs/readme/history.webp" width="100%" alt="Pass rate over time for four models across six runs, with Vega 8B’s drop at run 6 circled in red: the re-quantised model, caught on the chart." />
-</picture>
-
-The same check runs in CI. `evalbench run` sends a suite to one or more models headless and exits non-zero below a pass rate, so a prompt change or a new quantisation can fail a pull request:
+If a task was edited between two runs, the change is marked as an edit, not blamed on the model. The same check runs in CI: `evalbench run` sends a suite to one or more models headless and exits non-zero below a pass rate, so a prompt change or a new quantisation can fail a pull request.
 
 ```bash
 evalbench run suites/support.yaml \
@@ -129,23 +39,13 @@ evalbench run suites/support.yaml \
 
 `--allow-local-code` lets Python checks run on the CI machine, which is fine for a throwaway runner; without it, and without a sandbox service, they are recorded as errors.
 
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/regressions-mobile.webp" />
-  <img src="docs/readme/regressions.webp" width="100%" alt="What changed from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B, the last one circled in red, beside a head-to-head matrix of blind preferences." />
-</picture>
+## Runs you can trust
 
-## Take your data with you
-
-Everything raters and checks produce downloads in one click, and every record carries the prompt and both answers, so a file stands on its own.
-
-- **Ratings** as CSV (one row per rating, a column per rubric score) or JSONL.
-- **Preference pairs** as `{prompt, chosen, rejected}` JSONL from every decisive rating, ready for DPO-style training. Ties are left out.
-- **Run results** with every check verdict, score, latency and token count.
-
-<picture>
-  <source media="(max-width: 700px)" srcset="docs/readme/data-mobile.webp" />
-  <img src="docs/readme/data.webp" width="100%" alt="The four exports, with the Preference pairs card circled in red and the note: every decisive verdict, ready to train on." />
-</picture>
+- **Keys stay in the environment.** A model stores the *name* of its key variable, such as `ANTHROPIC_API_KEY`. The value is read when a request is made and is never written to the database, the logs or an export.
+- **Fair to slow hardware.** Each model has its own parallel limit, so a local model on one GPU runs one request at a time while API models run several, under one global cap.
+- **History that cannot drift.** A run freezes the suite text and every model's settings when it starts. Edit a task tomorrow and last week's results still mean what they meant.
+- **Every answer side by side.** Click any cell of a run and every model's answer to that task opens in columns, with each check's verdict and its reason: `3 sentences (max 2)`, `expected "36", got "24"`.
+- **Your data, in one click.** Ratings as CSV or JSONL, preference pairs as `{prompt, chosen, rejected}` JSONL from every decisive rating, ready for DPO-style training, and run results with every verdict, score, latency and token count.
 
 ## The core battery
 
@@ -222,13 +122,7 @@ Without the sandbox container there is nowhere safe to run model-written code, s
 
 </details>
 
-<br />
-
-## Under the hood
-
-<details>
-<summary><b>How a run works</b></summary>
-<br />
+## How it works
 
 ```mermaid
 flowchart LR
@@ -245,6 +139,10 @@ flowchart LR
   H --> G
   D --> E[Exports<br/>CSV · JSONL · preference pairs]
 ```
+
+<details>
+<summary><b>The method, question by question</b></summary>
+<br />
 
 | Question | Method |
 | --- | --- |
@@ -286,22 +184,16 @@ CI checks the network layer, the app's refusal and the per-run users on every pu
 
 </details>
 
-<details>
-<summary><b>Quality bar</b></summary>
-<br />
-
-<a id="quality"></a>
+## Quality
 
 | Check | What it covers |
 | --- | --- |
-| 93 Python tests | Suite parsing and error messages, every check type, the sandbox limits (no fork, no processes, memory and output caps, empty environment, timeouts), early-exit tricks that must not pass, Bradley-Terry and bootstrap maths, pair blindness and balance, rating validation and duplicates, the API end to end through the real Anthropic and OpenAI SDKs against a local fake server, keys that cannot be redirected, first-run account setup, wrong usernames that look exactly like wrong passwords, throttling, the one-time username step for 1.0 installs, localhost-only mode, runs without a sandbox, provider errors, exports and the CLI gate. |
+| 93 Python tests | Suite parsing and error messages, every check type, the sandbox limits (no fork, no processes, memory and output caps, empty environment, timeouts), early-exit tricks that must not pass, Bradley-Terry and bootstrap maths, pair blindness and balance, rating validation and duplicates, the API end to end through the real Anthropic and OpenAI SDKs against a local fake server, keys that cannot be redirected, sign-in, throttling, localhost-only mode, runs without a sandbox, provider errors, exports and the CLI gate. |
 | Battery consistency | Every scripted demo answer is graded by the real engine: strong answers must pass every check and weak ones must fail one, which keeps the suite, the checks and the demo honest with each other. |
-| 13 end-to-end tests | Playwright against the built app: the overview, the result matrix and side-by-side answers, a complete blind rating with no model name on screen, editing a task in the form and reading it back as YAML, the exports, and sign-in filled the way a password manager fills it, with values set directly and no key events, on a new install, a returning one and one upgrading from 1.0. The theme follows the device, a chosen one survives a reload, and the theme menu works from the keyboard. axe checks every screen against WCAG 2.1 AA, contrast included, in the dark theme and the light one: all eleven pages, the sign-in steps, a marked-up judging card, the reveal and the open theme menu. |
+| 13 end-to-end tests | Playwright against the built app: the overview, the result matrix and side-by-side answers, a complete blind rating with no model name on screen, editing a task in the form and reading it back as YAML, the exports, sign-in filled the way a password manager fills it, and the theme following the device. axe checks every screen against WCAG 2.1 AA, contrast included, in the dark theme and the light one. |
 | 6 web unit tests | Formatting of rates, durations and relative times, and the sanitiser: highlighted code survives, remote images, scripts, styles, forms and borrowed layout classes do not. |
-| Docker in CI | Builds the image, starts the compose stack, signs in with a username and password, loads the demo through the sandbox container, and proves the sandbox has no route out, is refused by the app and runs each execution as its own user. |
+| Docker in CI | Builds the image, starts the compose stack, signs in, loads the demo through the sandbox container, and proves the sandbox has no route out, is refused by the app and runs each execution as its own user. |
 | Lint and format | Ruff for Python; TypeScript strict mode and Prettier for the web app. |
-
-</details>
 
 <details>
 <summary><b>Stack and architecture</b></summary>
@@ -309,7 +201,7 @@ CI checks the network layer, the app's refusal and the per-run users on every pu
 
 Python 3.12+ with [FastAPI](https://fastapi.tiangolo.com), SQLite in WAL mode, Pydantic, and the official [Anthropic](https://github.com/anthropics/anthropic-sdk-python) and [OpenAI](https://github.com/openai/openai-python) SDKs. The web app is React 19 with TypeScript, Vite, Tailwind CSS v4, TanStack Query and CodeMirror. Type is Schibsted Grotesk, with Zilla Slab for scores and JetBrains Mono for code, all bundled, so no request leaves for fonts.
 
-```
+```text
 evalbench/
   suites.py       the suite format: tasks, checks, rubrics, validation, YAML round trip
   checks.py       answer extraction and the seven check types
@@ -323,7 +215,7 @@ evalbench/
   data/           the core battery and the scripted demo answers
 web/src/          the React app: overview, suites, models, runs, compare, rate, scoreboard, data
 web/e2e/          Playwright tests
-web/scripts/      the generator for the images in this README
+docs/readme/src/  the generator for the images in this README
 ```
 
 </details>
@@ -342,7 +234,7 @@ npm --prefix web test                # web unit tests
 npm --prefix web run build && PATH=.venv/bin:$PATH npm --prefix web run e2e
 ```
 
-The images in this README come from `npm --prefix web run readme:visuals`, which captures the running app on the demo workspace at desktop and phone sizes and composes each scene.
+The images in this README come from `npm --prefix web run readme:visuals` ([`docs/readme/src/build.sh`](docs/readme/src/build.sh)), which captures the running app on the demo workspace in its dark and light themes, at desktop and phone sizes, and renders each glass scene from those captures.
 
 </details>
 
@@ -351,7 +243,7 @@ The images in this README come from `npm --prefix web run readme:visuals`, which
 <details>
 <summary><b>Are the screenshots real?</b></summary>
 <br />
-Yes. They are captures of the app running the bundled demo workspace. The four demo models (Nimbus Pro, Atlas 70B, Orion Mini, Vega 8B) are fictional and their answers are scripted, but every check result, pass rate, rating and regression in the images is computed by the same code that grades real runs.
+Yes. They are captures of the app running the bundled demo workspace, in its dark theme for the dark images and its light theme for the light ones, set in glass. The four demo models (Nimbus Pro, Atlas 70B, Orion Mini, Vega 8B) are fictional and their answers are scripted, but every check result, pass rate, rating and regression in the images is computed by the same code that grades real runs.
 </details>
 
 <details>

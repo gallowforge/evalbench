@@ -17,3 +17,4 @@ docs/readme/.raw/
 dist/
 .e2e-*/
 *.tsbuildinfo
+docs/readme/build/

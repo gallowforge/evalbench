@@ -14,10 +14,9 @@
   - When a judge finishes a queue, the cards turn over and reveal who wrote what.
   - The mark: two cards, one face down in azure, one turned up and ticked in red.
 
-## The README plates
+## The README images
 
-- **Field:** solid azure, the colour of a face-down card. Turn one over and you see the app, printed on paper. No gradients, glows, grids or pills.
-- **Staging:** real captures of the running app on the demo workspace, placed like objects in a product photo with a deep, soft shadow. The hero tilts its screen; feature plates keep it straight and large for legibility.
-- **One note per plate:** written in Zilla Slab in paper white, with one pen stroke that stops at the screen's edge. The judge's red loop or underline marks the one thing that matters inside the screen.
-- **Surprises:** the scorecard slip in the hero carries the real results; the history plate catches the re-quantised model dropping at run 6; the rate plate's red loop is the app's own.
-- **Source:** `web/scripts/readme-visuals.mjs` captures and composes everything; the HTML of each plate is in `docs/readme/src/`.
+- **Glass:** the README joins the Glass family of Ali's GitHub profile. The app's real screens float as frosted-glass windows in an ink-black room with a little azure low in the haze (dark), or on warm paper in sunlight (light). Every image ships dark and light, wide and phone, and the dark images show the app in its dark theme, so nothing glares.
+- **Staging:** real captures of the running app on the demo workspace. Each feature panel lifts one element out of its screen: the leading row, the Python tests, the verdict scale with the judge's red loop, the top rating with its interval.
+- **Copy:** Geist in the images, set flush left beside the glass, with three true numbers under each panel.
+- **Source:** `docs/readme/src/build.sh` captures the app (`capture.cjs`) and renders every scene (`render.cjs`, `scene.js`, `layouts.js`). `social.png` is the earlier plate for the repository's social preview.
