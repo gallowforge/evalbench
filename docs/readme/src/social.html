@@ -4,22 +4,24 @@
 @font-face { font-family: Slab; src: url(data:…) format('woff2'); font-weight: 700; }
 * { box-sizing: border-box; margin: 0; }
 html, body { background: transparent; }
-body { font-family: Grotesk, sans-serif; color: #16171b; -webkit-font-smoothing: antialiased; }
-.scene { position: relative; overflow: hidden; border-radius: 6px; background: #f1eee6; }
+body { font-family: Grotesk, sans-serif; color: #fffdf8; -webkit-font-smoothing: antialiased; }
+.scene { position: relative; overflow: hidden; border-radius: 8px; background: #2457f0; }
 .slab { font-family: Slab, serif; font-variant-numeric: lining-nums; }
-.screen { position: absolute; border-radius: 12px; overflow: hidden; background: #0d0e10;
-  box-shadow: 0 0 0 1px rgba(22,23,27,.55), 0 2px 3px rgba(22,23,27,.12), 0 24px 40px -18px rgba(22,23,27,.45), 0 60px 100px -50px rgba(22,23,27,.5); }
+.screen { position: absolute; border-radius: 14px; overflow: hidden; background: #f3f0e8;
+  box-shadow: 0 0 0 1px rgba(10,22,70,.25), 0 2px 4px rgba(10,22,70,.18), 0 30px 50px -22px rgba(6,14,52,.55), 0 80px 120px -60px rgba(6,14,52,.6); }
 .screen img { display: block; width: 100%; }
-.phone { position: absolute; padding: 9px; border-radius: 46px; background: #1b1c20;
-  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08), 0 0 0 1px rgba(22,23,27,.6), 0 28px 50px -22px rgba(22,23,27,.55), 0 70px 110px -60px rgba(22,23,27,.55); }
-.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #101113; padding-top: 34px; }
+.phone { position: absolute; padding: 9px; border-radius: 46px; background: #17181c;
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.1), 0 0 0 1px rgba(10,22,70,.4), 0 34px 60px -26px rgba(6,14,52,.65), 0 80px 120px -60px rgba(6,14,52,.6); }
+.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #f3f0e8; padding-top: 34px; }
 .phone .scr img { display: block; width: 100%; }
 .phone .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #000; z-index: 2; }
-.note { position: absolute; font-family: Slab, serif; font-weight: 700; color: #d23c2a; line-height: 1.12; }
+.note { position: absolute; font-family: Slab, serif; font-weight: 600; color: #fffdf8; line-height: 1.12; }
+.slip { position: absolute; background: #fffdf8; color: #17181c; border-radius: 4px; padding: 22px 26px 18px;
+  box-shadow: 0 1px 2px rgba(10,22,70,.2), 0 24px 40px -20px rgba(6,14,52,.6); }
 svg.ink { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
 </style></head><body><div class="scene" style="width:1280px;height:640px;border-radius:0">
-      <div style="position:absolute;left:80px;top:74px;display:flex;align-items:center;gap:14px;font-size:28px;font-weight:650"><svg width="42" height="42" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#16171b"/><g transform="rotate(-11 11.5 17)"><rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#4da3ff"/></g><g transform="rotate(8 20.5 15.5)"><rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="#f7f5ef"/><path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#e04a36" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg> Evalbench</div>
-      <div style="position:absolute;left:76px;top:160px;font-size:82px;font-weight:760;letter-spacing:-.05em;line-height:.93;white-space:nowrap">Judge the answer,<br>not the <span style="position:relative;display:inline-block">name.<svg viewBox="0 0 100 12" preserveAspectRatio="none" style="position:absolute;left:-2%;bottom:-0.16em;width:104%;height:0.16em;overflow:visible"><path d="M1,7 C25,10 60,4 99,6" fill="none" stroke="#d23c2a" vector-effect="non-scaling-stroke" stroke-linecap="round" style="stroke-width:5px"/></svg></span></div>
-      <div style="position:absolute;left:80px;top:372px;width:440px;font-size:24px;line-height:1.4;color:#45443f">Self-hosted LLM evaluation: automatic checks, blind rating, regressions.</div>
-      <div class="screen" style="left:640px;top:300px;width:700px;transform:rotate(1.4deg)"><img src="data:…"></div>
+      <div style="position:absolute;left:80px;top:72px;display:flex;align-items:center;gap:14px;font-size:28px;font-weight:700"><svg width="42" height="42" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#fffdf8"/><g transform="rotate(-11 11.5 17)"><rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#2457f0"/></g><g transform="rotate(8 20.5 15.5)"><rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="#17181c"/><path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#ff6a55" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg> Evalbench</div>
+      <div style="position:absolute;left:76px;top:170px;width:560px;font-size:86px;font-weight:800;letter-spacing:-.05em;line-height:.92">Judge the answer, not the <span style="position:relative;display:inline-block">name.<svg viewBox="0 0 100 12" preserveAspectRatio="none" style="position:absolute;left:-2%;bottom:-0.15em;width:104%;height:0.16em;overflow:visible"><path d="M1,7 C25,10 60,4 99,6" fill="none" stroke="#d23c2a" vector-effect="non-scaling-stroke" stroke-linecap="round" style="stroke-width:6px"/></svg></span></div>
+      <div style="position:absolute;left:80px;top:500px;width:470px;font-size:23px;line-height:1.4;color:rgba(255,253,248,.74)">Self-hosted LLM evaluation: checks, blind verdicts, regressions.</div>
+      <div class="screen" style="left:650px;top:70px;width:700px;transform:rotate(2.2deg)"><img src="data:…"></div>
     </div></body></html>

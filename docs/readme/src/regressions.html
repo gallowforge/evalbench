@@ -4,22 +4,23 @@
 @font-face { font-family: Slab; src: url(data:…) format('woff2'); font-weight: 700; }
 * { box-sizing: border-box; margin: 0; }
 html, body { background: transparent; }
-body { font-family: Grotesk, sans-serif; color: #16171b; -webkit-font-smoothing: antialiased; }
-.scene { position: relative; overflow: hidden; border-radius: 6px; background: #f1eee6; }
+body { font-family: Grotesk, sans-serif; color: #fffdf8; -webkit-font-smoothing: antialiased; }
+.scene { position: relative; overflow: hidden; border-radius: 8px; background: #2457f0; }
 .slab { font-family: Slab, serif; font-variant-numeric: lining-nums; }
-.screen { position: absolute; border-radius: 12px; overflow: hidden; background: #0d0e10;
-  box-shadow: 0 0 0 1px rgba(22,23,27,.55), 0 2px 3px rgba(22,23,27,.12), 0 24px 40px -18px rgba(22,23,27,.45), 0 60px 100px -50px rgba(22,23,27,.5); }
+.screen { position: absolute; border-radius: 14px; overflow: hidden; background: #f3f0e8;
+  box-shadow: 0 0 0 1px rgba(10,22,70,.25), 0 2px 4px rgba(10,22,70,.18), 0 30px 50px -22px rgba(6,14,52,.55), 0 80px 120px -60px rgba(6,14,52,.6); }
 .screen img { display: block; width: 100%; }
-.phone { position: absolute; padding: 9px; border-radius: 46px; background: #1b1c20;
-  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08), 0 0 0 1px rgba(22,23,27,.6), 0 28px 50px -22px rgba(22,23,27,.55), 0 70px 110px -60px rgba(22,23,27,.55); }
-.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #101113; padding-top: 34px; }
+.phone { position: absolute; padding: 9px; border-radius: 46px; background: #17181c;
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.1), 0 0 0 1px rgba(10,22,70,.4), 0 34px 60px -26px rgba(6,14,52,.65), 0 80px 120px -60px rgba(6,14,52,.6); }
+.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #f3f0e8; padding-top: 34px; }
 .phone .scr img { display: block; width: 100%; }
 .phone .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #000; z-index: 2; }
-.note { position: absolute; font-family: Slab, serif; font-weight: 700; color: #d23c2a; line-height: 1.12; }
+.note { position: absolute; font-family: Slab, serif; font-weight: 600; color: #fffdf8; line-height: 1.12; }
+.slip { position: absolute; background: #fffdf8; color: #17181c; border-radius: 4px; padding: 22px 26px 18px;
+  box-shadow: 0 1px 2px rgba(10,22,70,.2), 0 24px 40px -20px rgba(6,14,52,.6); }
 svg.ink { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
-</style></head><body><div class="scene" style="width:1400px;height:825px">
-    <div class="screen" style="left:64px;top:64px;width:1272px;transform:rotate(0deg)"><img src="data:…"></div>
-    <div class="note" style="left:224.5542168674698px;top:709.301204819277px;width:600px;font-size:30px">The day it breaks, not the week after.</div>
-    <svg class="ink" width="1400" height="825"><path d="M648.6,489.4 L655.8,493.7 L655.3,499.2 L652.1,503.8 L648.7,509.4 L639.9,514.0 L626.4,515.1 L612.9,517.2 L598.4,520.6 L583.2,519.2 L570.0,515.2 L557.0,513.7 L545.5,511.0 L540.6,505.3 L539.2,500.3 L537.7,495.2 L541.5,489.8 L551.9,486.9 L562.9,483.8 L574.9,479.0 L589.9,478.2 L604.9,480.8 L619.4,481.1 L633.8,481.7 L643.4,486.7 L649.4,491.8 L655.5,496.0" fill="none" stroke="#d23c2a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M556.5542168674698,699.301204819277 Q610.1138554216866,618.2656626506024 586.5542168674698,524.0301204819277" fill="none" stroke="#d23c2a" stroke-width="2.6" stroke-linecap="round"/>
-    <path d="M594.8790896301189,534.0149336241806 L586.5542168674698,524.0301204819277 L583.9076679393886,536.7578767166799" fill="none" stroke="#d23c2a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</style></head><body><div class="scene" style="width:1400px;height:777px">
+    <div class="screen" style="left:70px;top:70px;width:1260px;transform:rotate(0deg)"><img src="data:…"></div>
+    <div class="note" style="left:243.71906354515045px;top:652.9698996655518px;width:620px;font-size:32px">The day it breaks, not the week after.</div>
+    <svg class="ink" width="1400" height="777"><path d="M666.0,459.4 L673.0,463.6 L672.6,469.0 L669.4,473.5 L666.2,479.0 L657.7,483.5 L644.5,484.5 L631.5,486.5 L617.5,489.9 L602.8,488.6 L590.0,484.6 L577.5,483.1 L566.3,480.5 L561.6,475.0 L560.3,470.0 L558.8,465.0 L562.5,459.7 L572.5,456.9 L583.2,453.9 L594.8,449.1 L609.3,448.3 L623.8,451.0 L637.8,451.2 L651.7,451.8 L661.0,456.7 L666.7,461.7 L672.8,465.8" fill="none" stroke="#d23c2a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M575.7190635451504,638.9698996655518 Q600.9190635451505,633.9698996655518 615.7190635451504,612.9698996655518" fill="none" stroke="rgba(6,14,52,.35)" stroke-width="6" stroke-linecap="round"/><path d="M613.4345196985786,626.7822441230685 L615.7190635451504,612.9698996655518 L603.4793872185531,619.7662459942886" fill="none" stroke="rgba(6,14,52,.35)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M575.7190635451504,638.9698996655518 Q600.9190635451505,633.9698996655518 615.7190635451504,612.9698996655518" fill="none" stroke="#fffdf8" stroke-width="2.8" stroke-linecap="round"/><path d="M613.4345196985786,626.7822441230685 L615.7190635451504,612.9698996655518 L603.4793872185531,619.7662459942886" fill="none" stroke="#fffdf8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div></body></html>

@@ -104,7 +104,7 @@ export function Suites() {
                   {s.id} · v{s.version}
                 </div>
               </div>
-              <span className="num shrink-0 rounded-full bg-white/[0.05] px-2.5 py-1 text-[12px] text-ink-2">{plural(s.tasks, 'task')}</span>
+              <span className="num shrink-0 rounded-full bg-ink/[0.05] px-2.5 py-1 text-[12px] text-ink-2">{plural(s.tasks, 'task')}</span>
             </div>
             <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-muted">{s.description || 'No description.'}</p>
             <div className="mt-4 flex flex-wrap gap-1.5">
@@ -116,7 +116,7 @@ export function Suites() {
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {Object.entries(s.check_types).map(([c, n]) => (
-                <span key={c} className="chip border-transparent bg-white/[0.025] font-mono text-[11px] text-faint">
+                <span key={c} className="chip border-transparent bg-ink/[0.025] font-mono text-[11px] text-faint">
                   {CHECK_LABEL[c] ?? c} ×{n}
                 </span>
               ))}

@@ -1,42 +1,50 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/schibsted-grotesk';
+@import '@fontsource/zilla-slab/latin-500.css';
 @import '@fontsource/zilla-slab/latin-600.css';
 @import '@fontsource/zilla-slab/latin-700.css';
 @import '@fontsource-variable/jetbrains-mono';
 
+/*
+  Evalbench: a blind tasting for models.
+  Paper and ink, like a printed results sheet. Azure is spent only on what you can click,
+  scorecard red only on the judge's marks and failures. Numbers are set in a slab, large.
+*/
 @theme {
   --font-sans: 'Schibsted Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
   --font-slab: 'Zilla Slab', ui-serif, Georgia, serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 
-  /* Evalbench: a blind tasting for models. Chalk on a dark judging table, azure for the blind
-     side of the cards, scorecard red for the marks a judge makes. */
-  --color-bg: #0d0e10;
-  --color-rail: #101113;
-  --color-panel: #141518;
-  --color-panel-2: #191a1e;
-  --color-raise: #1e2025;
-  --color-line: #ffffff10;
-  --color-line-2: #ffffff1c;
-  --color-ink: #efebe2;
-  --color-ink-2: #c3beb3;
-  --color-muted: #8f8a80;
-  --color-faint: #625e57;
+  --color-bg: #f3f0e8;
+  --color-rail: #f3f0e8;
+  --color-panel: #fffdf8;
+  --color-panel-2: #f9f6ef;
+  --color-raise: #efeadf;
+  --color-line: #e6e0d3;
+  --color-line-2: #d6cebe;
+  --color-ink: #17181c;
+  --color-ink-2: #3d3e44;
+  --color-muted: #6c6b67;
+  --color-faint: #716d66; /* AA on every paper tone */
+  --color-ghost: #b3ada2; /* decoration only, never information */
 
-  --color-accent: #4da3ff;
-  --color-accent-2: #8cc4ff;
-  --color-accent-ink: #04111f;
+  --color-accent: #2457f0;
+  --color-accent-2: #1a44c4;
+  --color-accent-ink: #ffffff;
 
-  --color-good: #0ca30c;
-  --color-good-ink: #52d152;
-  --color-warn: #fab219;
-  --color-serious: #ec835a;
+  --color-good: #1d7a4b;
+  --color-good-ink: #1d7a4b;
+  --color-good-tint: #e3efe6;
+  --color-warn: #8f5509;
+  --color-warn-tint: #f6ead6;
+  --color-serious: #b4511d;
   --color-bad: #d23c2a;
-  --color-bad-ink: #ef6f5c;
-  --color-mark: #e04a36;
+  --color-bad-ink: #bf3220;
+  --color-bad-tint: #f9e3de;
+  --color-mark: #d23c2a;
 
-  --color-side-a: #4da3ff;
-  --color-side-b: #e9a23b;
+  --color-side-a: #2457f0;
+  --color-side-b: #b4531c;
 }
 
 @layer base {
@@ -47,14 +55,15 @@
   }
   body {
     @apply bg-bg text-ink font-sans antialiased;
-    font-size: 14px;
+    font-size: 15px;
+    line-height: 1.55;
   }
   ::selection {
-    background: #4da3ff55;
+    background: #2457f033;
   }
   * {
     scrollbar-width: thin;
-    scrollbar-color: #ffffff1f transparent;
+    scrollbar-color: #17181c26 transparent;
   }
   button {
     cursor: pointer;
@@ -70,68 +79,78 @@
 }
 
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-3.5 h-9 text-[13.5px] font-medium transition-all select-none whitespace-nowrap;
+  @apply inline-flex items-center justify-center gap-2 rounded-[10px] px-4 h-10 text-[14.5px] font-semibold transition-all select-none whitespace-nowrap;
 }
 
 @layer components {
+  /* A sheet of paper on the table. */
   .card {
-    @apply bg-panel border border-line rounded-[14px];
-  }
-  .card-pad {
-    @apply p-5;
+    @apply bg-panel border border-line rounded-[16px];
+    box-shadow:
+      0 1px 0 rgba(23, 24, 28, 0.03),
+      0 10px 30px -22px rgba(23, 24, 28, 0.35);
   }
   .label {
-    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-faint;
+    @apply text-[12px] font-semibold uppercase tracking-[0.07em] text-faint;
   }
   .num {
     font-variant-numeric: tabular-nums;
   }
-  /* Scores are set in the slab, like figures on a judge's card. */
   .slab {
     font-family: var(--font-slab);
     font-variant-numeric: lining-nums tabular-nums;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
   .input {
-    @apply w-full rounded-[10px] bg-[#0d1014] border border-line-2 px-3 py-2 text-[13.5px] text-ink placeholder:text-faint outline-none transition-colors;
+    @apply w-full rounded-[10px] bg-panel border border-line-2 px-3.5 py-2.5 text-[14.5px] text-ink placeholder:text-faint outline-none transition-colors;
   }
   .input:focus {
-    @apply border-accent/70 bg-[#0e1217];
-    box-shadow: 0 0 0 3px #4da3ff1f;
+    @apply border-accent;
+    box-shadow: 0 0 0 3px #2457f022;
   }
   .btn-primary {
-    @apply btn bg-accent text-accent-ink font-semibold hover:bg-accent-2;
+    @apply btn bg-ink text-panel hover:bg-[#2c2d33];
     box-shadow:
-      0 6px 20px -8px #4da3ffaa,
-      inset 0 1px 0 #ffffff55;
+      0 1px 0 rgba(255, 255, 255, 0.08) inset,
+      0 6px 16px -10px rgba(23, 24, 28, 0.6);
   }
   .btn-primary:disabled {
-    @apply opacity-50 hover:bg-accent;
+    @apply opacity-35 hover:bg-ink;
+  }
+  .btn-accent {
+    @apply btn bg-accent text-white hover:bg-accent-2;
   }
   .btn-ghost {
-    @apply btn bg-white/[0.04] border border-line-2 text-ink-2 hover:text-ink hover:bg-white/[0.07];
+    @apply btn border border-line-2 text-ink bg-panel hover:bg-raise;
   }
   .btn-quiet {
-    @apply btn text-muted hover:text-ink hover:bg-white/[0.05] px-2.5;
+    @apply btn font-medium text-muted hover:text-ink hover:bg-ink/[0.05] px-3;
   }
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-line-2 bg-white/[0.03] px-2.5 h-6 text-[12px] text-ink-2 whitespace-nowrap;
+    @apply inline-flex items-center gap-1.5 rounded-[6px] bg-ink/[0.05] px-2 h-6 text-[12.5px] font-medium text-ink-2 whitespace-nowrap;
   }
   .kbd {
-    @apply inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-[5px] border border-line-2 bg-white/[0.04] font-mono text-[10.5px] text-muted;
+    @apply inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-[5px] border border-line-2 bg-panel font-mono text-[10.5px] text-muted;
+    box-shadow: 0 1px 0 var(--color-line-2);
+  }
+  .link {
+    @apply text-accent font-medium hover:text-accent-2;
   }
   .prose-answer {
-    @apply text-[13.5px] leading-[1.65] text-ink-2;
+    @apply text-[15px] leading-[1.68] text-ink-2;
   }
   .prose-answer p {
-    @apply my-2.5;
+    @apply my-3;
   }
   .prose-answer p:first-child {
     @apply mt-0;
   }
+  .prose-answer p:last-child {
+    @apply mb-0;
+  }
   .prose-answer ul,
   .prose-answer ol {
-    @apply my-2.5 pl-5;
+    @apply my-3 pl-5;
   }
   .prose-answer ul {
     list-style: disc;
@@ -145,14 +164,17 @@
   .prose-answer strong {
     @apply text-ink font-semibold;
   }
+  .prose-answer a {
+    @apply text-accent underline underline-offset-2;
+  }
   .prose-answer code {
-    @apply font-mono text-[12.5px] text-[#d6deeb] bg-white/[0.06] rounded-[5px] px-1 py-[1px];
+    @apply font-mono text-[13px] text-ink bg-ink/[0.06] rounded-[5px] px-1 py-[1px];
   }
   .prose-answer pre {
-    @apply my-3 rounded-[10px] border border-line bg-[#0b0e12] p-3.5 overflow-x-auto;
+    @apply my-3.5 rounded-[12px] border border-line bg-panel-2 p-4 overflow-x-auto;
   }
   .prose-answer pre code {
-    @apply bg-transparent p-0 text-[12.5px] leading-[1.6];
+    @apply bg-transparent p-0 text-[13px] leading-[1.65];
   }
   .prose-answer h1,
   .prose-answer h2,
@@ -160,81 +182,12 @@
     @apply text-ink font-semibold mt-4 mb-2;
   }
   .prose-answer table {
-    @apply my-3 text-[12.5px];
+    @apply my-3 text-[13.5px];
   }
   .prose-answer td,
   .prose-answer th {
     @apply border border-line px-2 py-1;
   }
-}
-
-/* highlight.js, tuned to the palette */
-.hljs-keyword,
-.hljs-built_in,
-.hljs-literal {
-  color: #c4a7ff;
-}
-.hljs-string,
-.hljs-regexp {
-  color: #9fd88a;
-}
-.hljs-number {
-  color: #f4b66a;
-}
-.hljs-comment {
-  color: #5e6676;
-  font-style: italic;
-}
-.hljs-title,
-.hljs-title.function_ {
-  color: #7cc0ff;
-}
-.hljs-params {
-  color: #d6deeb;
-}
-.hljs-attr,
-.hljs-property {
-  color: #8cc4ff;
-}
-
-.bg-grid {
-  background-image: radial-gradient(#ffffff0d 1px, transparent 1.2px);
-  background-size: 22px 22px;
-}
-
-@keyframes pulse-soft {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
-.animate-pulse-soft {
-  animation: pulse-soft 1.6s ease-in-out infinite;
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.animate-rise {
-  animation: rise 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
-.cm-editor {
-  font-size: 12.5px;
-  height: 100%;
-}
-.cm-editor.cm-focused {
-  outline: none;
 }
 
 /* Code reads character by character: no ligatures turning == into one glyph. */
@@ -246,17 +199,119 @@ textarea,
   font-variant-ligatures: none;
 }
 
+/* highlight.js, in ink with a few colours */
+.hljs-keyword,
+.hljs-built_in,
+.hljs-literal {
+  color: #b4531c;
+}
+.hljs-string,
+.hljs-regexp {
+  color: #1d7a4b;
+}
+.hljs-number {
+  color: #2457f0;
+}
+.hljs-comment {
+  color: #9c988f;
+  font-style: italic;
+}
+.hljs-title,
+.hljs-title.function_ {
+  color: #17181c;
+  font-weight: 650;
+}
+.hljs-params {
+  color: #3d3e44;
+}
+.hljs-attr,
+.hljs-property {
+  color: #2457f0;
+}
+
+/* Ruled paper, for the places you write by hand. */
+.ruled {
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 27px, #e6e0d3 27px, #e6e0d3 28px);
+  background-position: 0 10px;
+  background-attachment: local;
+  line-height: 28px !important;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+.animate-pulse-soft {
+  animation: pulse-soft 1.6s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* A card being dealt onto the table. */
+@keyframes deal {
+  from {
+    opacity: 0;
+    transform: translateY(14px) rotate(var(--deal-rot, -1.5deg));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-deal {
+  animation: deal 0.45s cubic-bezier(0.2, 0.75, 0.2, 1) both;
+}
+
 /* The reveal at the end of a blind queue: each card turns over to show who wrote it. */
 @keyframes flip-in {
   from {
     opacity: 0;
-    transform: perspective(600px) rotateY(88deg);
+    transform: perspective(700px) rotateY(88deg);
   }
   to {
     opacity: 1;
-    transform: perspective(600px) rotateY(0);
+    transform: perspective(700px) rotateY(0);
   }
 }
 .animate-flip {
   animation: flip-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+/* The judge's pen: a ring drawn around the chosen verdict. */
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.animate-draw {
+  stroke-dasharray: 1;
+  animation: draw 0.42s cubic-bezier(0.3, 0.6, 0.2, 1) both;
+}
+
+.cm-editor {
+  font-size: 13px;
+  height: 100%;
+}
+.cm-editor.cm-focused {
+  outline: none;
 }

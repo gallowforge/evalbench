@@ -43,7 +43,7 @@ function clean<T extends object>(obj: T): T {
 function Toggle({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
   return (
     <label className="inline-flex cursor-pointer select-none items-center gap-2 text-[12.5px] text-ink-2">
-      <input type="checkbox" className="h-3.5 w-3.5 accent-[#4da3ff]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <input type="checkbox" className="h-3.5 w-3.5 accent-[#17181c]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       {children}
     </label>
   );
@@ -54,7 +54,7 @@ function CheckEditor({ check, onChange, onRemove }: { check: Check; onChange: (c
   const t = check.type;
   const meta = CHECK_TYPES.find((c) => c.value === t)!;
   return (
-    <div className="rounded-[12px] border border-line-2 bg-[#0d1014] p-4">
+    <div className="rounded-[12px] border border-line-2 bg-panel-2 p-4">
       <div className="mb-3 flex items-center gap-2">
         <select
           className="input h-8 w-auto py-0 text-[12.5px] font-medium"
@@ -266,7 +266,7 @@ function TaskEditor({
 }) {
   const set = (patch: Partial<Task>) => onChange({ ...task, ...patch });
   return (
-    <div className="space-y-4 border-t border-line bg-white/[0.012] px-5 py-5">
+    <div className="space-y-4 border-t border-line bg-ink/[0.012] px-5 py-5">
       <div className="grid gap-3 md:grid-cols-[1fr_1.4fr_1fr]">
         <Field label="Id">
           <input className="input font-mono text-[12.5px]" value={task.id} onChange={(e) => set({ id: e.target.value })} />
@@ -300,7 +300,7 @@ function TaskEditor({
       </div>
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[12.5px] font-medium text-ink-2">Automatic checks</span>
+          <span className="text-[13.5px] font-semibold text-ink-2">Automatic checks</span>
           <span className="text-[12px] text-faint">The task passes when every check passes</span>
         </div>
         <div className="space-y-2.5">
@@ -337,7 +337,7 @@ function RubricEditor({ rubric, onChange }: { rubric: RubricDimension[]; onChang
       </p>
       <div className="space-y-2.5">
         {rubric.map((d, i) => (
-          <div key={i} className="grid items-start gap-2.5 rounded-[12px] border border-line-2 bg-[#0d1014] p-3 md:grid-cols-[180px_200px_1fr_auto]">
+          <div key={i} className="grid items-start gap-2.5 rounded-[12px] border border-line-2 bg-panel-2 p-3 md:grid-cols-[180px_200px_1fr_auto]">
             <input
               className="input font-mono text-[12.5px]"
               value={d.id}
@@ -461,7 +461,7 @@ export function SuiteDetail({ id }: { id: string }) {
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : `${i}`)}
-                  className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-white/[0.02]"
+                  className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-ink/[0.02]"
                 >
                   <ChevronRight size={15} className={cx('shrink-0 text-faint transition-transform', isOpen && 'rotate-90')} />
                   <span className="w-[150px] shrink-0 truncate font-mono text-[11.5px] text-faint">{t.id}</span>
@@ -470,7 +470,7 @@ export function SuiteDetail({ id }: { id: string }) {
                   <span className="hidden w-[190px] justify-end gap-1 md:flex">
                     {t.checks.length ? (
                       [...new Set(t.checks.map((c) => c.type))].map((type) => (
-                        <span key={type} className="rounded-[6px] bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10.5px] text-muted">
+                        <span key={type} className="rounded-[6px] bg-ink/[0.04] px-1.5 py-0.5 font-mono text-[10.5px] text-muted">
                           {type === 'not_contains' ? 'avoids' : type}
                           {t.checks.filter((c) => c.type === type).length > 1 ? ` ×${t.checks.filter((c) => c.type === type).length}` : ''}
                         </span>
@@ -531,7 +531,7 @@ export function SuiteDetail({ id }: { id: string }) {
       )}
 
       {dirty && (
-        <div className="sticky bottom-4 z-20 mt-5 flex items-center justify-between gap-3 rounded-[14px] border border-accent/30 bg-[#121a24f2] px-5 py-3 shadow-[0_20px_60px_-20px_#000] backdrop-blur animate-rise">
+        <div className="sticky bottom-4 z-20 mt-5 flex items-center justify-between gap-3 rounded-[14px] border border-line-2 bg-panel px-5 py-3 shadow-[0_20px_50px_-24px_rgba(23,24,28,0.5)] backdrop-blur animate-rise">
           <span className="text-[13px] text-ink-2">Unsaved changes{tab !== 'yaml' ? ' · saving rewrites the YAML from the form' : ''}</span>
           <div className="flex gap-2">
             <button

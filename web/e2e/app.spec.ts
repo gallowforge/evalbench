@@ -6,12 +6,12 @@ test.beforeEach(async ({ page }) => {
 
 test('overview shows the leaderboard and what changed', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('leads the core battery');
   for (const name of ['Nimbus Pro', 'Atlas 70B', 'Orion Mini', 'Vega 8B']) {
     await expect(page.getByText(name).first()).toBeVisible();
   }
-  await expect(page.getByText('Answers graded')).toBeVisible();
-  await expect(page.getByText('Since the previous run')).toBeVisible();
+  await expect(page.getByText(/answers graded by/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Since run #5/ })).toBeVisible();
 });
 
 test('a run shows the result matrix and opens answers side by side', async ({ page }) => {
@@ -26,12 +26,12 @@ test('a run shows the result matrix and opens answers side by side', async ({ pa
 
 test('blind rating hides the models and records a full rating', async ({ page }) => {
   await page.goto('/rate?run=6');
-  await expect(page.getByText('Response A', { exact: true })).toBeVisible();
+  await expect(page.getByText('Answer A', { exact: true })).toBeVisible();
   const cards = await page.locator('article, section').allInnerTexts();
   for (const name of ['Nimbus', 'Atlas', 'Orion', 'Vega']) {
     expect(cards.join('\n')).not.toContain(name);
   }
-  const progress = page.getByText(/of \d+ rated/);
+  const progress = page.getByText(/of \d+ judged/);
   const before = Number((await progress.textContent())!.match(/(\d+) of/)![1]);
   const articles = page.locator('article');
   for (const i of [0, 1]) {
@@ -45,10 +45,10 @@ test('blind rating hides the models and records a full rating', async ({ page })
       if ((await buttons.count()) === 5) await buttons.nth(i === 0 ? 4 : 2).click();
     }
   }
-  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.mouse.click(4, 500);
   await page.keyboard.press('2');
-  await page.getByPlaceholder(/Point to specific parts/).fill('A is correct and shows each step; B makes an error and skips the check.');
-  await page.getByRole('button', { name: 'Submit' }).click();
+  await page.getByPlaceholder(/Point at the parts/).fill('A is correct and shows each step; B makes an error and skips the check.');
+  await page.getByRole('button', { name: 'Submit verdict' }).click();
   await expect(progress).toHaveText(new RegExp(`${before + 1} of`));
 });
 

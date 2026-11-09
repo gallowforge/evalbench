@@ -30,12 +30,12 @@ function ExportCard({
   return (
     <div className="card flex flex-col p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-[11px] border border-line-2 bg-white/[0.03] text-accent">{icon}</div>
+        <div className="grid h-10 w-10 place-items-center rounded-[11px] border border-line-2 bg-ink/[0.03] text-accent">{icon}</div>
         <span className="num text-[12px] text-muted">{count}</span>
       </div>
       <div className="mt-4 text-[14.5px] font-semibold">{title}</div>
       <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{text}</p>
-      <pre className="mt-3 overflow-hidden whitespace-pre-wrap break-all rounded-[9px] border border-line bg-[#0b0e12] px-3 py-2 font-mono text-[11px] leading-relaxed text-faint">
+      <pre className="mt-3 overflow-hidden whitespace-pre-wrap break-all rounded-[9px] border border-line bg-panel-2 px-3 py-2 font-mono text-[11px] leading-relaxed text-faint">
         {sample}
       </pre>
       <a className="btn-ghost mt-4" href={href}>
@@ -50,7 +50,7 @@ export function DataPage() {
   const s = useQuery({ queryKey: ['export-summary'], queryFn: () => api.get<ExportSummary>('/export/summary') });
   const ratings = useQuery({
     queryKey: ['ratings', suite],
-    queryFn: () => api.get<RatingRow[]>(`/ratings?limit=60${suite ? `&suite=${suite}` : ''}`),
+    queryFn: () => api.get<RatingRow[]>(`/ratings?limit=20${suite ? `&suite=${suite}` : ''}`),
   });
   const models = useQuery({ queryKey: ['models-all'], queryFn: () => api.get<Model[]>('/models?archived=true') });
   const byId = new Map(models.data?.map((m) => [m.id, m]));

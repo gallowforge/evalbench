@@ -26,16 +26,16 @@ SUITE_ID = "core-battery"
 
 MODELS = [
     {"label": "Nimbus Pro", "base_url": "https://api.example.com/v1", "model": "nimbus-pro",
-     "api_key_env": "NIMBUS_API_KEY", "concurrency": 4, "color": "#3987e5",
+     "api_key_env": "NIMBUS_API_KEY", "concurrency": 4, "color": "#2a78d6",
      "skill": [None, 0.78, 0.80, 0.82, 0.83, 0.84], "speed": (380, 16), "pick": 0},
     {"label": "Atlas 70B", "base_url": "http://192.168.1.40:1234/v1", "model": "atlas-70b-instruct",
-     "api_key_env": None, "concurrency": 1, "color": "#d95926",
+     "api_key_env": None, "concurrency": 1, "color": "#eb6834",
      "skill": [0.70, 0.72, 0.73, 0.76, 0.78, 0.80], "speed": (900, 42), "pick": 1},
     {"label": "Orion Mini", "base_url": "https://api.example.com/v1", "model": "orion-mini",
-     "api_key_env": "NIMBUS_API_KEY", "concurrency": 8, "color": "#199e70",
+     "api_key_env": "NIMBUS_API_KEY", "concurrency": 8, "color": "#1baf7a",
      "skill": [0.52, 0.55, 0.58, 0.60, 0.62, 0.66], "speed": (240, 7), "pick": -1},
     {"label": "Vega 8B", "base_url": "http://192.168.1.40:11434/v1", "model": "vega-8b-q4",
-     "api_key_env": None, "concurrency": 1, "color": "#c98500",
+     "api_key_env": None, "concurrency": 1, "color": "#eda100",
      "skill": [0.36, 0.42, 0.49, 0.55, 0.62, 0.42], "speed": (300, 20), "pick": 0},
 ]
 RUN_LABELS = ["baseline", "weekly", "weekly", "new sampling defaults", "weekly", "vega 8b re-quantised"]

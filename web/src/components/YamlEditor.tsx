@@ -8,28 +8,28 @@ import { useEffect, useRef } from 'react';
 
 const theme = EditorView.theme(
   {
-    '&': { backgroundColor: '#0b0e12', color: '#d6deeb', height: '100%' },
-    '.cm-scroller': { fontFamily: "'JetBrains Mono Variable', ui-monospace, monospace", lineHeight: '1.65' },
-    '.cm-content': { padding: '14px 0', caretColor: '#4da3ff' },
-    '.cm-gutters': { backgroundColor: '#0b0e12', color: '#4a5260', border: 'none', paddingRight: '6px' },
-    '.cm-activeLine': { backgroundColor: '#ffffff06' },
-    '.cm-activeLineGutter': { backgroundColor: 'transparent', color: '#8a93a3' },
-    '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': { backgroundColor: '#4da3ff33 !important' },
-    '.cm-cursor': { borderLeftColor: '#4da3ff' },
-    '.cm-foldGutter span': { color: '#4a5260' },
-    '.cm-matchingBracket': { backgroundColor: '#4da3ff26', outline: 'none' },
+    '&': { backgroundColor: '#fffdf8', color: '#17181c', height: '100%' },
+    '.cm-scroller': { fontFamily: "'JetBrains Mono Variable', ui-monospace, monospace", lineHeight: '1.7' },
+    '.cm-content': { padding: '16px 0', caretColor: '#17181c' },
+    '.cm-gutters': { backgroundColor: '#f9f6ef', color: '#b3ada2', border: 'none', borderRight: '1px solid #e6e0d3', paddingRight: '4px' },
+    '.cm-activeLine': { backgroundColor: '#17181c08' },
+    '.cm-activeLineGutter': { backgroundColor: 'transparent', color: '#6c6b67' },
+    '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection': { backgroundColor: '#2457f02e !important' },
+    '.cm-cursor': { borderLeftColor: '#17181c', borderLeftWidth: '2px' },
+    '.cm-foldGutter span': { color: '#b3ada2' },
+    '.cm-matchingBracket': { backgroundColor: '#2457f01f', outline: 'none' },
   },
-  { dark: true },
+  { dark: false },
 );
 
 const highlight = HighlightStyle.define([
-  { tag: [t.propertyName, t.definition(t.propertyName)], color: '#8cc4ff' },
-  { tag: [t.string, t.special(t.string)], color: '#cfd8e6' },
-  { tag: [t.number, t.bool, t.null], color: '#f4b66a' },
-  { tag: t.comment, color: '#5e6676', fontStyle: 'italic' },
-  { tag: [t.punctuation, t.separator, t.squareBracket, t.brace], color: '#6b7484' },
-  { tag: [t.keyword, t.labelName, t.typeName], color: '#c4a7ff' },
-  { tag: t.content, color: '#cfd8e6' },
+  { tag: [t.propertyName, t.definition(t.propertyName)], color: '#2457f0', fontWeight: '600' },
+  { tag: [t.string, t.special(t.string)], color: '#17181c' },
+  { tag: [t.number, t.bool, t.null], color: '#b4531c' },
+  { tag: t.comment, color: '#9c988f', fontStyle: 'italic' },
+  { tag: [t.punctuation, t.separator, t.squareBracket, t.brace], color: '#9c988f' },
+  { tag: [t.keyword, t.labelName, t.typeName], color: '#b4531c' },
+  { tag: t.content, color: '#17181c' },
 ]);
 
 export function YamlEditor({ value, onChange, minHeight = 420 }: { value: string; onChange: (v: string) => void; minHeight?: number }) {

@@ -1,6 +1,6 @@
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/hero-mobile.webp" />
-  <img src="docs/readme/hero.webp" width="100%" alt="Evalbench: judge the answer, not the name. A judge’s scorecard of four models with their pass rates and human ratings, beside the blind rating screen, where the two anonymous answers, A and B, are circled in red." />
+  <img src="docs/readme/hero.webp" width="100%" alt="Evalbench: judge the answer, not the name. On an azure field, the judging screen with two anonymous answers, A and B, each circled in red, beside a paper scorecard slip of four models with their pass rates and judge ratings." />
 </picture>
 
 <p align="center">
@@ -8,7 +8,7 @@
   &nbsp;·&nbsp;
   <a href="#write-the-test-before-you-trust-the-model">Write a suite</a>
   &nbsp;·&nbsp;
-  <a href="#rate-blind-the-way-training-teams-do">Blind rating</a>
+  <a href="#judge-blind-the-way-training-teams-do">Blind judging</a>
   &nbsp;·&nbsp;
   <a href="#under-the-hood">How it works</a>
   &nbsp;·&nbsp;
@@ -19,10 +19,10 @@
 
 <p align="center">
   <a href="https://github.com/gallowforge/evalbench/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gallowforge/evalbench/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="97 tests passing" src="https://img.shields.io/badge/tests-97_passing-4da3ff?labelColor=0f1217" />
-  <img alt="One compose file" src="https://img.shields.io/badge/deploy-one_compose_file-4da3ff?labelColor=0f1217" />
-  <img alt="Code sandbox with no network" src="https://img.shields.io/badge/code_sandbox-no_network-4da3ff?labelColor=0f1217" />
-  <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-9aa1ad?labelColor=0f1217" />
+  <img alt="97 tests passing" src="https://img.shields.io/badge/tests-97_passing-2457f0?labelColor=17181c" />
+  <img alt="One compose file" src="https://img.shields.io/badge/deploy-one_compose_file-2457f0?labelColor=17181c" />
+  <img alt="Code sandbox with no network" src="https://img.shields.io/badge/code_sandbox-no_network-2457f0?labelColor=17181c" />
+  <img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-9c988f?labelColor=17181c" />
 </p>
 
 <br />
@@ -33,10 +33,19 @@ Picking a model by vibes is easy and wrong. A few chats feel convincing, a leade
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/numbers-mobile.webp" />
-  <img src="docs/readme/numbers.webp" width="100%" alt="20 battery tasks across reasoning, constraints and debugging; 7 check types from exact match to Python tests; 3 provider kinds: Anthropic, OpenAI and any OpenAI-compatible server; 4 export formats; and 0 keys stored, because keys are read from the environment." />
+  <img src="docs/readme/numbers.webp" width="100%" alt="20 battery tasks across reasoning, constraints and debugging; 7 check types from exact match to Python tests; 3 provider kinds: Anthropic, OpenAI and any OpenAI-compatible server; 4 export formats; and 0 keys stored, circled, because keys are read from the environment." />
 </picture>
 
 <br />
+
+## Know what happened before you scroll
+
+The overview opens on a headline written from your latest run: who leads, by how much, what the judges think, and what broke since last time. Under it, a scorecard of every model with its pass rate, judge rating, trend and speed.
+
+<picture>
+  <source media="(max-width: 700px)" srcset="docs/readme/overview-mobile.webp" />
+  <img src="docs/readme/overview.webp" width="100%" alt="The overview, headlined Nimbus Pro leads the core battery, underlined in red with the note: it writes the headline for you, from the latest run; below it, a scorecard of four models with pass rates, judge ratings, six-run trends and median latency." />
+</picture>
 
 ## Write the test before you trust the model
 
@@ -48,7 +57,7 @@ A suite is a list of tasks. Each task has a prompt, optional reference answer fo
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/write-mobile.webp" />
-  <img src="docs/readme/write.webp" width="100%" alt="The suite editor with the Binary search that hangs task open: prompt, reference answer and a Python tests check, with the five test assertions circled in red and the note: your tests run against the answer’s code, in a box with no way out." />
+  <img src="docs/readme/write.webp" width="100%" alt="The suite editor with the Binary search that hangs task open: prompt, reference answer and a Python tests check, its five assertions underlined in red, with the note: your tests run against the answer’s code, in a box with no way out." />
 </picture>
 
 ## Run every model on the same tasks
@@ -61,7 +70,7 @@ Add a model in a few seconds: pick LM Studio, Ollama, Anthropic, OpenAI or any O
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/run-mobile.webp" />
-  <img src="docs/readme/run.webp" width="100%" alt="The result matrix of a run: tasks down the side, four models across, green passes, red failures and amber partial scores, with one failed cell circled in red and the note: every cell is a verdict, click one for the reason." />
+  <img src="docs/readme/run.webp" width="100%" alt="Every verdict in a run: tasks down the side, four models across, green ticks, red crosses and amber partial scores, with one failed square circled in red and the note: every square is a verdict, click one for the reason." />
 </picture>
 
 ## Read the answers side by side
@@ -70,20 +79,21 @@ Click any cell and every model's answer to that task opens in columns, with each
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/compare-mobile.webp" />
-  <img src="docs/readme/compare.webp" width="100%" alt="Four answers to the Two-sentence summary task side by side with their check results; the one rule Vega 8B broke, three sentences where two were allowed, is circled in red." />
+  <img src="docs/readme/compare.webp" width="100%" alt="Two answers to the Two-sentence summary task with their check results; the one rule Vega 8B broke, three sentences where two were allowed, is circled in red." />
 </picture>
 
-## Rate blind, the way training teams do
+## Judge blind, the way training teams do
 
-Automatic checks catch wrong answers; people catch the rest. Evalbench shows two answers to the same task from two different models, in random order, with nothing that names either model.
+Automatic checks catch wrong answers; people catch the rest. Evalbench deals two answers to the same task from two different models, like tasting cards turned face up: random order, nothing that names either model.
 
 - **The questions rating platforms ask.** Score each response from 1 to 5 on every rubric dimension, tick issues such as a factual error or an ignored constraint, choose a side on a seven-point scale from "A is much better" to "B is much better", and write a justification. Confidence and time spent are recorded too.
 - **A queue that stays balanced.** The next pair is always the least-rated one, so every pair of models gets coverage. Each rater has their own queue, and skipped pairs come back last.
 - **Fast with a keyboard.** Keys `1` to `7` choose, `S` skips, `Ctrl`+`Enter` submits.
+- **The labels come off at the end.** When your queue is done, the cards turn over: every pair you judged shows who wrote what, with a tally of which model you kept picking. Never before, so it can never sway a verdict.
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/rate-mobile.webp" />
-  <img src="docs/readme/rate.webp" width="100%" alt="A blind rating in progress: two anonymous answers scored on four rubric dimensions with a factual error flagged, the seven-step preference with the winning side circled in red, and a written justification." />
+  <img src="docs/readme/rate.webp" width="100%" alt="The judging screen: two anonymous answers, A and B, scored on a paper-form rubric with a factual error ticked, the seven-stop verdict scale with the judge’s red loop around the choice, and the written reason." />
 </picture>
 
 ## One leaderboard for checks and people
@@ -96,7 +106,7 @@ The scoreboard puts the two kinds of evidence next to each other: how many tasks
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/scoreboard-mobile.webp" />
-  <img src="docs/readme/scoreboard.webp" width="100%" alt="The leaderboard: four models with pass rate, score, human rating with its confidence interval, win rate and latency; the interval of the top rating is circled in red with the note: a lead inside the interval is not a lead." />
+  <img src="docs/readme/scoreboard.webp" width="100%" alt="The leaderboard: four models with pass rate, judge rating with its confidence interval, picks and latency; the interval of the top rating is circled in red with the note: a lead inside the interval is not a lead." />
 </picture>
 
 ## Catch a regression the day it lands
@@ -105,7 +115,7 @@ For each model, Evalbench compares its latest run with the one before and lists 
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/history-mobile.webp" />
-  <img src="docs/readme/history.webp" width="100%" alt="Pass rate over time for four models across six runs, with Vega 8B's drop at run 6 circled in red: the re-quantised model, caught on the chart." />
+  <img src="docs/readme/history.webp" width="100%" alt="Pass rate over time for four models across six runs, with Vega 8B’s drop at run 6 circled in red: the re-quantised model, caught on the chart." />
 </picture>
 
 The same check runs in CI. `evalbench run` sends a suite to one or more models headless and exits non-zero below a pass rate, so a prompt change or a new quantisation can fail a pull request:
@@ -121,7 +131,7 @@ evalbench run suites/support.yaml \
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/regressions-mobile.webp" />
-  <img src="docs/readme/regressions.webp" width="100%" alt="Regressions from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B, with the last one circled in red; beside it, a head-to-head matrix of blind preference rates." />
+  <img src="docs/readme/regressions.webp" width="100%" alt="What changed from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B, the last one circled in red, beside a head-to-head matrix of blind preferences." />
 </picture>
 
 ## Take your data with you
@@ -134,7 +144,7 @@ Everything raters and checks produce downloads in one click, and every record ca
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/readme/data-mobile.webp" />
-  <img src="docs/readme/data.webp" width="100%" alt="The Data page with four export cards, the Preference pairs card circled in red with the note: every decisive verdict, ready to train on." />
+  <img src="docs/readme/data.webp" width="100%" alt="The four exports, with the Preference pairs card circled in red and the note: every decisive verdict, ready to train on." />
 </picture>
 
 ## The core battery
@@ -168,7 +178,7 @@ curl -O https://raw.githubusercontent.com/gallowforge/evalbench/main/compose.yam
 docker compose up -d
 ```
 
-Open **http://localhost:8484** and create a password: Evalbench can spend API credits and run model-written code, so sign-in is on from the first visit. To look around before connecting a model, choose **Explore the demo workspace**.
+Open **http://localhost:8484** and create a password: Evalbench can spend API credits and run model-written code, so sign-in is on from the first visit. To look around before connecting a model, choose **Load the demo workspace**.
 
 To use API models, put the keys in a `.env` file next to `compose.yaml` (see [`.env.example`](.env.example)) and run `docker compose up -d` again. To use LM Studio or Ollama on the same machine, add a model with the base URL `http://host.docker.internal:1234/v1` or `http://host.docker.internal:11434/v1`; compose already maps that name to the host.
 
@@ -296,7 +306,7 @@ CI checks the network layer, the app's refusal and the per-run users on every pu
 <summary><b>Stack and architecture</b></summary>
 <br />
 
-Python 3.12+ with [FastAPI](https://fastapi.tiangolo.com), SQLite in WAL mode, Pydantic, and the official [Anthropic](https://github.com/anthropics/anthropic-sdk-python) and [OpenAI](https://github.com/openai/openai-python) SDKs. The web app is React 19 with TypeScript, Vite, Tailwind CSS v4, TanStack Query and CodeMirror; Inter and JetBrains Mono are bundled, so no request leaves for fonts.
+Python 3.12+ with [FastAPI](https://fastapi.tiangolo.com), SQLite in WAL mode, Pydantic, and the official [Anthropic](https://github.com/anthropics/anthropic-sdk-python) and [OpenAI](https://github.com/openai/openai-python) SDKs. The web app is React 19 with TypeScript, Vite, Tailwind CSS v4, TanStack Query and CodeMirror. Type is Schibsted Grotesk, with Zilla Slab for scores and JetBrains Mono for code, all bundled, so no request leaves for fonts.
 
 ```
 evalbench/

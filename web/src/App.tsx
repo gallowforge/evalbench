@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { BarChart3, Boxes, Database, FileStack, Gauge, LayoutGrid, Lock, Play, Scale, Settings as SettingsIcon } from 'lucide-react';
+import { Lock, Settings as SettingsIcon } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { Link, Route, Switch, useLocation } from 'wouter';
 import { api, type Overview as OverviewData } from './api';
@@ -17,123 +17,96 @@ import { SettingsPage } from './pages/Settings';
 import { SuiteDetail } from './pages/SuiteDetail';
 import { Suites } from './pages/Suites';
 
-/** Two tasting cards: one still face-down, one turned over and ticked by the judge. */
+/** Two tasting cards: one still face down, one turned over and ticked by the judge. */
 export function Logo({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden>
-      <rect width="32" height="32" rx="8" fill="#16171b" />
+      <rect width="32" height="32" rx="8" fill="#17181c" />
       <g transform="rotate(-11 11.5 17)">
-        <rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#4da3ff" />
+        <rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#2457f0" />
       </g>
       <g transform="rotate(8 20.5 15.5)">
-        <rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="#f1eee6" />
-        <path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#e04a36" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="#fffdf8" />
+        <path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#d23c2a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     </svg>
   );
 }
 
-function NavItem({
-  href,
-  icon,
-  children,
-  badge,
-  match,
-}: {
-  href: string;
-  icon: ReactNode;
-  children: ReactNode;
-  badge?: ReactNode;
-  match?: (path: string) => boolean;
-}) {
+const NAV: { href: string; label: string; exact?: boolean }[] = [
+  { href: '/', label: 'Overview', exact: true },
+  { href: '/rate', label: 'Judge' },
+  { href: '/scoreboard', label: 'Scoreboard' },
+  { href: '/runs', label: 'Runs' },
+  { href: '/suites', label: 'Suites' },
+  { href: '/models', label: 'Models' },
+  { href: '/data', label: 'Data' },
+];
+
+function NavLink({ href, label, exact, badge }: { href: string; label: string; exact?: boolean; badge?: ReactNode }) {
   const [location] = useLocation();
-  const active = match ? match(location) : location === href || location.startsWith(`${href}/`);
+  const active = exact ? location === href : location === href || location.startsWith(`${href}/`);
   return (
     <Link
       href={href}
+      aria-current={active ? 'page' : undefined}
       className={cx(
-        'group relative flex items-center gap-3 rounded-[9px] px-3 h-9 text-[13.5px] transition-colors',
-        active ? 'bg-white/[0.07] text-ink' : 'text-muted hover:text-ink hover:bg-white/[0.035]',
+        'relative flex h-16 shrink-0 items-center gap-1.5 text-[14.5px] font-semibold transition-colors',
+        active ? 'text-ink' : 'text-muted hover:text-ink',
       )}
     >
-      {active && <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r-full bg-accent" />}
-      <span className={cx('transition-colors', active ? 'text-accent' : 'text-faint group-hover:text-ink-2')}>{icon}</span>
-      <span className="flex-1">{children}</span>
+      {label}
       {badge}
+      {active && <span className="absolute inset-x-0 bottom-0 h-[2.5px] rounded-t-full bg-ink" />}
     </Link>
   );
 }
 
-function Sidebar() {
+function TopBar() {
   const meta = useMeta();
   const [rater] = useRater();
   const overview = useQuery({ queryKey: ['overview'], queryFn: () => api.get<OverviewData>('/overview'), refetchInterval: 15_000 });
-  const toRate = overview.data?.rating.reduce((n, r) => n + r.remaining, 0) ?? 0;
+  const toJudge = overview.data?.rating.reduce((n, r) => n + r.remaining, 0) ?? 0;
   return (
-    <aside className="hidden md:flex w-[244px] shrink-0 flex-col border-r border-line bg-rail px-3 py-4">
-      <Link href="/" className="flex items-center gap-2.5 px-2.5 pb-5 pt-1">
-        <Logo />
-        <span className="text-[15.5px] font-semibold tracking-[-0.01em]">Evalbench</span>
-      </Link>
-      <nav className="flex flex-col gap-0.5">
-        <NavItem href="/" icon={<LayoutGrid size={16} />} match={(p) => p === '/'}>
-          Overview
-        </NavItem>
-        <NavItem href="/suites" icon={<FileStack size={16} />}>
-          Suites
-        </NavItem>
-        <NavItem href="/models" icon={<Boxes size={16} />}>
-          Models
-        </NavItem>
-        <NavItem href="/runs" icon={<Play size={16} />}>
-          Runs
-        </NavItem>
-        <NavItem
-          href="/rate"
-          icon={<Scale size={16} />}
-          badge={toRate > 0 ? <span className="num rounded-full bg-accent/15 px-1.5 text-[11px] font-semibold text-accent">{toRate}</span> : null}
-        >
-          Rate blind
-        </NavItem>
-        <NavItem href="/scoreboard" icon={<BarChart3 size={16} />}>
-          Scoreboard
-        </NavItem>
-        <NavItem href="/data" icon={<Database size={16} />}>
-          Data
-        </NavItem>
-      </nav>
-      <div className="mt-auto flex flex-col gap-0.5">
-        {meta.data?.demo && (
-          <div className="mx-1 mb-3 rounded-[10px] border border-accent/20 bg-accent/[0.06] px-3 py-2.5 text-[12px] leading-snug text-ink-2">
-            <div className="mb-0.5 flex items-center gap-1.5 font-semibold text-accent">
-              <Gauge size={13} /> Demo workspace
-            </div>
-            Fictional models with scripted answers, graded for real.
-          </div>
-        )}
-        <NavItem href="/settings" icon={<SettingsIcon size={16} />}>
-          Settings
-        </NavItem>
-        <div className="flex items-center justify-between px-3 pt-3 text-[11.5px] text-faint">
-          <span>{rater ? `Rating as ${rater}` : 'No rater name yet'}</span>
-          <span className="num">v{meta.data?.version ?? ''}</span>
+    <header className="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur-md">
+      <div className="mx-auto flex max-w-[1240px] items-center gap-8 px-5 md:px-10">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <Logo size={28} />
+          <span className="text-[17px] font-bold tracking-[-0.02em]">Evalbench</span>
+        </Link>
+        <nav aria-label="Main" className="-mb-px flex min-w-0 flex-1 gap-6 overflow-x-auto [scrollbar-width:none]">
+          {NAV.map((n) => (
+            <NavLink
+              key={n.href}
+              {...n}
+              badge={
+                n.href === '/rate' && toJudge > 0 ? (
+                  <span className="num rounded-full bg-mark px-1.5 text-[11px] leading-[18px] font-bold text-white">{toJudge}</span>
+                ) : null
+              }
+            />
+          ))}
+        </nav>
+        <div className="flex shrink-0 items-center gap-4">
+          {meta.data?.demo && (
+            <span
+              className="hidden text-[12.5px] font-semibold text-muted lg:inline"
+              title="Fictional models with scripted answers, graded for real."
+            >
+              Demo workspace
+            </span>
+          )}
+          {rater && (
+            <span className="hidden text-[13px] text-muted lg:inline">
+              Judging as <span className="font-semibold text-ink">{rater}</span>
+            </span>
+          )}
+          <Link href="/settings" className="btn-quiet h-9 w-9 p-0" aria-label="Settings" title="Settings">
+            <SettingsIcon size={17} />
+          </Link>
         </div>
       </div>
-    </aside>
-  );
-}
-
-function MobileBar() {
-  return (
-    <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 border-b border-line bg-rail/95 px-4 h-12 backdrop-blur">
-      <Logo size={22} />
-      <span className="font-semibold">Evalbench</span>
-      <nav className="ml-auto flex gap-3 text-[12.5px] text-muted">
-        <Link href="/runs">Runs</Link>
-        <Link href="/rate">Rate</Link>
-        <Link href="/scoreboard">Scores</Link>
-      </nav>
-    </div>
+    </header>
   );
 }
 
@@ -158,24 +131,20 @@ function Login({ onDone, setup }: { onDone: () => void; setup: boolean }) {
     }
   };
   return (
-    <div className="grid min-h-full place-items-center bg-grid p-6">
-      <form onSubmit={submit} className="card w-full max-w-[380px] p-7 animate-rise">
-        <div className="mb-6 flex items-center gap-2.5">
-          <Logo />
-          <span className="text-[16px] font-semibold">Evalbench</span>
-        </div>
-        {setup && (
-          <div className="mb-5">
-            <div className="text-[15px] font-semibold">Create a password</div>
-            <p className="mt-1 text-[13px] leading-relaxed text-muted">
-              Evalbench can spend your API credits and run model-written code, so it asks for a password. You set it once, here.
-            </p>
-          </div>
-        )}
-        <label className="mb-1.5 flex items-center gap-1.5 text-[12.5px] font-medium text-ink-2">
-          <Lock size={13} /> Password
+    <div className="grid min-h-full place-items-center p-6">
+      <form onSubmit={submit} className="card w-full max-w-[420px] p-8 animate-rise">
+        <Logo size={40} />
+        <h1 className="mt-6 text-[30px] leading-tight font-bold tracking-[-0.03em]">{setup ? 'Set the house password' : 'Welcome back'}</h1>
+        <p className="mt-2 text-[14.5px] leading-relaxed text-muted">
+          {setup
+            ? 'Evalbench can spend your API credits and run model-written code, so it asks for a password. You set it once, here.'
+            : 'Sign in to judge, run and read the scores.'}
+        </p>
+        <label htmlFor="password" className="mt-7 mb-1.5 flex items-center gap-1.5 text-[13.5px] font-semibold text-ink-2">
+          <Lock size={14} /> Password
         </label>
         <input
+          id="password"
           className="input"
           type="password"
           autoFocus
@@ -185,17 +154,26 @@ function Login({ onDone, setup }: { onDone: () => void; setup: boolean }) {
         />
         {setup && (
           <>
-            <label className="mb-1.5 mt-3 block text-[12.5px] font-medium text-ink-2">Again</label>
-            <input className="input" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
-            <div className={`mt-2 text-[12px] ${mismatch ? 'text-bad-ink' : 'text-faint'}`}>
+            <label htmlFor="password-again" className="mt-4 mb-1.5 block text-[13.5px] font-semibold text-ink-2">
+              Once more
+            </label>
+            <input
+              id="password-again"
+              className="input"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+            <div className={`mt-2 text-[12.5px] ${mismatch ? 'text-bad-ink' : 'text-muted'}`}>
               {mismatch ? 'The two passwords differ.' : 'At least 8 characters.'}
             </div>
           </>
         )}
-        <div className="mt-3">
+        <div className="mt-4">
           <ErrorNote error={error} />
         </div>
-        <button className="btn-primary mt-4 w-full" disabled={busy || !ready}>
+        <button className="btn-primary mt-5 w-full" disabled={busy || !ready}>
           {setup ? 'Set password and continue' : 'Sign in'}
         </button>
       </form>
@@ -216,38 +194,32 @@ export function App() {
   if (meta.data?.auth && !meta.data.authenticated) return <Login setup={!!meta.data.setup_required} onDone={() => qc.invalidateQueries()} />;
 
   return (
-    <div className="flex h-full">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <MobileBar />
-        <main className="relative flex-1 overflow-y-auto">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[340px] bg-[radial-gradient(900px_300px_at_20%_-10%,#4da3ff14,transparent_70%)]" />
-          <div className="relative mx-auto max-w-[1280px] px-5 py-8 md:px-9 md:py-9">
-            <Switch>
-              <Route path="/" component={Overview} />
-              <Route path="/suites" component={Suites} />
-              <Route path="/suites/:id">{(p) => <SuiteDetail id={p.id} />}</Route>
-              <Route path="/models" component={Models} />
-              <Route path="/runs" component={Runs} />
-              <Route path="/runs/:id">{(p) => <RunDetailPage id={Number(p.id)} />}</Route>
-              <Route path="/runs/:id/tasks/:task">{(p) => <Compare runId={Number(p.id)} taskId={p.task} />}</Route>
-              <Route path="/rate" component={Rate} />
-              <Route path="/scoreboard">{() => <Scoreboard />}</Route>
-              <Route path="/scoreboard/:suite">{(p) => <Scoreboard suite={p.suite} />}</Route>
-              <Route path="/data" component={DataPage} />
-              <Route path="/settings" component={SettingsPage} />
-              <Route>
-                <div className="py-24 text-center text-muted">
-                  Nothing here.{' '}
-                  <Link href="/" className="text-accent">
-                    Back to the overview
-                  </Link>
-                </div>
-              </Route>
-            </Switch>
-          </div>
-        </main>
-      </div>
+    <div className="min-h-full">
+      <TopBar />
+      <main className="mx-auto max-w-[1240px] px-5 pt-10 pb-24 md:px-10 md:pt-14">
+        <Switch>
+          <Route path="/" component={Overview} />
+          <Route path="/suites" component={Suites} />
+          <Route path="/suites/:id">{(p) => <SuiteDetail id={p.id} />}</Route>
+          <Route path="/models" component={Models} />
+          <Route path="/runs" component={Runs} />
+          <Route path="/runs/:id">{(p) => <RunDetailPage id={Number(p.id)} />}</Route>
+          <Route path="/runs/:id/tasks/:task">{(p) => <Compare runId={Number(p.id)} taskId={p.task} />}</Route>
+          <Route path="/rate" component={Rate} />
+          <Route path="/scoreboard">{() => <Scoreboard />}</Route>
+          <Route path="/scoreboard/:suite">{(p) => <Scoreboard suite={p.suite} />}</Route>
+          <Route path="/data" component={DataPage} />
+          <Route path="/settings" component={SettingsPage} />
+          <Route>
+            <div className="py-24 text-center text-muted">
+              Nothing here.{' '}
+              <Link href="/" className="link">
+                Back to the overview
+              </Link>
+            </div>
+          </Route>
+        </Switch>
+      </main>
     </div>
   );
 }

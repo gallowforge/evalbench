@@ -7,55 +7,55 @@ import { ago, duration, pct } from '../lib/format';
 import { useNow } from '../lib/hooks';
 import { cx, ErrorNote, Field, ModelDot, Modal, StatusPill } from './ui';
 
-export function RunRow({ run, compact = false }: { run: RunListItem; compact?: boolean }) {
+export function RunRow({ run }: { run: RunListItem; compact?: boolean }) {
   const now = useNow();
   const live = run.active || run.status === 'running';
   const progress = run.progress.total ? run.progress.finished / run.progress.total : 0;
   return (
     <Link
       href={`/runs/${run.id}`}
-      className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-3 rounded-[12px] px-4 py-3.5 transition-colors hover:bg-white/[0.03] md:grid-cols-[200px_minmax(0,1fr)_120px]"
+      className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-8 gap-y-3 rounded-[12px] px-5 py-4 transition-colors hover:bg-ink/[0.035] md:grid-cols-[230px_minmax(0,1fr)_110px]"
     >
       <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="num text-[12px] text-faint">#{run.id}</span>
-          <span className="truncate text-[13.5px] font-medium text-ink">{run.suite_title}</span>
+        <div className="flex items-baseline gap-2.5">
+          <span className="slab text-[20px] leading-none font-semibold text-faint">#{run.id}</span>
+          <span className="truncate text-[15px] font-semibold text-ink">{run.label || run.suite_title}</span>
         </div>
-        <div className="mt-1 flex items-center gap-2.5 text-[12px] text-muted">
+        <div className="mt-1.5 flex items-center gap-2.5 text-[13px] text-muted">
           <StatusPill status={run.status} />
-          {run.label && <span className="truncate">· {run.label}</span>}
+          <span className="truncate">{run.label ? run.suite_title : `${run.tasks} tasks`}</span>
         </div>
       </div>
-      <div className={cx('col-span-2 md:col-span-1 grid gap-x-5 gap-y-2', compact ? 'grid-cols-2' : 'grid-cols-2 lg:grid-cols-4 gap-x-6')}>
+      <div className="col-span-2 grid grid-cols-2 gap-x-6 gap-y-3 md:col-span-1 lg:grid-cols-4">
         {run.models.map((m) => (
           <div key={m.id} className="min-w-0">
-            <div className="flex items-center justify-between gap-2 text-[12px]">
-              <span className="flex min-w-0 items-center gap-1.5 text-ink-2">
-                <ModelDot color={m.color} size={6} />
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-1.5 text-[13px] text-ink-2">
+                <ModelDot color={m.color} size={7} />
                 <span className="truncate">{m.label}</span>
               </span>
-              <span className="slab text-[14px] font-bold text-ink">{pct(m.pass_rate)}</span>
+              <span className="slab text-[17px] leading-none font-semibold text-ink">{pct(m.pass_rate)}</span>
             </div>
-            <div className="mt-1.5 h-[5px] overflow-hidden rounded-full bg-white/[0.05]">
+            <div className="mt-2 h-[4px] overflow-hidden rounded-full bg-ink/[0.07]">
               <div className="h-full rounded-full" style={{ width: `${(m.pass_rate ?? 0) * 100}%`, background: m.color }} />
             </div>
           </div>
         ))}
       </div>
-      <div className="row-start-1 col-start-2 md:row-auto md:col-auto text-right">
+      <div className="col-start-2 row-start-1 text-right md:col-auto md:row-auto">
         {live ? (
-          <div className="w-28">
-            <div className="num text-[12px] text-accent">
+          <div className="ml-auto w-28">
+            <div className="num text-[13px] font-semibold text-accent">
               {run.progress.finished}/{run.progress.total}
             </div>
-            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-ink/[0.07]">
               <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${progress * 100}%` }} />
             </div>
           </div>
         ) : (
           <>
-            <div className="text-[12px] text-ink-2">{ago(run.created_at, now)}</div>
-            <div className="num mt-0.5 text-[11.5px] text-faint">{duration(run.started_at, run.finished_at, now)}</div>
+            <div className="text-[13px] text-ink-2">{ago(run.created_at, now)}</div>
+            <div className="num mt-0.5 text-[12px] text-faint">{duration(run.started_at, run.finished_at, now)}</div>
           </>
         )}
       </div>
@@ -118,10 +118,10 @@ export function NewRunModal({ open, onClose, suiteId }: { open: boolean; onClose
         </Field>
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <span className="text-[12.5px] font-medium text-ink-2">Models</span>
+            <span className="text-[13.5px] font-semibold text-ink-2">Models</span>
             {models.data && models.data.length > 1 && (
               <button
-                className="text-[12px] text-accent"
+                className="link text-[13px]"
                 onClick={() => setChosen(chosen.length === models.data!.length ? [] : models.data!.map((m) => m.id))}
               >
                 {chosen.length === models.data.length ? 'Clear' : 'Select all'}
@@ -147,24 +147,19 @@ export function NewRunModal({ open, onClose, suiteId }: { open: boolean; onClose
                   onClick={() => toggle(m.id)}
                   className={cx(
                     'flex items-center gap-3 rounded-[10px] border px-3 py-2.5 text-left transition-colors',
-                    on ? 'border-accent/50 bg-accent/[0.07]' : 'border-line-2 hover:bg-white/[0.03]',
+                    on ? 'border-ink bg-ink/[0.03]' : 'border-line-2 hover:bg-ink/[0.03]',
                   )}
                 >
-                  <span
-                    className={cx(
-                      'grid h-4 w-4 place-items-center rounded-[5px] border',
-                      on ? 'border-accent bg-accent text-accent-ink' : 'border-line-2',
-                    )}
-                  >
+                  <span className={cx('grid h-4 w-4 place-items-center rounded-[5px] border', on ? 'border-ink bg-ink text-panel' : 'border-line-2')}>
                     {on && <Check size={11} strokeWidth={3} />}
                   </span>
                   <ModelDot color={m.color} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] font-medium text-ink">{m.label}</span>
+                    <span className="block truncate text-[14.5px] font-semibold text-ink">{m.label}</span>
                     <span className="block truncate font-mono text-[11.5px] text-faint">{m.model}</span>
                   </span>
                   {!m.key.present && (
-                    <span className="chip border-warn/30 text-warn">
+                    <span className="chip bg-warn-tint text-warn">
                       <KeyRound size={11} /> {m.key.env} missing
                     </span>
                   )}

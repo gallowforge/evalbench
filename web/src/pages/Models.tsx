@@ -128,7 +128,7 @@ function ModelForm({ initial, editing, onClose }: { initial?: Model; editing: bo
                 onClick={() => setPreset(p.id)}
                 className={cx(
                   'rounded-[10px] border px-2 py-2.5 text-[12px] font-medium transition-colors',
-                  preset === p.id ? 'border-accent/60 bg-accent/[0.08] text-ink' : 'border-line-2 text-muted hover:text-ink',
+                  preset === p.id ? 'border-ink bg-ink/[0.04] text-ink' : 'border-line-2 text-muted hover:text-ink',
                 )}
               >
                 {p.label}
@@ -179,7 +179,7 @@ function ModelForm({ initial, editing, onClose }: { initial?: Model; editing: bo
                 {found.slice(0, 18).map((m) => (
                   <button
                     key={m}
-                    className={cx('chip font-mono text-[11.5px]', d.model === m && 'border-accent/60 text-ink')}
+                    className={cx('chip font-mono text-[12px]', d.model === m && 'bg-ink text-panel')}
                     onClick={() => set({ model: m })}
                   >
                     {m}

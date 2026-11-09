@@ -4,48 +4,44 @@
 @font-face { font-family: Slab; src: url(data:…) format('woff2'); font-weight: 700; }
 * { box-sizing: border-box; margin: 0; }
 html, body { background: transparent; }
-body { font-family: Grotesk, sans-serif; color: #16171b; -webkit-font-smoothing: antialiased; }
-.scene { position: relative; overflow: hidden; border-radius: 6px; background: #f1eee6; }
+body { font-family: Grotesk, sans-serif; color: #fffdf8; -webkit-font-smoothing: antialiased; }
+.scene { position: relative; overflow: hidden; border-radius: 8px; background: #2457f0; }
 .slab { font-family: Slab, serif; font-variant-numeric: lining-nums; }
-.screen { position: absolute; border-radius: 12px; overflow: hidden; background: #0d0e10;
-  box-shadow: 0 0 0 1px rgba(22,23,27,.55), 0 2px 3px rgba(22,23,27,.12), 0 24px 40px -18px rgba(22,23,27,.45), 0 60px 100px -50px rgba(22,23,27,.5); }
+.screen { position: absolute; border-radius: 14px; overflow: hidden; background: #f3f0e8;
+  box-shadow: 0 0 0 1px rgba(10,22,70,.25), 0 2px 4px rgba(10,22,70,.18), 0 30px 50px -22px rgba(6,14,52,.55), 0 80px 120px -60px rgba(6,14,52,.6); }
 .screen img { display: block; width: 100%; }
-.phone { position: absolute; padding: 9px; border-radius: 46px; background: #1b1c20;
-  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08), 0 0 0 1px rgba(22,23,27,.6), 0 28px 50px -22px rgba(22,23,27,.55), 0 70px 110px -60px rgba(22,23,27,.55); }
-.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #101113; padding-top: 34px; }
+.phone { position: absolute; padding: 9px; border-radius: 46px; background: #17181c;
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.1), 0 0 0 1px rgba(10,22,70,.4), 0 34px 60px -26px rgba(6,14,52,.65), 0 80px 120px -60px rgba(6,14,52,.6); }
+.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #f3f0e8; padding-top: 34px; }
 .phone .scr img { display: block; width: 100%; }
 .phone .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #000; z-index: 2; }
-.note { position: absolute; font-family: Slab, serif; font-weight: 700; color: #d23c2a; line-height: 1.12; }
+.note { position: absolute; font-family: Slab, serif; font-weight: 600; color: #fffdf8; line-height: 1.12; }
+.slip { position: absolute; background: #fffdf8; color: #17181c; border-radius: 4px; padding: 22px 26px 18px;
+  box-shadow: 0 1px 2px rgba(10,22,70,.2), 0 24px 40px -20px rgba(6,14,52,.6); }
 svg.ink { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
-</style></head><body><div class="scene" style="width:1400px;height:930px">
-      <div style="position:absolute;left:80px;top:70px;display:flex;align-items:center;gap:14px;font-size:26px;font-weight:650;letter-spacing:-.01em"><svg width="38" height="38" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#16171b"/><g transform="rotate(-11 11.5 17)"><rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#4da3ff"/></g><g transform="rotate(8 20.5 15.5)"><rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="#f7f5ef"/><path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#e04a36" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg> Evalbench</div>
-      <div style="position:absolute;left:74px;top:150px;font-size:112px;font-weight:760;letter-spacing:-.05em;line-height:.93;white-space:nowrap">Judge the answer,<br>not the <span style="position:relative;display:inline-block">name.<svg viewBox="0 0 100 12" preserveAspectRatio="none" style="position:absolute;left:-2%;bottom:-0.16em;width:104%;height:0.16em;overflow:visible"><path d="M1,7 C25,10 60,4 99,6" fill="none" stroke="#d23c2a" stroke-width="3.2" vector-effect="non-scaling-stroke" stroke-linecap="round" style="stroke-width:6px"/></svg></span></div>
-      <div style="position:absolute;left:80px;top:440px;width:440px;font-size:21px;line-height:1.45;color:#45443f">A self-hosted workbench for testing language models on your own tasks. Run any model, grade every answer, and let people rate them blind.</div>
-      <div style="position:absolute;left:80px;top:640px"><div style="width:430px">
-    <div style="display:grid;grid-template-columns:28px 1fr 96px 96px;font-size:13px;font-weight:600;letter-spacing:.04em;color:#7a766d;padding-bottom:10px">
-      <span></span><span>CORE BATTERY, LATEST RUN</span><span style="text-align:right">CHECKS</span><span style="text-align:right">JUDGES</span></div>
-    <div style="display:grid;grid-template-columns:28px 1fr 96px 96px;align-items:baseline;height:48px;border-top:1px solid rgba(22,23,27,.16);padding-top:12px">
-        <span class="slab" style="font-size:15px;font-weight:600;color:#7a766d">1</span>
-        <span style="font-size:17px;font-weight:500">Nimbus Pro</span>
-        <span class="slab" style="font-size:26px;font-weight:700;text-align:right">90%</span>
-        <span class="slab" style="font-size:26px;font-weight:700;text-align:right;color:#45443f">1142</span>
-      </div><div style="display:grid;grid-template-columns:28px 1fr 96px 96px;align-items:baseline;height:48px;border-top:1px solid rgba(22,23,27,.16);padding-top:12px">
-        <span class="slab" style="font-size:15px;font-weight:600;color:#7a766d">2</span>
-        <span style="font-size:17px;font-weight:500">Atlas 70B</span>
-        <span class="slab" style="font-size:26px;font-weight:700;text-align:right">90%</span>
-        <span class="slab" style="font-size:26px;font-weight:700;text-align:right;color:#45443f">1118</span>
-      </div><div style="display:grid;grid-template-columns:28px 1fr 96px 96px;align-items:baseline;height:48px;border-top:1px solid rgba(22,23,27,.16);padding-top:12px">
-        <span class="slab" style="font-size:15px;font-weight:600;color:#7a766d">3</span>
-        <span style="font-size:17px;font-weight:500">Orion Mini</span>
-        <span class="slab" style="font-size:26px;font-weight:700;text-align:right">55%</span>
-        <span class="slab" style="font-size:26px;font-weight:700;text-align:right;color:#45443f">875</span>
-      </div><div style="display:grid;grid-template-columns:28px 1fr 96px 96px;align-items:baseline;height:48px;border-top:1px solid rgba(22,23,27,.16);padding-top:12px">
-        <span class="slab" style="font-size:15px;font-weight:600;color:#7a766d">4</span>
-        <span style="font-size:17px;font-weight:500">Vega 8B</span>
-        <span class="slab" style="font-size:26px;font-weight:700;text-align:right">35%</span>
-        <span class="slab" style="font-size:26px;font-weight:700;text-align:right;color:#45443f">865</span>
-      </div><div style="border-top:1px solid rgba(22,23,27,.16)"></div></div></div>
-      <div class="screen" style="left:584px;top:404px;width:760px;transform:rotate(1.2deg)"><img src="data:…"></div>
-      <div class="note" style="left:604px;top:799.871485943775px;width:760px;font-size:28px">No names, shuffled every time. The labels come off when you are done.</div>
-      <svg class="ink" width="1400" height="930"><path d="M645.7,418.6 L649.7,423.5 L648.2,429.5 L646.2,434.7 L646.2,440.8 L642.8,445.8 L636.2,447.3 L630.9,449.5 L625.2,453.0 L618.9,451.6 L614.1,447.4 L608.4,445.6 L602.7,442.4 L601.7,436.3 L602.0,430.7 L600.0,425.1 L601.1,419.1 L606.7,415.7 L611.1,412.3 L615.3,407.2 L621.7,406.3 L627.7,408.9 L633.7,409.3 L640.3,410.3 L643.6,415.6 L645.0,421.2 L648.8,425.9" fill="none" stroke="#d23c2a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M1021.1,418.6 L1025.1,423.5 L1023.6,429.5 L1021.6,434.7 L1021.6,440.8 L1018.2,445.8 L1011.7,447.3 L1006.4,449.5 L1000.6,453.0 L994.3,451.6 L989.5,447.4 L983.8,445.6 L978.1,442.4 L977.1,436.3 L977.5,430.7 L975.4,425.1 L976.5,419.1 L982.1,415.7 L986.6,412.3 L990.7,407.2 L997.1,406.3 L1003.1,408.9 L1009.1,409.3 L1015.7,410.3 L1019.0,415.6 L1020.5,421.2 L1024.2,425.9" fill="none" stroke="#d23c2a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</style></head><body><div class="scene" style="width:1400px;height:1273px">
+      <div style="position:absolute;left:84px;top:76px;display:flex;align-items:center;gap:14px;font-size:27px;font-weight:700;letter-spacing:-.015em"><svg width="40" height="40" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#fffdf8"/><g transform="rotate(-11 11.5 17)"><rect x="5.5" y="9" width="12" height="16.5" rx="2.4" fill="#2457f0"/></g><g transform="rotate(8 20.5 15.5)"><rect x="14.5" y="7.25" width="12" height="16.5" rx="2.4" fill="#17181c"/><path d="M17.4 15.6l2.5 2.6 4.4-5.3" fill="none" stroke="#ff6a55" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g></svg> Evalbench</div>
+      <div style="position:absolute;left:80px;top:160px;font-size:112px;font-weight:800;letter-spacing:-.052em;line-height:.9;white-space:nowrap">Judge the answer,<br>not the <span style="position:relative;display:inline-block">name.<svg viewBox="0 0 100 12" preserveAspectRatio="none" style="position:absolute;left:-2%;bottom:-0.15em;width:104%;height:0.16em;overflow:visible"><path d="M1,7 C25,10 60,4 99,6" fill="none" stroke="#d23c2a" vector-effect="non-scaling-stroke" stroke-linecap="round" style="stroke-width:7px"/></svg></span></div>
+      <div style="position:absolute;left:84px;top:424px;width:400px;font-size:21px;line-height:1.45;color:rgba(255,253,248,.74)">A self-hosted workbench for testing language models on your own tasks: any model, every answer graded, and blind verdicts from people.</div>
+      <div class="slip" style="left:84px;top:630px;transform:rotate(-1.6deg)"><div style="width:376px">
+    <div style="display:grid;grid-template-columns:24px 1fr 70px 70px;font-size:12px;font-weight:700;letter-spacing:.06em;color:#9c988f;padding-bottom:8px">
+      <span></span><span>CORE BATTERY, RUN 6</span><span style="text-align:right">CHECKS</span><span style="text-align:right">JUDGES</span></div><div style="display:grid;grid-template-columns:24px 1fr 70px 70px;align-items:baseline;padding:9px 0;border-top:1px solid #e6e0d3">
+        <span class="slab" style="font-size:17px;color:#9c988f">1</span>
+        <span style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:#2a78d6"></span>Nimbus Pro</span>
+        <span class="slab" style="font-size:24px;text-align:right">90%</span>
+        <span class="slab" style="font-size:24px;text-align:right;color:#3d3e44">1142</span></div><div style="display:grid;grid-template-columns:24px 1fr 70px 70px;align-items:baseline;padding:9px 0;border-top:1px solid #e6e0d3">
+        <span class="slab" style="font-size:17px;color:#9c988f">2</span>
+        <span style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:#eb6834"></span>Atlas 70B</span>
+        <span class="slab" style="font-size:24px;text-align:right">90%</span>
+        <span class="slab" style="font-size:24px;text-align:right;color:#3d3e44">1118</span></div><div style="display:grid;grid-template-columns:24px 1fr 70px 70px;align-items:baseline;padding:9px 0;border-top:1px solid #e6e0d3">
+        <span class="slab" style="font-size:17px;color:#9c988f">3</span>
+        <span style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:#1baf7a"></span>Orion Mini</span>
+        <span class="slab" style="font-size:24px;text-align:right">55%</span>
+        <span class="slab" style="font-size:24px;text-align:right;color:#3d3e44">875</span></div><div style="display:grid;grid-template-columns:24px 1fr 70px 70px;align-items:baseline;padding:9px 0;border-top:1px solid #e6e0d3">
+        <span class="slab" style="font-size:17px;color:#9c988f">4</span>
+        <span style="font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;background:#eda100"></span>Vega 8B</span>
+        <span class="slab" style="font-size:24px;text-align:right">35%</span>
+        <span class="slab" style="font-size:24px;text-align:right;color:#3d3e44">865</span></div></div></div>
+      <div class="screen" style="left:548px;top:420px;width:780px;transform:rotate(1.8deg)"><img src="data:…"></div>
+      <svg class="ink" width="1400" height="1273" style="transform-origin:938px 806.4130434782609px;transform:rotate(1.8deg)"><path d="M606.2,534.1 L609.6,538.3 L608.0,543.7 L606.2,548.2 L606.8,553.6 L604.2,558.2 L598.9,559.2 L594.9,561.2 L590.6,564.6 L585.8,563.2 L582.3,559.3 L577.9,557.8 L573.2,555.2 L572.8,549.6 L573.4,544.7 L571.3,539.7 L572.0,534.5 L576.7,531.6 L580.1,528.6 L583.0,523.9 L587.9,523.1 L592.5,525.7 L597.0,525.9 L602.3,526.5 L604.6,531.4 L605.3,536.5 L608.6,540.5" fill="none" stroke="#d23c2a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M990.2,534.1 L993.5,538.3 L991.9,543.7 L990.1,548.2 L990.8,553.6 L988.4,558.2 L983.3,559.2 L979.6,561.2 L975.6,564.6 L971.0,563.2 L967.8,559.3 L963.6,557.8 L959.1,555.2 L958.8,549.6 L959.5,544.7 L957.4,539.7 L958.0,534.5 L962.6,531.6 L965.7,528.6 L968.4,523.9 L973.0,523.1 L977.3,525.7 L981.6,525.9 L986.7,526.5 L988.8,531.4 L989.3,536.5 L992.5,540.5" fill="none" stroke="#d23c2a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div></body></html>

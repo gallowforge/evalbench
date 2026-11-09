@@ -4,22 +4,23 @@
 @font-face { font-family: Slab; src: url(data:…) format('woff2'); font-weight: 700; }
 * { box-sizing: border-box; margin: 0; }
 html, body { background: transparent; }
-body { font-family: Grotesk, sans-serif; color: #16171b; -webkit-font-smoothing: antialiased; }
-.scene { position: relative; overflow: hidden; border-radius: 6px; background: #f1eee6; }
+body { font-family: Grotesk, sans-serif; color: #fffdf8; -webkit-font-smoothing: antialiased; }
+.scene { position: relative; overflow: hidden; border-radius: 8px; background: #2457f0; }
 .slab { font-family: Slab, serif; font-variant-numeric: lining-nums; }
-.screen { position: absolute; border-radius: 12px; overflow: hidden; background: #0d0e10;
-  box-shadow: 0 0 0 1px rgba(22,23,27,.55), 0 2px 3px rgba(22,23,27,.12), 0 24px 40px -18px rgba(22,23,27,.45), 0 60px 100px -50px rgba(22,23,27,.5); }
+.screen { position: absolute; border-radius: 14px; overflow: hidden; background: #f3f0e8;
+  box-shadow: 0 0 0 1px rgba(10,22,70,.25), 0 2px 4px rgba(10,22,70,.18), 0 30px 50px -22px rgba(6,14,52,.55), 0 80px 120px -60px rgba(6,14,52,.6); }
 .screen img { display: block; width: 100%; }
-.phone { position: absolute; padding: 9px; border-radius: 46px; background: #1b1c20;
-  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.08), 0 0 0 1px rgba(22,23,27,.6), 0 28px 50px -22px rgba(22,23,27,.55), 0 70px 110px -60px rgba(22,23,27,.55); }
-.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #101113; padding-top: 34px; }
+.phone { position: absolute; padding: 9px; border-radius: 46px; background: #17181c;
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.1), 0 0 0 1px rgba(10,22,70,.4), 0 34px 60px -26px rgba(6,14,52,.65), 0 80px 120px -60px rgba(6,14,52,.6); }
+.phone .scr { position: relative; overflow: hidden; border-radius: 37px; background: #f3f0e8; padding-top: 34px; }
 .phone .scr img { display: block; width: 100%; }
 .phone .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 92px; height: 26px; border-radius: 20px; background: #000; z-index: 2; }
-.note { position: absolute; font-family: Slab, serif; font-weight: 700; color: #d23c2a; line-height: 1.12; }
+.note { position: absolute; font-family: Slab, serif; font-weight: 600; color: #fffdf8; line-height: 1.12; }
+.slip { position: absolute; background: #fffdf8; color: #17181c; border-radius: 4px; padding: 22px 26px 18px;
+  box-shadow: 0 1px 2px rgba(10,22,70,.2), 0 24px 40px -20px rgba(6,14,52,.6); }
 svg.ink { position: absolute; inset: 0; overflow: visible; pointer-events: none; }
-</style></head><body><div class="scene" style="width:1400px;height:698px">
-    <div class="screen" style="left:64px;top:170px;width:1272px;transform:rotate(0deg)"><img src="data:…"></div>
-    <div class="note" style="left:484.44578313253px;top:52px;width:600px;font-size:30px">Every decisive verdict, ready to train on.</div>
-    <svg class="ink" width="1400" height="698"><path d="M971.8,273.2 L985.7,278.2 L987.4,284.4 L981.6,289.7 L971.2,296.0 L951.3,301.2 L923.4,302.7 L893.1,305.0 L860.4,308.6 L826.9,307.1 L796.5,302.9 L768.5,300.9 L745.0,297.7 L732.1,291.4 L727.1,285.6 L726.6,279.8 L736.1,273.7 L756.4,270.2 L780.8,266.6 L809.0,261.5 L841.9,260.4 L875.2,263.1 L907.4,263.6 L937.6,264.6 L960.3,270.1 L975.6,275.8 L986.8,280.7" fill="none" stroke="#d23c2a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M816.44578313253,98 Q796.6301204819275,183.72650602409638 846.44578313253,256.2530120481928" fill="none" stroke="#d23c2a" stroke-width="2.6" stroke-linecap="round"/>
-    <path d="M835.1573105331616,249.80550195721102 L846.44578313253,256.2530120481928 L844.4792641925732,243.40261114943513" fill="none" stroke="#d23c2a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</style></head><body><div class="scene" style="width:1400px;height:612px">
+    <div class="screen" style="left:70px;top:176px;width:1260px;transform:rotate(0deg)"><img src="data:…"></div>
+    <div class="note" style="left:482.866220735786px;top:56px;width:620px;font-size:32px">Every decisive verdict, ready to train on.</div>
+    <svg class="ink" width="1400" height="612"><path d="M974.5,260.8 L988.8,265.3 L990.7,271.0 L984.8,275.8 L973.9,281.6 L953.2,286.4 L924.3,287.6 L892.9,289.7 L859.0,293.2 L824.3,291.8 L792.7,287.7 L763.6,286.0 L739.3,283.2 L725.9,277.4 L720.6,272.1 L720.2,266.8 L730.1,261.2 L751.0,258.1 L776.4,254.9 L805.7,250.0 L839.8,249.1 L874.4,251.8 L907.8,252.1 L939.0,252.9 L962.6,258.0 L978.5,263.3 L990.0,267.6" fill="none" stroke="#d23c2a" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M814.866220735786,106 Q823.266220735786,143 854.866220735786,164" fill="none" stroke="rgba(6,14,52,.35)" stroke-width="6" stroke-linecap="round"/><path d="M840.99652148944,162.0943655083117 L854.866220735786,164 L847.737412204595,151.95092995598338" fill="none" stroke="rgba(6,14,52,.35)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M814.866220735786,106 Q823.266220735786,143 854.866220735786,164" fill="none" stroke="#fffdf8" stroke-width="2.8" stroke-linecap="round"/><path d="M840.99652148944,162.0943655083117 L854.866220735786,164 L847.737412204595,151.95092995598338" fill="none" stroke="#fffdf8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </div></body></html>
