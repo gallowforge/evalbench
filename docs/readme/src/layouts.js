@@ -84,7 +84,7 @@ function panelPhone(o) {
 const OVERVIEW = {
   kick: 'Overview', head: 'Know what happened<br>before you scroll',
   line: 'The overview writes its headline from the latest run: who leads, by how much, what the judges think, and what broke since last time.',
-  facts: [['90%', 'of checks passed by the leader'], ['71%', 'of blind pairs went to it'], ['3', 'tasks Vega 8B dropped']],
+  facts: [['90%', 'of checks passed by the leader'], ['71%', 'win rate in blind judging'], ['3', 'tasks Vega 8B dropped']],
   win: (n, ph) => {
     const P = ph ? { a: { x: 176, y: 372, w: 330, z: -60, rot: [2, -10, 0] }, b: { x: 300, y: 430, h: 220, z: 70, rot: [0, -14, 0] } }
       : { a: { x: 566, y: 224, w: 400, z: -80, rot: [2, -18, 0] }, b: { x: 742, y: 300, h: 236, z: 60, rot: [0, -14, 0] } };
