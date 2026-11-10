@@ -161,7 +161,7 @@ const heroWindows = (n, P) => [
   { parent: 4, box: 'lead', pad: [0, 0], lift: 110, breathe: [12, 0.85], bezel: 8, radius: 14, ...LIFT(n), align: 0.6, glow: 0.25 },
 ].map((w, i) => ({ ...w, ...(P[i] || {}) }));
 
-const NUMBERS = [['20', 'tasks in the<br>core battery'], ['7', 'kinds of<br>automatic check'], ['112', 'tests in CI'], ['0', 'API keys stored,<br>read from the environment']];
+const NUMBERS = [['20', 'tasks in the<br>core battery'], ['7', 'kinds of<br>automatic check'], ['116', 'tests in CI'], ['0', 'API keys stored,<br>read from the environment']];
 
 export const LAYOUTS = {
   hero: {
