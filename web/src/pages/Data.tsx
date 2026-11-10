@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Braces, Download, FileSpreadsheet, GitCompareArrows, ListChecks } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
-import { api, type Model, type RatingRow } from '../api';
+import { api, download, type Model, type RatingRow } from '../api';
 import { Card, cx, ModelDot, PageHeader } from '../components/ui';
 import { ago, thousands } from '../lib/format';
 
@@ -17,14 +17,15 @@ function ExportCard({
   title,
   text,
   count,
-  href,
+  file,
   sample,
 }: {
   icon: ReactNode;
   title: string;
   text: string;
   count: string;
-  href: string;
+  /** The export's path under the API, with its filter. */
+  file: string;
   sample: string;
 }) {
   return (
@@ -38,7 +39,7 @@ function ExportCard({
       <pre className="mt-3 overflow-hidden whitespace-pre-wrap break-all rounded-[9px] border border-line bg-panel-2 px-3 py-2 font-mono text-[11px] leading-relaxed text-faint">
         {sample}
       </pre>
-      <a className="btn-ghost mt-4" href={href}>
+      <a className="btn-ghost mt-4" {...download(file)}>
         <Download size={14} /> Download
       </a>
     </div>
@@ -78,7 +79,7 @@ export function DataPage() {
           title="Ratings, CSV"
           text="One row per rating: prompt, both answers, models, 7-point preference, rubric scores, flags, justification and time spent."
           count={`${thousands(s.data?.ratings)} rows`}
-          href={`/api/export/ratings.csv${q}`}
+          file={`/export/ratings.csv${q}`}
           sample={'rating_id,rater,task_id,winner,\n  strength,a_correctness,...'}
         />
         <ExportCard
@@ -86,7 +87,7 @@ export function DataPage() {
           title="Ratings, JSONL"
           text="The same records with nested scores and flags, one JSON object per line."
           count={`${thousands(s.data?.ratings)} lines`}
-          href={`/api/export/ratings.jsonl${q}`}
+          file={`/export/ratings.jsonl${q}`}
           sample={'{"preference": -2, "winner": "a",\n "scores": {"a": {...}}, ...}'}
         />
         <ExportCard
@@ -94,7 +95,7 @@ export function DataPage() {
           title="Preference pairs"
           text="Chosen and rejected answers from every decisive rating, ready for DPO-style training. Ties are left out."
           count={`${thousands(s.data?.pairs)} pairs`}
-          href={`/api/export/preferences.jsonl${q}`}
+          file={`/export/preferences.jsonl${q}`}
           sample={'{"prompt": "...", "chosen": "...",\n "rejected": "...", "meta": {...}}'}
         />
         <ExportCard
@@ -102,7 +103,7 @@ export function DataPage() {
           title="Run results"
           text="Every answer with its check results, score, latency and token counts."
           count={`${thousands(s.data?.results)} answers`}
-          href={`/api/export/results.jsonl${q}`}
+          file={`/export/results.jsonl${q}`}
           sample={'{"model": "...", "passed": true,\n "checks": [...], "latency_ms": 812}'}
         />
       </div>

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.0
+
+- A live demo at [gallowforge.github.io/evalbench](https://gallowforge.github.io/evalbench/): the web app itself, built as a static site and answering in the browser from the demo workspace's own data. Every screen works. Ratings, model edits and settings are kept for the visit and forgotten on reload.
+- Starting a run in the demo replays the recorded answers and check results for the models you pick, cell by cell, so the result matrix fills the way a real run does; stopping, resuming and deleting work too. What needs the server says so in one sentence instead of failing: saving a suite, testing a model's connection, and accounts.
+- A quiet line at the foot of every demo page says it is sample data, that nothing is saved, and links to the source.
+- `npm --prefix web run build:demo` builds the demo into `web/dist` for the `/evalbench/` path, with a `404.html` copy so deep links and reloads work on GitHub Pages, and `serve:demo` serves it locally the way Pages does. `capture:demo` regenerates the sample data from a running demo server, so it is never edited by hand. A workflow deploys the demo to GitHub Pages on every push to main.
+- The server build behaves as before, and it now stops if the demo's adapter or sample data would be bundled into it.
+- Tests: the in-browser adapter is held to the numbers the server computed for the same data, and a browser smoke test loads every route of the built demo under `/evalbench/` in dark and light, at 1280 and 390 pixels wide, with reloads on deep links, and fails on any console error, failed request or sideways overflow.
+- The README counts the tests that run now: 171 in CI (93 Python, 17 end-to-end, 33 web unit and 28 demo smoke).
+
 ## 1.2.1
 
 - Phones: the sections get a full-width row of their own under the logo, with the page you are on scrolled into view, instead of one name beside a strip nobody knew scrolled. The scoreboard no longer forces the page wider than the screen, the head-to-head grid fits, a run's verdict grid puts each task's name above its verdicts so all of them show, and the task list keeps the titles readable. The new-run dialog fits the screen with its Start button, the provider choice wraps, and the judging buttons are a little larger under a thumb.

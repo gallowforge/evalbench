@@ -5,6 +5,7 @@ import { Link, useLocation } from 'wouter';
 import { api, type SuitePayload, type SuiteSummary } from '../api';
 import { YamlEditor } from '../components/LazyYaml';
 import { Empty, ErrorNote, Loading, Modal, PageHeader } from '../components/ui';
+import { DEMO, SUITES_READ_ONLY } from '../lib/demo';
 import { ago, plural } from '../lib/format';
 
 const CHECK_LABEL: Record<string, string> = {
@@ -138,14 +139,15 @@ export function Suites() {
             <button className="btn-ghost" onClick={() => setOpen(false)}>
               Cancel
             </button>
-            <button className="btn-primary" disabled={create.isPending} onClick={() => create.mutate(text)}>
+            <button className="btn-primary" disabled={DEMO || create.isPending} onClick={() => create.mutate(text)}>
               Create suite
             </button>
           </>
         }
       >
         <p className="mb-3 text-[13px] text-muted">
-          Paste or write YAML. See <span className="font-mono text-ink-2">examples/suite-template.yaml</span> for every field and check type.
+          {DEMO ? `${SUITES_READ_ONLY} ` : 'Paste or write YAML. '}See <span className="font-mono text-ink-2">examples/suite-template.yaml</span> for
+          every field and check type.
         </p>
         <YamlEditor value={text} onChange={setText} minHeight={380} />
         {create.error && (

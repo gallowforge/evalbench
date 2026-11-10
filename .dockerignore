@@ -5,6 +5,7 @@
 **/node_modules
 web/test-results
 web/playwright-report
+web/dist
 evalbench/static
 data
 docs

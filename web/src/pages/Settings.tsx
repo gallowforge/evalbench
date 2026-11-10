@@ -4,6 +4,7 @@ import { type ReactNode, useState } from 'react';
 import { api } from '../api';
 import { THEME_OPTIONS } from '../components/ThemeMenu';
 import { Card, ErrorNote, Field, Loading, PageHeader, Segmented } from '../components/ui';
+import { DEMO } from '../lib/demo';
 import { useMeta, useRater } from '../lib/hooks';
 import { useTheme } from '../lib/theme';
 
@@ -43,11 +44,13 @@ export function SettingsPage() {
           <Row label="Version">{m.version}</Row>
           <Row label="Code sandbox">
             <Ok ok={!!m.sandbox?.ok}>
-              {m.sandbox?.mode === 'container'
-                ? 'separate container, no network'
-                : m.sandbox?.mode === 'local'
-                  ? 'this machine, with limits (EVALBENCH_SANDBOX=local)'
-                  : 'off: Python checks are recorded as errors'}
+              {DEMO
+                ? 'not used here: the demo shows recorded check results'
+                : m.sandbox?.mode === 'container'
+                  ? 'separate container, no network'
+                  : m.sandbox?.mode === 'local'
+                    ? 'this machine, with limits (EVALBENCH_SANDBOX=local)'
+                    : 'off: Python checks are recorded as errors'}
             </Ok>
           </Row>
           <Row label="Data directory">
@@ -66,6 +69,8 @@ export function SettingsPage() {
                   <LogOut size={13} /> Sign out
                 </button>
               </span>
+            ) : DEMO ? (
+              'not needed: the demo has no accounts'
             ) : (
               <span className="text-warn">off: only localhost can connect</span>
             )}

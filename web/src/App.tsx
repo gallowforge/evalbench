@@ -6,6 +6,7 @@ import { api, type Overview as OverviewData } from './api';
 import { Logo } from './components/Logo';
 import { ThemeMenu } from './components/ThemeMenu';
 import { cx, Loading, NotFound } from './components/ui';
+import { DEMO, REPO_URL } from './lib/demo';
 import { useMeta, useRater } from './lib/hooks';
 import { Compare } from './pages/Compare';
 import { DataPage } from './pages/Data';
@@ -91,7 +92,7 @@ function TopBar() {
           ))}
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-4">
-          {meta.data?.demo && (
+          {meta.data?.demo && !DEMO && (
             <span
               className="hidden text-[12.5px] font-semibold text-muted lg:inline"
               title="Fictional models with scripted answers, graded for real."
@@ -113,6 +114,26 @@ function TopBar() {
         </div>
       </div>
     </header>
+  );
+}
+
+/** The static demo's one standing notice: always in sight, as quiet as the bar at the top. */
+function DemoNotice() {
+  return (
+    <aside
+      aria-label="About this demo"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
+    >
+      <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-4 px-5 py-2 text-[12.5px] text-muted md:px-10">
+        <p className="min-w-0">
+          <span className="font-semibold text-ink-2">Demo.</span> Sample data<span className="hidden sm:inline"> in your browser</span>
+          <span className="hidden md:inline">: new runs replay recorded answers</span>. Nothing is saved.
+        </p>
+        <a href={REPO_URL} className="shrink-0 font-semibold text-ink-2 underline-offset-4 hover:text-ink hover:underline">
+          Source on GitHub
+        </a>
+      </div>
+    </aside>
   );
 }
 
@@ -156,6 +177,7 @@ export function App() {
           </Route>
         </Switch>
       </main>
+      {DEMO && <DemoNotice />}
     </div>
   );
 }

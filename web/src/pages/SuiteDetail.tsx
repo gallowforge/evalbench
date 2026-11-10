@@ -2,10 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ChevronRight, Download, Play, Plus, Trash2 } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
-import { ApiError, api, type Check, type RubricDimension, type Suite, type SuitePayload, type Task } from '../api';
+import { ApiError, api, download, type Check, type RubricDimension, type Suite, type SuitePayload, type Task } from '../api';
 import { NewRunModal } from '../components/runs';
 import { YamlEditor } from '../components/LazyYaml';
 import { cx, ErrorNote, Field, isNotFound, Loading, NotFound, PageHeader, Tabs } from '../components/ui';
+import { DEMO, SUITES_READ_ONLY } from '../lib/demo';
 import { plural } from '../lib/format';
 
 type Tab = 'tasks' | 'rubric' | 'yaml';
@@ -443,7 +444,7 @@ export function SuiteDetail({ id }: { id: string }) {
         subtitle={p.description}
         actions={
           <>
-            <a className="btn-ghost" href={`/api/suites/${id}/yaml`}>
+            <a className="btn-ghost" {...download(`/suites/${id}/yaml`)}>
               <Download size={14} /> YAML
             </a>
             <button className="btn-primary" onClick={() => setRunOpen(true)}>
@@ -548,8 +549,12 @@ export function SuiteDetail({ id }: { id: string }) {
       )}
 
       {dirty && (
-        <div className="sticky bottom-4 z-20 mt-5 flex items-center justify-between gap-3 rounded-[14px] border border-line-2 bg-panel px-5 py-3 shadow-[0_20px_50px_-24px_rgb(var(--shade)/0.5)] backdrop-blur animate-rise">
-          <span className="text-[13px] text-ink-2">Unsaved changes{tab !== 'yaml' ? ' · saving rewrites the YAML from the form' : ''}</span>
+        <div
+          className={`sticky ${DEMO ? 'bottom-14' : 'bottom-4'} z-20 mt-5 flex items-center justify-between gap-3 rounded-[14px] border border-line-2 bg-panel px-5 py-3 shadow-[0_20px_50px_-24px_rgb(var(--shade)/0.5)] backdrop-blur animate-rise`}
+        >
+          <span className="text-[13px] text-ink-2">
+            {DEMO ? SUITES_READ_ONLY : `Unsaved changes${tab !== 'yaml' ? ' · saving rewrites the YAML from the form' : ''}`}
+          </span>
           <div className="flex gap-2">
             <button
               className="btn-ghost h-8"
@@ -563,7 +568,7 @@ export function SuiteDetail({ id }: { id: string }) {
             </button>
             <button
               className="btn-primary h-8"
-              disabled={save.isPending || (tab === 'yaml' && errors.length > 0)}
+              disabled={DEMO || save.isPending || (tab === 'yaml' && errors.length > 0)}
               onClick={() => save.mutate(tab === 'yaml' ? { yaml: yamlText } : { suite: draft })}
             >
               Save

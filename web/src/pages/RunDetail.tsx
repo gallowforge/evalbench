@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Download, RotateCcw, Square } from 'lucide-react';
 import { Fragment } from 'react';
 import { Link, useLocation } from 'wouter';
-import { api, type Result, type RunDetail } from '../api';
+import { api, download, type Result, type RunDetail } from '../api';
 import { cx, ErrorNote, isNotFound, Loading, ModelDot, NotFound, ResultCell, StatusPill } from '../components/ui';
 import { ago, compact, duration, ms, pct, plural } from '../lib/format';
 import { useNow } from '../lib/hooks';
@@ -73,7 +73,7 @@ export function RunDetailPage({ id }: { id: number }) {
               <RotateCcw size={15} /> {errors ? `Retry ${errors} failed` : 'Resume'}
             </button>
           )}
-          <a className="btn-ghost" href={`/api/export/results.jsonl?run=${run.id}`}>
+          <a className="btn-ghost" {...download(`/export/results.jsonl?run=${run.id}`)}>
             <Download size={15} /> Results
           </a>
           {run.models.length > 1 && (

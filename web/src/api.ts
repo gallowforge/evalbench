@@ -8,7 +8,21 @@ export class ApiError extends Error {
   }
 }
 
+// The two demo branches below test the build flag itself, not the DEMO constant: the bundler
+// follows an `import()` unless the branch around it is plainly dead, and the server build must
+// not carry src/demo or its sample data (vite.config.ts fails the build if it does).
+
+/** The static demo has no server: the same call is answered in the page, from sample data. */
+async function demoRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const demo = await import('./demo');
+  const { status, data } = await demo.demoRequest(method, path, body);
+  if (status < 400) return data as T;
+  const { detail } = data as { detail: string | { errors: string[] } };
+  throw typeof detail === 'string' ? new ApiError(status, detail) : new ApiError(status, detail.errors[0], detail.errors);
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  if (import.meta.env.VITE_DEMO === '1') return demoRequest<T>(method, path, body);
   const res = await fetch(`/api${path}`, {
     method,
     headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
@@ -42,6 +56,21 @@ export const api = {
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, body),
   del: <T>(path: string) => request<T>('DELETE', path),
 };
+
+/**
+ * Link props for a file the server sends as a download, such as `/export/ratings.csv`.
+ * The static demo builds the same file in the page instead.
+ */
+export function download(path: string): { href: string; onClick?: (e: { preventDefault: () => void }) => void } {
+  if (import.meta.env.VITE_DEMO !== '1') return { href: `/api${path}` };
+  return {
+    href: '#',
+    onClick: (e) => {
+      e.preventDefault();
+      void import('./demo').then((demo) => demo.demoDownload(path));
+    },
+  };
+}
 
 // ---------- types (mirror the API) ----------
 
