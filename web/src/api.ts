@@ -124,6 +124,9 @@ export interface Model {
   color: string;
   archived: boolean;
   key: { env: string | null; present: boolean };
+  /** Dollars per million tokens. Null is unknown; zero is a model you run yourself. */
+  price_in: number | null;
+  price_out: number | null;
 }
 
 export interface ModelRef {
@@ -139,6 +142,8 @@ export interface Check {
   label?: string | null;
   weight?: number;
   extract?: string | null;
+  /** Grade one field of a JSON answer (a dotted path) instead of the whole text. */
+  field?: string | null;
   expect?: string | string[] | null;
   mode?: 'all' | 'any';
   case_sensitive?: boolean;
@@ -178,6 +183,8 @@ export interface Suite {
   title: string;
   description: string;
   version: number | string;
+  /** The share of tasks a model must get right to be good enough for this job. */
+  bar?: number | null;
   system?: string | null;
   rubric: RubricDimension[];
   tasks: Task[];
@@ -331,6 +338,60 @@ export interface Board {
   h2h: Record<string, { wins: number; games: number }>;
   ratings: number;
   runs: number;
+}
+
+/** One model on the verdict page: what its latest run on the suite measured. */
+export interface VerdictModel {
+  id: number;
+  label: string;
+  color: string;
+  provider: Provider | null;
+  model: string | null;
+  price_in: number | null;
+  price_out: number | null;
+  archived: boolean;
+  run_id: number;
+  run_label: string;
+  run_at: string;
+  passed: number;
+  attempted: number;
+  pass_rate: number;
+  interval: [number, number] | null;
+  errors: number;
+  latency_ms: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  /** Dollars per 1,000 answers, from the tokens the run used. */
+  cost: number | null;
+  categories: Record<string, [number, number]>;
+  tasks: Record<string, { ok: boolean; result_id: number; why?: string }>;
+}
+
+export interface Verdict {
+  suite: {
+    id: string;
+    title: string;
+    description: string;
+    bar: number;
+    exists: boolean;
+    tasks: { id: string; title: string; category: string }[];
+    ungraded: number;
+  };
+  models: VerdictModel[];
+  history: {
+    run_id: number;
+    label: string;
+    created_at: string;
+    models: Record<string, { passed: number; attempted: number; cost: number | null; latency_ms: number | null }>;
+  }[];
+  human: {
+    models: Record<string, { rating: number; ci: [number, number] | null; win_rate: number | null; games: number; ties: number }>;
+    h2h: Record<string, { wins: number; games: number }>;
+    count: number;
+  };
+  runs: number;
+  decision: import('./lib/verdict').Decision;
+  picks: { run_id: number; pick: number | null }[];
 }
 
 export interface Overview {

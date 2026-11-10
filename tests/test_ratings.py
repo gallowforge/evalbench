@@ -43,18 +43,19 @@ def demo_db():
 
 
 def test_pairs_are_blind_and_balanced(demo_db):
-    run_id = demo_db.scalar("SELECT MAX(id) FROM runs")
-    pair = next_pair(demo_db, "sam", run_id=run_id, rng=random.Random(1))
-    assert pair is not None
-    text = repr(pair)
-    for label in ("Nimbus", "Atlas", "Orion", "Vega"):
-        assert label not in text, "a pair never names a model"
-    assert set(pair["a"]) == {"result_id", "output"}
-    assert pair["a"]["output"] != pair["b"]["output"]
+    for suite_id in ("core-battery", "support-triage"):
+        run_id = demo_db.scalar("SELECT MAX(id) FROM runs WHERE suite_id=?", (suite_id,))
+        pair = next_pair(demo_db, "sam", run_id=run_id, rng=random.Random(1))
+        assert pair is not None and pair["suite_id"] == suite_id
+        text = repr(pair)
+        for label in ("Nimbus", "Atlas", "Orion", "Vega", "Lyra"):
+            assert label not in text, "a pair never names a model"
+        assert set(pair["a"]) == {"result_id", "output"}
+        assert pair["a"]["output"] != pair["b"]["output"]
 
 
 def test_rating_flow_and_progress(demo_db):
-    run_id = demo_db.scalar("SELECT MAX(id) FROM runs")
+    run_id = demo_db.scalar("SELECT MAX(id) FROM runs WHERE suite_id='core-battery'")
     before = progress(demo_db, "sam", run_id=run_id)
     pair = next_pair(demo_db, "sam", run_id=run_id)
     save_rating(demo_db, {
@@ -72,7 +73,7 @@ def test_rating_flow_and_progress(demo_db):
 
 
 def test_skipped_pairs_come_back_last(demo_db):
-    run_id = demo_db.scalar("SELECT MAX(id) FROM runs")
+    run_id = demo_db.scalar("SELECT MAX(id) FROM runs WHERE suite_id='core-battery'")
     first = next_pair(demo_db, "sam", run_id=run_id, rng=random.Random(3))
     second = next_pair(demo_db, "sam", run_id=run_id, skip=[first["key"]], rng=random.Random(3))
     assert second["key"] != first["key"]
@@ -89,7 +90,7 @@ def test_skipped_pairs_come_back_last(demo_db):
     ],
 )
 def test_rating_validation(demo_db, change, message):
-    run_id = demo_db.scalar("SELECT MAX(id) FROM runs")
+    run_id = demo_db.scalar("SELECT MAX(id) FROM runs WHERE suite_id='core-battery'")
     pair = next_pair(demo_db, "sam", run_id=run_id)
     payload = {"result_a": pair["a"]["result_id"], "result_b": pair["b"]["result_id"], "preference": 1,
                "justification": "B is shorter and still gets every part of it right."}

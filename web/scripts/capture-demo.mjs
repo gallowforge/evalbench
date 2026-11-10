@@ -122,6 +122,7 @@ const raters = [...new Set(ratings.map((r) => r.rater))].sort();
 for (const s of suites) {
   const id = encodeURIComponent(s.id);
   bodies[`/scoreboard/${id}`] = await get(`/scoreboard/${id}`);
+  bodies[`/verdict/${id}`] = await get(`/verdict/${id}`);
   digests[`/suites/${id}`] = digest(await get(`/suites/${id}`));
   digests[`/ratings?limit=5&suite=${id}`] = digest(await get(`/ratings?limit=5&suite=${id}`));
   for (const rater of [...raters, 'someone-new']) {

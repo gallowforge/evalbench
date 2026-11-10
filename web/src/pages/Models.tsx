@@ -5,6 +5,7 @@ import { api, type Model, type Preset, type Provider } from '../api';
 import { cx, Empty, ErrorNote, Field, Loading, Modal, ModelDot, PageHeader } from '../components/ui';
 import { useMeta } from '../lib/hooks';
 import { tone } from '../lib/theme';
+import { money } from '../lib/verdict';
 
 const PROVIDER_LABEL: Record<Provider, string> = { anthropic: 'Anthropic', openai: 'OpenAI', 'openai-compatible': 'OpenAI-compatible' };
 
@@ -25,6 +26,8 @@ interface Draft {
   temperature: string;
   effort: string;
   concurrency: string;
+  price_in: string;
+  price_out: string;
 }
 
 const emptyDraft = (p?: Preset): Draft => ({
@@ -37,6 +40,8 @@ const emptyDraft = (p?: Preset): Draft => ({
   temperature: '',
   effort: '',
   concurrency: String(p?.concurrency ?? 2),
+  price_in: '',
+  price_out: '',
 });
 
 function fromModel(m: Model): Draft {
@@ -50,6 +55,8 @@ function fromModel(m: Model): Draft {
     temperature: m.params.temperature !== undefined ? String(m.params.temperature) : '',
     effort: m.params.effort ?? '',
     concurrency: String(m.concurrency),
+    price_in: m.price_in === null || m.price_in === undefined ? '' : String(m.price_in),
+    price_out: m.price_out === null || m.price_out === undefined ? '' : String(m.price_out),
   };
 }
 
@@ -93,6 +100,8 @@ function ModelForm({ initial, editing, onClose }: { initial?: Model; editing: bo
         api_key_env: d.api_key_env,
         concurrency: Number(d.concurrency) || 1,
         params: { max_tokens: d.max_tokens, temperature: d.temperature, effort: d.effort },
+        price_in: d.price_in,
+        price_out: d.price_out,
       };
       return editing && initial ? api.put(`/models/${initial.id}`, body) : api.post('/models', body);
     },
@@ -260,6 +269,41 @@ function ModelForm({ initial, editing, onClose }: { initial?: Model; editing: bo
             />
           </Field>
         </div>
+        <Field
+          label="Price per million tokens, in dollars"
+          hint="The verdict uses it to name the cheapest model that is good enough. Enter 0 and 0 for a model you run yourself; leave both empty if you do not know."
+        >
+          <div className="grid grid-cols-2 gap-4">
+            <label className="relative block">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[12px] text-faint">in</span>
+              <input
+                className="input num pl-9"
+                type="number"
+                min={0}
+                step="any"
+                inputMode="decimal"
+                aria-label="Price per million input tokens"
+                value={d.price_in}
+                onChange={(e) => set({ price_in: e.target.value })}
+                placeholder="3.00"
+              />
+            </label>
+            <label className="relative block">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-[12px] text-faint">out</span>
+              <input
+                className="input num pl-11"
+                type="number"
+                min={0}
+                step="any"
+                inputMode="decimal"
+                aria-label="Price per million output tokens"
+                value={d.price_out}
+                onChange={(e) => set({ price_out: e.target.value })}
+                placeholder="15.00"
+              />
+            </label>
+          </div>
+        </Field>
         <ErrorNote error={save.error} />
       </div>
     </Modal>
@@ -311,6 +355,18 @@ function ModelCard({ m, onEdit }: { m: Model; onEdit: () => void }) {
           ]
             .filter(Boolean)
             .join(' · ')}
+        </dd>
+        <dt className="text-faint">Price</dt>
+        <dd className="text-ink-2">
+          {m.price_in === null || m.price_out === null ? (
+            <span className="text-faint">not set, so the verdict cannot rank it by cost</span>
+          ) : m.price_in === 0 && m.price_out === 0 ? (
+            'no API bill'
+          ) : (
+            <span className="num">
+              {money(m.price_in)} in · {money(m.price_out)} out, per million tokens
+            </span>
+          )}
         </dd>
       </dl>
       {r && (

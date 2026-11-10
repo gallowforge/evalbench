@@ -28,9 +28,12 @@ import type {
   Summary,
   Task,
   TaskAnswers,
+  Verdict,
+  VerdictModel,
 } from '../api';
 import { SUITES_READ_ONLY } from '../lib/demo';
-import { bootstrap, bradleyTerry, type Game, pyRound, summarize } from './stats';
+import { DEFAULT_BAR, decide, wilson } from '../lib/verdict';
+import { bootstrap, bradleyTerry, type Game, pyRound, pySum, summarize } from './stats';
 
 // ---------- records ----------
 
@@ -853,6 +856,147 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
     };
   }
 
+  // ---------- the verdict ----------
+
+  type Measured = Omit<VerdictModel, 'id' | 'label' | 'color' | 'provider' | 'model' | 'price_in' | 'price_out' | 'archived' | 'run_id' | 'run_label' | 'run_at'>;
+
+  /** Dollars for 1,000 answers at these prices, from the tokens the run used (`cost_per_1k` in verdict.py). */
+  function costPer1k(rows: ResultRow[], priceIn: number | null | undefined, priceOut: number | null | undefined): number | null {
+    if (priceIn === null || priceIn === undefined || priceOut === null || priceOut === undefined) return null;
+    const used = rows.filter((r) => r.status === 'done' && r.input_tokens !== null && r.output_tokens !== null);
+    if (!used.length) return null;
+    return pyRound(pySum(used.map((r) => r.input_tokens! * priceIn + r.output_tokens! * priceOut)) / used.length / 1000, 6);
+  }
+
+  const mean = (values: number[]) => (values.length ? pyRound(pySum(values) / values.length, 1) : null);
+
+  /** One line on why an answer did not pass: the first check it failed, or the error. */
+  function why(row: ResultRow): string {
+    if (row.status === 'error') return row.error || 'no answer';
+    const failed = row.checks.find((c) => !c.passed);
+    return failed ? failed.label || failed.type || 'a check failed' : '';
+  }
+
+  function candidate(rows: ResultRow[], unscored: ReadonlySet<string>, prices: { price_in?: number | null; price_out?: number | null }): Measured | null {
+    const s = summarize(rows, unscored);
+    if (!s.attempted) return null;
+    const done = rows.filter((r) => r.status === 'done');
+    const categories: Record<string, [number, number]> = {};
+    const tasks: VerdictModel['tasks'] = {};
+    for (const r of rows) {
+      if (unscored.has(r.task_id) || (r.status !== 'done' && r.status !== 'error')) continue;
+      if (r.status === 'done' && r.passed === null) continue;
+      const ok = r.status === 'done' && Boolean(r.passed);
+      const cell = (categories[r.category] ??= [0, 0]);
+      cell[0] += Number(ok);
+      cell[1] += 1;
+      tasks[r.task_id] = ok ? { ok, result_id: r.id } : { ok, result_id: r.id, why: why(r) };
+    }
+    const tokens = (key: 'input_tokens' | 'output_tokens') => mean(done.filter((r) => r[key] !== null).map((r) => r[key] as number));
+    return {
+      passed: s.passed,
+      attempted: s.attempted,
+      pass_rate: s.pass_rate!,
+      interval: wilson(s.passed, s.attempted),
+      errors: s.errors,
+      latency_ms: s.latency_ms,
+      input_tokens: tokens('input_tokens'),
+      output_tokens: tokens('output_tokens'),
+      cost: costPer1k(rows, prices.price_in, prices.price_out),
+      categories,
+      tasks,
+    };
+  }
+
+  /** Everything the verdict page shows for one suite (`verdict` in verdict.py). */
+  function verdict(suiteId: string): Verdict {
+    const stored = suiteRow(suiteId);
+    if (!stored) throw new Refusal(404, 'no such suite');
+    const suite = stored.suite;
+    const runs = db.runs.filter((r) => r.suite_id === suiteId).sort((a, b) => a.id - b.id);
+    const bar = suite.bar ?? DEFAULT_BAR;
+    const unscored = unscoredOf(suite);
+
+    const runIds = new Set(runs.map((r) => r.id));
+    const byRunModel = new Map<string, ResultRow[]>();
+    for (const r of [...db.results].sort((a, b) => a.id - b.id)) {
+      if (!runIds.has(r.run_id)) continue;
+      const key = `${r.run_id}:${r.model_id}`;
+      byRunModel.set(key, [...(byRunModel.get(key) ?? []), r]);
+    }
+
+    type Info = Pick<VerdictModel, 'label' | 'color' | 'provider' | 'model'> & { price_in?: number | null; price_out?: number | null; archived?: boolean };
+    const info = new Map<number, Info>();
+    for (const run of runs) {
+      for (const snap of run.models) info.set(snap.id, { label: snap.label, color: snap.color, provider: snap.provider, model: snap.model });
+    }
+    for (const m of db.models) {
+      const known = info.get(m.id); // today's name, colour and prices; what was run stays as it was
+      if (known) Object.assign(known, { label: m.label, color: m.color || known.color, price_in: m.price_in, price_out: m.price_out, archived: Boolean(m.archived) });
+    }
+
+    const history: Verdict['history'] = [];
+    const latest = new Map<number, number>();
+    for (const run of runs) {
+      const models: Verdict['history'][number]['models'] = {};
+      for (const [mid, about] of info) {
+        const rows = byRunModel.get(`${run.id}:${mid}`);
+        const c = rows ? candidate(rows, unscored, about) : null;
+        if (!c) continue;
+        models[mid] = { passed: c.passed, attempted: c.attempted, cost: c.cost, latency_ms: c.latency_ms };
+        latest.set(mid, run.id);
+      }
+      if (Object.keys(models).length) history.push({ run_id: run.id, label: run.label, created_at: run.created_at, models });
+    }
+
+    const models: VerdictModel[] = [];
+    for (const [mid, runId] of latest) {
+      const run = runRow(runId)!;
+      const about = info.get(mid)!;
+      models.push({
+        id: mid,
+        label: about.label,
+        color: about.color,
+        provider: about.provider,
+        model: about.model,
+        price_in: about.price_in ?? null,
+        price_out: about.price_out ?? null,
+        archived: about.archived ?? false,
+        run_id: runId,
+        run_label: run.label,
+        run_at: run.created_at,
+        ...candidate(byRunModel.get(`${runId}:${mid}`)!, unscored, about)!,
+      });
+    }
+    models.sort((a, b) => b.pass_rate - a.pass_rate || Number(a.cost === null) - Number(b.cost === null) || (a.cost ?? 0) - (b.cost ?? 0) || a.id - b.id);
+
+    const human = humanBoard(suiteId);
+    return {
+      suite: {
+        id: suiteId,
+        title: suite.title,
+        description: suite.description ?? '',
+        bar,
+        exists: true,
+        tasks: suite.tasks.filter((t) => t.checks.length).map((t) => ({ id: t.id, title: t.title || t.id, category: t.category })),
+        ungraded: suite.tasks.filter((t) => !t.checks.length).length,
+      },
+      models,
+      history,
+      human: { models: Object.fromEntries(human.models), h2h: human.h2h, count: human.count },
+      runs: runs.length,
+      decision: decide(models, bar, 'cost'),
+      picks: history.map((p) => ({
+        run_id: p.run_id,
+        pick: decide(
+          Object.entries(p.models).map(([id, m]) => ({ id: Number(id), ...m })),
+          bar,
+          'cost',
+        ).pick,
+      })),
+    };
+  }
+
   // ---------- suites ----------
 
   const runCount = (suiteId: string) => db.runs.filter((r) => r.suite_id === suiteId).length;
@@ -936,13 +1080,24 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
     return { id: 0, label, provider, base_url: baseUrl, model, api_key_env: keyEnv, params, concurrency, color: String(data.color ?? '').trim() };
   }
 
+  /** Dollars per million tokens. Empty is unknown; zero is a real price, for a model you run yourself. */
+  function cleanPrices(data: Record<string, unknown>): Pick<Model, 'price_in' | 'price_out'> {
+    const price = (value: unknown): number | null => {
+      if (blank(value)) return null;
+      const n = Number(value);
+      if (!(n >= 0 && n <= 100_000)) throw new Refusal(422, 'a price is dollars per million tokens, zero or more');
+      return n;
+    };
+    return { price_in: price(data.price_in), price_out: price(data.price_out) };
+  }
+
   function createModel(data: Record<string, unknown>) {
     const m = cleanModel(data);
     if (!m.color) {
       const used = new Set(db.models.filter((x) => !x.archived).map((x) => x.color));
       m.color = PALETTE.find((c) => !used.has(c)) ?? PALETTE[db.models.length % PALETTE.length];
     }
-    const row: ModelRow = { ...m, id: nextId(db.models), archived: false, created_at: iso(now()), key: keyStatus(m) };
+    const row: ModelRow = { ...m, ...cleanPrices(data), id: nextId(db.models), archived: false, created_at: iso(now()), key: keyStatus(m) };
     db.models.push(row);
     return { ...row };
   }
@@ -951,7 +1106,7 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
     const current = db.models.find((m) => m.id === id);
     if (!current) throw new Refusal(404, 'no such model');
     const m = cleanModel({ ...current, ...data });
-    Object.assign(current, { ...m, id, color: m.color || current.color });
+    Object.assign(current, { ...m, ...cleanPrices({ ...current, ...data }), id, color: m.color || current.color });
     current.key = keyStatus(current);
     return { ...current };
   }
@@ -1219,6 +1374,9 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
         break;
       case 'scoreboard':
         if (is('GET', 2)) return scoreboard(id);
+        break;
+      case 'verdict':
+        if (is('GET', 2)) return verdict(id);
         break;
       case 'export':
         if (is('GET', 2) && id === 'summary') {

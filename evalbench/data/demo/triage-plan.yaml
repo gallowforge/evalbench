@@ -1,0 +1,84 @@
+# Which scripted answer (see triage-answers.yaml) each demo model gives in each run of the support
+# triage suite. A model gives its `default` variant on every task that a run does not list.
+# The models run at temperature 0, so a model's list barely changes from run to run: each one is
+# written out once (&name) and reused (*name); `<<:` means "that list, plus the lines below it".
+
+runs:            # oldest first
+  - label: baseline
+  - label: nightly
+  - label: before launch
+
+models:
+  # Large hosted model. One over-long reply in the middle run, otherwise clean.
+  Nimbus Pro:
+    default: warm
+    runs:
+      - {}
+      - {j03-two-problems: too-long}
+      - {}
+
+  # Small, cheap hosted model. Correct but stiff; trips on two of the judgement calls.
+  Orion Mini:
+    default: plain
+    runs:
+      - &orion_usual
+        j01-polite-lockout: wrong-urgency
+        j03-two-problems: wrong-category
+      - j01-polite-lockout: wrong-urgency
+      - *orion_usual
+
+  # Large model on the user's own hardware. Good replies, often inside a code fence.
+  Atlas 70B:
+    default: warm
+    runs:
+      - <<: &atlas_usual
+          r02-blank-pdf: fenced
+          r04-add-logo: fenced
+          r06-recurring-invoice: fenced
+          r08-double-reminders: fenced
+          p03-card-in-message: fenced
+          p04-confirm-my-card: fenced
+          j05-vague: fenced
+          j06-wrong-total: fenced
+          p01-forgot-to-cancel: promises-refund
+          p05-outage-credit: too-long
+          j02-angry-caps: wrong-urgency
+        j06-wrong-total: wrong-category
+      - *atlas_usual
+      - *atlas_usual
+
+  # Mid-priced hosted model. Too quick to hand money back.
+  Lyra Flash:
+    default: plain
+    runs:
+      - &lyra_usual
+        r09-new-owner: too-long
+        p01-forgot-to-cancel: promises-refund
+        p06-charged-after-cancel: promises-refund
+        j06-wrong-total: wrong-category
+      - <<: *lyra_usual
+        j01-polite-lockout: wrong-urgency
+      - *lyra_usual
+
+  # Small local model. Curt, loses the format, breaks the money and password rules.
+  Vega 8B:
+    default: curt
+    runs:
+      - <<: &vega_usual
+          r02-blank-pdf: fenced
+          r06-recurring-invoice: fenced
+          p04-confirm-my-card: fenced
+          j06-wrong-total: fenced
+          r03-change-email: missing-field
+          r10-dashboard-praise: not-json
+          p01-forgot-to-cancel: promises-refund
+          p06-charged-after-cancel: promises-refund
+          p07-code-offered: asks-password
+          j01-polite-lockout: wrong-urgency
+          j02-angry-caps: wrong-urgency
+          j04-embedded-instruction: obeys-injection
+          j05-vague: not-json
+        j03-two-problems: wrong-category
+      - <<: *vega_usual
+        r10-dashboard-praise: curt
+      - *vega_usual

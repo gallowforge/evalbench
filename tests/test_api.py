@@ -6,13 +6,13 @@ from fastapi.testclient import TestClient
 
 from evalbench.app import create_app
 from evalbench.auth import COOKIE, hash_password
+from evalbench.verdict import decide
 from tests.conftest import make_settings, wait_for_run
 
 
 def test_first_start_installs_the_sample_suite(client):
     suites = client.get("/api/suites").json()
-    assert [s["id"] for s in suites] == ["core-battery"]
-    assert suites[0]["tasks"] == 20
+    assert [(s["id"], s["tasks"]) for s in suites] == [("core-battery", 20), ("support-triage", 24)]
     meta = client.get("/api/meta").json()
     assert meta["sandbox"] == {"mode": "local", "ok": True}
     assert set(meta["keys"]) == {"anthropic", "openai"}
@@ -296,9 +296,9 @@ def test_ratings_are_not_counted_twice_and_go_with_their_run(client):
     in_run = len([r for r in client.get("/api/ratings", params={"limit": 1000}).json() if r["run_id"] == run_id])
     assert client.delete(f"/api/runs/{run_id}").status_code == 200
     assert client.get("/api/export/summary").json()["ratings"] <= total - in_run
-    board = client.get("/api/scoreboard/core-battery").json()
+    boards = [client.get(f"/api/scoreboard/{suite}").json() for suite in ("core-battery", "support-triage")]
     rows = list(csv.DictReader(io.StringIO(client.get("/api/export/ratings.csv").text)))
-    assert board["ratings"] == len(rows), "the board and the export agree"
+    assert sum(b["ratings"] for b in boards) == len(rows), "the boards and the export agree"
 
 
 def test_csv_neutralises_formulas(client, fake_server):
@@ -309,10 +309,39 @@ def test_csv_neutralises_formulas(client, fake_server):
 
 def test_demo_loads_once(client):
     first = client.post("/api/demo").json()
-    assert first["runs"] == 6 and first["ratings"] > 40
+    assert first["runs"] == 9 and first["models"] == 5 and first["ratings"] > 150
     assert client.post("/api/demo").json()["already"]
     overview = client.get("/api/overview").json()
-    assert overview["demo"] and overview["counts"]["runs"] == 6
+    assert overview["demo"] and overview["counts"]["runs"] == 9
     board = client.get("/api/scoreboard/core-battery").json()
     vega = next(r for r in board["regressions"] if r["model_id"] == next(m["id"] for m in board["models"] if m["label"] == "Vega 8B"))
     assert vega["regressed"] >= 1, "the demo tells a regression story"
+
+
+def test_the_demo_has_two_jobs_with_different_answers(client):
+    """What the demo is for: the cheapest model that is good enough depends on the job and on the bar."""
+    client.post("/api/demo")
+    triage = client.get("/api/verdict/support-triage").json()
+    label = {m["id"]: m["label"] for m in triage["models"]}
+    assert {m["label"]: m["passed"] for m in triage["models"]} == {
+        "Nimbus Pro": 24, "Orion Mini": 22, "Atlas 70B": 21, "Lyra Flash": 20, "Vega 8B": 15}
+    assert [[h["models"][str(m)]["passed"] for h in triage["history"]] for m in sorted(label)] == [
+        [24, 23, 24], [20, 21, 21], [22, 23, 22], [14, 16, 15], [20, 19, 20]]
+    assert triage["suite"]["bar"] == 0.9 and label[triage["decision"]["pick"]] == "Orion Mini"
+    assert [label[p["pick"]] for p in triage["picks"]] == ["Orion Mini"] * 3, "the answer holds from run to run"
+    assert [label[decide(triage["models"], bar)["pick"]] for bar in (0.85, 0.9, 0.95)] == ["Atlas 70B", "Orion Mini", "Nimbus Pro"]
+    cost = {m["label"]: m["cost"] for m in triage["models"]}
+    assert cost["Atlas 70B"] == 0 and cost["Vega 8B"] == 0
+    assert 0.08 < cost["Orion Mini"] < 0.2 < cost["Lyra Flash"] < 1 < cost["Nimbus Pro"] < 4
+    lyra = next(m["id"] for m in triage["models"] if m["label"] == "Lyra Flash")
+    orion = next(m["id"] for m in triage["models"] if m["label"] == "Orion Mini")
+    assert orion in triage["decision"]["rows"][str(lyra)]["beaten_by"], "more accurate and cheaper"
+    assert triage["human"]["count"] > 100
+
+    core = client.get("/api/verdict/core-battery").json()
+    assert {m["label"]: m["passed"] for m in core["models"]} == {"Nimbus Pro": 18, "Atlas 70B": 18, "Orion Mini": 11, "Vega 8B": 7}
+    assert next(m["label"] for m in core["models"] if m["id"] == core["decision"]["pick"]) == "Atlas 70B"
+    assert core["human"]["count"] == 88
+    runs = client.get("/api/runs").json()
+    assert [r["id"] for r in runs] == sorted((r["id"] for r in runs), reverse=True)
+    assert [r["created_at"] for r in runs] == sorted((r["created_at"] for r in runs), reverse=True), "newest first, by id and by time"

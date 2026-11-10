@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Board, Model, Pair, RatingRow, RunDetail, RunListItem, TaskAnswers } from '../api';
+import type { Board, Model, Pair, RatingRow, RunDetail, RunListItem, TaskAnswers, Verdict } from '../api';
 import { createBackend, type Fixtures, LIMITS } from './backend';
 import fixtureData from './data/fixtures.json';
 import snapshotData from './data/snapshots.json';
@@ -7,7 +7,9 @@ import snapshotData from './data/snapshots.json';
 const fixtures = fixtureData as unknown as Fixtures;
 const snapshots = snapshotData as unknown as { bodies: Record<string, unknown>; digests: Record<string, string> };
 const CAPTURED = Date.parse(fixtures.captured_at);
-const SUITE = fixtures.suites[0].id;
+const SUITE = 'core-battery';
+const TRIAGE = 'support-triage';
+const runsOf = (suite: string) => fixtures.runs.filter((r) => r.suite_id === suite).length;
 
 /** The same written form scripts/capture-demo.mjs digests: objects with their keys sorted. */
 function canonical(value: unknown): string {
@@ -225,19 +227,21 @@ describe('writes stay in memory for the visit', () => {
       params: { temperature: 9, max_tokens: 0 },
     });
     expect(made.data).toMatchObject({
-      id: 5,
+      id: 6,
       label: 'local-7b',
       model: 'local-7b',
       base_url: 'http://localhost:1234/v1',
       concurrency: 1,
       archived: false,
+      price_in: null,
+      price_out: null,
     });
     expect(made.data.params).toEqual({ max_tokens: 1, temperature: 2 });
     expect(made.data.key).toEqual({ env: null, present: true });
     expect(fixtures.models.map((m) => m.color)).not.toContain(made.data.color);
 
-    const edited = await call<Model>('PUT', '/models/5', { label: 'Local 7B', api_key_env: 'LOCAL_API_KEY' });
-    expect(edited.data).toMatchObject({ id: 5, label: 'Local 7B', model: 'local-7b', key: { env: 'LOCAL_API_KEY', present: false } });
+    const edited = await call<Model>('PUT', '/models/6', { label: 'Local 7B', api_key_env: 'LOCAL_API_KEY' });
+    expect(edited.data).toMatchObject({ id: 6, label: 'Local 7B', model: 'local-7b', key: { env: 'LOCAL_API_KEY', present: false } });
     expect((await get<Model[]>('/models')).map((m) => m.label)).toContain('Local 7B');
 
     expect(await call('POST', '/models', { provider: 'openai-compatible', model: 'x' })).toMatchObject({
@@ -245,16 +249,28 @@ describe('writes stay in memory for the visit', () => {
       detail: 'an OpenAI-compatible model needs a base URL',
     });
     expect(await call('POST', '/models', { provider: 'nobody', model: 'x' })).toMatchObject({ status: 422 });
-    expect((await call<{ detail: string }>('PUT', '/models/5', { api_key_env: 'PATH' })).detail).toContain("'PATH' is not allowed as a key variable");
-    expect((await call<{ detail: string }>('PUT', '/models/5', { api_key_env: 'OPENAI_API_KEY' })).detail).toContain(
+    expect((await call<{ detail: string }>('PUT', '/models/6', { api_key_env: 'PATH' })).detail).toContain("'PATH' is not allowed as a key variable");
+    expect((await call<{ detail: string }>('PUT', '/models/6', { api_key_env: 'OPENAI_API_KEY' })).detail).toContain(
       'OPENAI_API_KEY is only sent to api.openai.com',
     );
 
+    // A price is dollars per million tokens: kept through other edits, cleared when emptied, zero is a price.
+    const priced = await call<Model>('PUT', '/models/6', { price_in: '0.2', price_out: 0 });
+    expect([priced.data.price_in, priced.data.price_out]).toEqual([0.2, 0]);
+    expect((await call<Model>('PUT', '/models/6', { label: 'Local 7B' })).data.price_in).toBe(0.2);
+    expect((await call<Model>('PUT', '/models/6', { price_in: '', price_out: null })).data).toMatchObject({ price_in: null, price_out: null });
+    for (const bad of [-1, 'cheap', 100_001]) {
+      expect(await call('PUT', '/models/6', { price_in: bad }), String(bad)).toMatchObject({
+        status: 422,
+        detail: 'a price is dollars per million tokens, zero or more',
+      });
+    }
+
     // No run has used the new model, so it goes; a model with history is kept and hidden.
-    expect((await call('DELETE', '/models/5')).data).toEqual({ result: 'deleted' });
+    expect((await call('DELETE', '/models/6')).data).toEqual({ result: 'deleted' });
     expect((await call('DELETE', '/models/1')).data).toEqual({ result: 'archived' });
-    expect((await get<Model[]>('/models')).map((m) => m.id)).toEqual([2, 3, 4]);
-    expect((await get<Model[]>('/models?archived=true')).map((m) => m.id)).toEqual([1, 2, 3, 4]);
+    expect((await get<Model[]>('/models')).map((m) => m.id)).toEqual([2, 3, 4, 5]);
+    expect((await get<Model[]>('/models?archived=true')).map((m) => m.id)).toEqual([1, 2, 3, 4, 5]);
     expect((await get<RunDetail>('/runs/6')).models.map((m) => m.id)).toContain(1);
   });
 
@@ -343,10 +359,10 @@ describe('a new run replays the recorded answers', () => {
 
     // It joins the history: the board's latest run for these models is now the new one.
     const board = await d.get<Board>(`/scoreboard/${SUITE}`);
-    expect(board.runs).toBe(fixtures.runs.length + 1);
+    expect(board.runs).toBe(runsOf(SUITE) + 1);
     expect(board.models.find((m) => m.id === 1)!.auto!.run_id).toBe(id);
     expect(board.history.at(-1)).toMatchObject({ run_id: id, label: 'second look' });
-    expect((await d.get<{ counts: { runs: number; answers: number } }>('/overview')).counts).toMatchObject({ runs: 7, answers: 500 });
+    expect((await d.get<{ counts: { runs: number; answers: number } }>('/overview')).counts).toMatchObject({ runs: fixtures.runs.length + 1, answers: fixtures.results.length + 40 });
   });
 
   it('stops when cancelled and picks up again when resumed', async () => {
@@ -381,6 +397,26 @@ describe('a new run replays the recorded answers', () => {
     expect(await d.call('POST', '/runs', { suite_id: 'none', model_ids: [1] })).toMatchObject({ status: 422, detail: "no suite 'none'" });
     expect(await d.call('POST', '/runs', { suite_id: SUITE, model_ids: [] })).toMatchObject({ status: 422, detail: 'choose at least one model' });
     expect(await d.call('POST', '/runs', { suite_id: SUITE, model_ids: [99] })).toMatchObject({ status: 422, detail: 'model 99 does not exist' });
+  });
+
+  it('moves the verdict: the new run is each model’s latest, and a new price changes the cost, not the marks', async () => {
+    const d = demo();
+    const before = await d.get<Verdict>(`/verdict/${TRIAGE}`);
+    const label = (v: Verdict, id: number | null) => v.models.find((m) => m.id === id)?.label;
+    expect(label(before, before.decision.pick)).toBe('Orion Mini');
+    expect(before.picks.map((p) => label(before, p.pick))).toEqual(['Orion Mini', 'Orion Mini', 'Orion Mini']);
+    const orion = before.models.find((m) => m.label === 'Orion Mini')!;
+    const made = await d.call<{ id: number }>('POST', '/runs', { suite_id: TRIAGE, model_ids: [orion.id], label: 'again' });
+    d.wait(600_000);
+    const after = await d.get<Verdict>(`/verdict/${TRIAGE}`);
+    expect(after.runs).toBe(runsOf(TRIAGE) + 1);
+    expect(after.models.find((m) => m.id === orion.id)).toMatchObject({ run_id: made.data.id, run_label: 'again', passed: orion.passed, cost: orion.cost });
+    expect(after.history.at(-1)!.models[orion.id]).toMatchObject({ passed: orion.passed, attempted: orion.attempted });
+    await d.call('PUT', `/models/${orion.id}`, { price_in: orion.price_in! * 10, price_out: orion.price_out! * 10 });
+    const dearer = (await d.get<Verdict>(`/verdict/${TRIAGE}`)).models.find((m) => m.id === orion.id)!;
+    expect(dearer.cost).toBeCloseTo(orion.cost! * 10, 5);
+    expect(dearer.passed).toBe(orion.passed);
+    expect((await d.call('GET', '/verdict/nope')).status).toBe(404);
   });
 
   it('will not invent answers for a model it has never heard from', async () => {
