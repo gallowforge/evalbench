@@ -55,6 +55,7 @@ class Check(BaseModel):
     label: str | None = None
     weight: float = Field(default=1.0, gt=0)
     extract: Extract | None = None
+    field: str | None = Field(default=None, min_length=1, max_length=80)
     expect: str | list[str] | None = None
     mode: Literal["all", "any"] = "all"
     case_sensitive: bool = False
@@ -103,12 +104,17 @@ class Check(BaseModel):
                 raise ValueError("min is larger than max")
         if t == "python" and not (self.tests and self.tests.strip()):
             raise ValueError("'python' needs tests")
+        if self.field is not None:
+            if t in ("json", "python"):
+                raise ValueError(f"'field' does not apply to '{t}' checks")
+            if self.extract not in (None, "json"):
+                raise ValueError("'field' reads the answer as JSON: leave extract unset")
         return self
 
     def title(self) -> str:
         if self.label:
             return self.label
-        return {
+        base = {
             "exact": "Exact answer",
             "contains": "Contains",
             "not_contains": "Avoids",
@@ -117,6 +123,7 @@ class Check(BaseModel):
             "json": "Valid JSON",
             "python": "Python tests",
         }[self.type]
+        return f"{base} in {self.field}" if self.field else base
 
 
 class RubricDimension(BaseModel):

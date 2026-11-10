@@ -50,6 +50,8 @@ def test_hash_tracks_what_the_model_sees():
         ("id: x\ntitle: X\ntasks: [{id: a, prompt: hi, checks: [{type: length, min: 5, max: 2}]}]", "min is larger"),
         ("id: x\ntitle: X\ntasks: [{id: a, prompt: hi, checks: [{type: python}]}]", "needs tests"),
         ("id: x\ntitle: X\ntasks: [{id: a, prompt: hi, oops: 1}]", "oops"),
+        ("id: x\ntitle: X\ntasks: [{id: a, prompt: hi, checks: [{type: json, field: reply}]}]", "'field' does not apply to 'json'"),
+        ("id: x\ntitle: X\ntasks: [{id: a, prompt: hi, checks: [{type: length, max: 5, field: reply, extract: last_line}]}]", "leave extract unset"),
         ("id: x\n  title: [", "line"),
         ("- just\n- a list", "mapping"),
     ],

@@ -19,6 +19,27 @@ def check(text: str, **fields) -> tuple[bool, str]:
     return result.passed, result.detail
 
 
+def test_a_text_check_can_grade_one_field_of_a_json_answer():
+    answer = 'Here you go:\n```json\n{"category": "billing", "reply": "Sorry about that. I have sent the invoice again.", "meta": {"lang": "en"}}\n```'
+    assert check(answer, type="length", field="reply", max=10) == (True, "9 words (max 10)")
+    assert check(answer, type="length", field="reply", max=5) == (False, "9 words (max 5)")
+    assert check(answer, type="not_contains", field="reply", expect=["refund"]) == (True, "none present")
+    # the same phrase elsewhere in the answer does not count: only the field is read
+    assert check(answer, type="not_contains", field="reply", expect=["billing"]) == (True, "none present")
+    assert check(answer, type="contains", field="reply", expect="invoice")[0]
+    assert check(answer, type="exact", field="category", expect="Billing")[0]
+    assert check(answer, type="exact", field="meta.lang", expect="en")[0]
+    assert check(answer, type="regex", field="reply", pattern=r"^Sorry")[0]
+    # a field that is not there fails the check and says so, whatever the rule
+    assert check(answer, type="not_contains", field="note", expect="x") == (False, 'no "note" field in the answer')
+    assert check(answer, type="exact", field="meta.tone", expect="x") == (False, 'no "meta.tone" field in the answer')
+    assert check("I cannot help with that.", type="length", field="reply", max=5) == (False, "the answer is not JSON")
+    # numbers and other values are compared as their JSON text
+    assert check('{"score": 4, "tags": ["a"]}', type="exact", field="score", expect="4")[0]
+    assert check('{"score": 4, "tags": ["a"]}', type="contains", field="tags", expect='"a"')[0]
+    assert Check(type="length", field="reply", max=5).title() == "Length (words) in reply"
+
+
 def test_extract_modes():
     text = "Working...\n\n**Answer:** 7/15."
     assert extract(text, "final_answer") == "7/15"

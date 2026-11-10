@@ -89,6 +89,22 @@ def extract(text: str, how: str) -> str:
     raise ValueError(f"unknown extract mode {how!r}")
 
 
+def field_value(answer: str, path: str) -> tuple[str | None, str]:
+    """The text of one field of a JSON answer ("reply", or "customer.name" for a nested one).
+    Returns (None, why) when it cannot be read, so the check fails with the reason."""
+    try:
+        value = json.loads(answer.strip())
+    except json.JSONDecodeError:
+        return None, "the answer is not JSON"
+    for key in path.split("."):
+        if not isinstance(value, dict) or key not in value:
+            return None, f'no "{path}" field in the answer'
+        value = value[key]
+    if isinstance(value, str):
+        return value, ""
+    return ("" if value is None else json.dumps(value)), ""
+
+
 def _normalize(s: str, case_sensitive: bool) -> str:
     s = _strip_wrapping(s)
     s = re.sub(r"\s+", " ", s).strip()
@@ -235,10 +251,15 @@ DEFAULT_EXTRACT = {"python": "code", "json": "json"}
 
 
 async def run_check(check: Check, output: str, sandbox: Sandbox) -> CheckResult:
-    how = check.extract or DEFAULT_EXTRACT.get(check.type, "full")
+    how = check.extract or ("json" if check.field else DEFAULT_EXTRACT.get(check.type, "full"))
     answer = extract(output, how)
     try:
-        if check.type == "exact":
+        why = ""
+        if check.field:
+            answer, why = field_value(answer, check.field)
+        if answer is None:
+            passed, detail = False, why
+        elif check.type == "exact":
             passed, detail = _exact(check, answer)
         elif check.type == "contains":
             passed, detail = _contains(check, answer, forbid=False)
