@@ -1,6 +1,7 @@
 // Compose Glass scenes from the captured pages, on the GPU.
 //   node render.cjs <layout>:<dark|light>:still:<out.png> ...            one still per job
 //   node render.cjs <layout>:<dark|light>:anim:<frames>:<outDir> ...     numbered frames of a loop
+//                   (<frames> may be the word loop: as many as the layout says one turn of it takes)
 // Reads docs/readme/build/shots (made by capture.cjs). three and playwright come from NODE_PATH.
 const { chromium } = require('playwright');
 const path = require('path'), fs = require('fs'), { pathToFileURL } = require('url');
@@ -40,7 +41,8 @@ function file(url) {
       await page.evaluate(p => window.renderAt(p), 0);
       await page.screenshot({ path: a });
     } else {
-      const n = +a; fs.mkdirSync(b, { recursive: true });
+      const n = a === 'loop' ? L.frames : +a; fs.mkdirSync(b, { recursive: true });
+      if (!(n > 0)) throw new Error(`how many frames of ${layout}?`);
       for (let i = 0; i < n; i++) {
         await page.evaluate(p => window.renderAt(p), i / n);
         await page.screenshot({ path: path.join(b, `f${String(i).padStart(4, '0')}.png`) });

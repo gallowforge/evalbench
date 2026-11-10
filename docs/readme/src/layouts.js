@@ -151,13 +151,39 @@ const HERO_NIGHT = merge(NIGHT, { env: {
   shafts: [[0.30, 0.050, 0.05, 0.13], [0.42, 0.020, 0.02, 0.10], [0.58, 0.022, -0.02, 0.11], [0.71, 0.050, -0.05, 0.13], [0.50, 0.22, 0.0, 0.06]],
   glows: [[0.50, 0.32, 0.42, 0.10, '#2457f0'], [0.5, 1.15, 0.65, 0.09, '#c8c0aa'], [0.5, -0.15, 0.6, 0.05, '#3a4a78']] } });
 const HERO_DAY = merge(DAY, { env: { sun: [0.10, 0, -0.80, 0.95] } });
+// The hero is a loop. Its centre window plays a new run of the core battery on the run page: capture.cjs
+// photographs REPLAY.frames moments of it, the queued run first and the finished run last, and frame i between
+// them is the first moment REPLAY.share(i / (frames - 1)) of the answers are in (slow, quicker, slow again).
+const ease = (u) => u * u * (3 - 2 * u);
+export const REPLAY = { frames: 38, share: (u) => u + (ease(u) - u) * 0.7 };
+const replayFrames = (n) => Array.from({ length: REPLAY.frames }, (_, i) => `replay-${n ? 'dark' : 'light'}-${String(i).padStart(2, '0')}.png`);
+// One turn of the loop, in frames at 12 a second. It opens on the finished state, the overview with the leader's
+// row lifted out, and holds it; the row settles back into its page; the page turns to the new run, which plays
+// one captured moment a frame and comes to rest on its scores; the page turns back and the row lifts out again.
+const HERO_LOOP = { hold: 24, settle: 6, turn: 6, run: REPLAY.frames - 1, rest: 7, back: 6, lift: 6, tail: 4 };
+export const HERO_FRAMES = Object.values(HERO_LOOP).reduce((a, b) => a + b, 0);
+function heroPlay(phase) {
+  const T = HERO_LOOP, last = REPLAY.frames;       // sequence index 0 is the overview, 1..last the run
+  let f = Math.round((((phase % 1) + 1) % 1) * HERO_FRAMES * 1000) / 1000, u;
+  const part = (n) => { u = (f + 1) / (n + 1); f -= n; return f < 0; };   // u: how far through this part the frame is
+  if (part(T.hold)) return { from: 0, to: 0, mix: 0, lift: 1 };
+  if (part(T.settle)) return { from: 0, to: 0, mix: 0, lift: 1 - ease(u) };
+  if (part(T.turn)) return { from: 0, to: 1, mix: ease(u), lift: 0 };
+  if (part(T.run)) return { from: 1 + Math.floor(f + T.run), to: 1, mix: 0, lift: 0 };
+  // the finished page sits a little higher than the running one, so it fades in over two frames instead of jumping
+  if (part(T.rest)) return { from: last - 1, to: last, mix: ease(Math.min(1, (f + T.rest + 1) / 3)), lift: 0 };
+  if (part(T.back)) return { from: last, to: 0, mix: ease(u), lift: 0 };
+  if (part(T.lift)) return { from: 0, to: 0, mix: 0, lift: ease(u) };
+  return { from: 0, to: 0, mix: 0, lift: 1 };
+}
+
 const heroWindows = (n, P) => [
   DESK(n, 'scoreboard', CROP.scoreboard, {}, { fog: n ? 0.58 : 0.38, lod: 1.2, defocus: 2.5, breathe: [16, 0.15], bezel: 8 }),
   DESK(n, 'run', CROP.run, {}, { fog: n ? 0.58 : 0.38, lod: 1.2, defocus: 2.5, breathe: [12, 0.8], bezel: 8 }),
   DESK(n, 'compare', CROP.compare, {}, { lod: 0.4, defocus: 0.8, fog: n ? 0.18 : 0.10, breathe: [12, 0.5] }),
   DESK(n, 'suite', CROP.suite, {}, { lod: 0.4, defocus: 0.8, fog: n ? 0.18 : 0.10, breathe: [12, 0.0] }),
-  DESK(n, 'overview', CROP.overview, {}, { breathe: [10, 0.6], bezel: 11, glow: 0.6 }),
-  PHONE(n, 'm-rate', CROP.phone, {}, { breathe: [9, 0.3] }),
+  DESK(n, 'overview', CROP.overview, {}, { breathe: [10, 0.6], bezel: 11, glow: 0.6, still: true, seq: [tx('overview', n), ...replayFrames(n)] }),
+  PHONE(n, 'm-rate', CROP.phone, {}, { breathe: [9, 0.3], still: true }),
   { parent: 4, box: 'lead', pad: [0, 0], lift: 110, breathe: [12, 0.85], bezel: 8, radius: 14, ...LIFT(n), align: 0.6, glow: 0.25 },
 ].map((w, i) => ({ ...w, ...(P[i] || {}) }));
 
@@ -165,7 +191,7 @@ const NUMBERS = [['20', 'tasks in the<br>core battery'], ['7', 'kinds of<br>auto
 
 export const LAYOUTS = {
   hero: {
-    css: [840, 560], fade: [40, 40, 30, 46], cam: [11, 4], motion: 0.75, pool: [0.5, 0.42, 0.62, 0.62],
+    css: [840, 560], fade: [40, 40, 30, 46], cam: [11, 4], motion: 0.75, pool: [0.5, 0.42, 0.62, 0.62], play: heroPlay, frames: HERO_FRAMES,
     night: HERO_NIGHT, day: HERO_DAY,
     windows: (n) => heroWindows(n, [
       { x: 104, y: 204, w: 116, z: -820, rot: [10, 18, 0] },
@@ -181,7 +207,7 @@ export const LAYOUTS = {
     ],
   },
   'hero-phone': {
-    css: [381, 640], dpr: 1080 / 381, fade: [16, 16, 24, 30], cam: [7, 3], motion: 0.75, pool: [0.5, 0.40, 0.75, 0.55],
+    css: [381, 640], dpr: 1080 / 381, fade: [16, 16, 24, 30], cam: [7, 3], motion: 0.75, pool: [0.5, 0.40, 0.75, 0.55], play: heroPlay, frames: HERO_FRAMES, driftEvery: 2,
     night: HERO_NIGHT, day: HERO_DAY,
     windows: (n) => heroWindows(n, [
       { x: 90, y: 228, w: 92, z: -820, rot: [10, 18, 0] },

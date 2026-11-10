@@ -235,6 +235,7 @@ void main(){
 const FOV = 30;
 const D = (CH / 2) / Math.tan(THREE.MathUtils.degToRad(FOV / 2));  // 1 world unit = 1 CSS px at z = 0
 const camera = new THREE.PerspectiveCamera(FOV, CW / CH, 10, 20000);
+const camStill = camera.clone();
 camera.position.set(0, 0, D);
 
 // ---------- textures ----------
@@ -270,7 +271,7 @@ const WIN_F = /* glsl */`
 ${GLSL_COMMON}
 uniform vec2 uRes; uniform sampler2D tFrost; uniform sampler2D tSharp;
 uniform vec2 uHalf; uniform float uRadius; uniform float uBevel;
-uniform sampler2D tContent; uniform float uHasContent; uniform vec4 uCRect; uniform float uCRadius; uniform vec4 uCrop; uniform vec2 uTexSize;
+uniform sampler2D tContent; uniform sampler2D tContentB; uniform vec2 uTexSizeB; uniform float uMix; uniform float uHoleAmt; uniform float uOpacity; uniform float uHasContent; uniform vec4 uCRect; uniform float uCRadius; uniform vec4 uCrop; uniform vec2 uTexSize;
 uniform vec3 uKey; uniform float uKeyAmt; uniform float uLodBias; uniform float uDefocus;
 uniform float uNight; uniform vec3 uTintAdd; uniform float uTransmit; uniform float uFog; uniform vec3 uFogCol;
 uniform vec3 uLightPos; uniform float uRim; uniform float uSpec; uniform vec3 uGlowCol; uniform float uGlow; uniform float uShadow;
@@ -369,6 +370,10 @@ void main(){
         vec2 uv = (p - uCRect.xy) / (uCRect.zw - uCRect.xy);      // 0..1, y up
         vec2 tuv = vec2((uCrop.x + uv.x * uCrop.z) / uTexSize.x, 1.0 - (uCrop.y + (1.0 - uv.y) * uCrop.w) / uTexSize.y);
         vec3 s = texture2D(tContent, tuv, uLodBias).rgb;
+        if (uMix > 0.0) {   // a sequence between two of its frames
+          vec2 tuvB = vec2((uCrop.x + uv.x * uCrop.z) / uTexSizeB.x, 1.0 - (uCrop.y + (1.0 - uv.y) * uCrop.w) / uTexSizeB.y);
+          s = mix(s, texture2D(tContentB, tuvB, uLodBias).rgb, uMix);
+        }
         // un-blend the app's flat background so its UI floats on the glass
         vec3 diff = s - uKey;
         vec3 ap = max(diff / max(1.0 - uKey, 1e-3), -diff / max(uKey, 1e-3));
@@ -377,7 +382,7 @@ void main(){
         vec3 under = mix(uKey, c, uKeyAmt);
         if (uHole.z > uHole.x) {   // where a card was lifted out, the window keeps only clear glass and a faint ghost
           float dh = sdRoundBox(p - (uHole.xy + uHole.zw) * 0.5, (uHole.zw - uHole.xy) * 0.5, 12.0);
-          float hm = 1.0 - smoothstep(-5.0, 7.0, dh);
+          float hm = (1.0 - smoothstep(-5.0, 7.0, dh)) * uHoleAmt;
           a *= mix(1.0, 0.10, hm); under = mix(under, c, hm * 0.85);
         }
         vec3 app = mix(under, clamp(fg, 0.0, 1.0), a) * uContentGain;
@@ -403,7 +408,7 @@ void main(){
     c = mix(c, uFogCol, uFog);
     col = mix(col * (1.0 - m), c, m); alpha = mix(alpha, 1.0, m);
   }
-  gl_FragColor = vec4(col, alpha);   // premultiplied
+  gl_FragColor = vec4(col, alpha) * uOpacity;   // premultiplied
 }`;
 
 function makeWindow(spec, tex) {
@@ -433,7 +438,8 @@ function makeWindow(spec, tex) {
     uShadow: { value: spec.shadow ?? TH.glass.shadow }, uBar: { value: spec.bar === false ? 0 : 1 },
     uContentGain: { value: spec.gain ?? 1 }, uRefract: { value: (spec.refract ?? 26) * DPR * SS }, uPhase: { value: 0 },
     uCaustic: { value: TH.glass.caustic ?? 0 },
-    uHole: { value: new THREE.Vector4() },
+    uHole: { value: new THREE.Vector4() }, uHoleAmt: { value: 1 }, uOpacity: { value: 1 },
+    tContentB: { value: tex }, uTexSizeB: { value: new THREE.Vector2(1, 1) }, uMix: { value: 0 },
     uShadowOff: { value: spec.shadowOff ? new THREE.Vector4(spec.shadowOff[0], spec.shadowOff[1], 1, spec.shadowOff[2]) : new THREE.Vector4() },
   };
   if (spec.glowColor) uniforms.uGlowCol.value = new THREE.Color(spec.glowColor);
@@ -546,11 +552,13 @@ let windows = [], motesFar, motesNear;
 async function init() {
   canvas.style.width = CW + 'px'; canvas.style.height = CH + 'px';
   const specs = LAYOUT.windows(NIGHT);
-  const texes = await Promise.all(specs.map(s => s.tex ? loadTex(s.tex) : Promise.resolve(null)));
+  // a window with `seq` plays a list of captures (its `tex` first); LAYOUT.play says which of them, frame by frame
+  const seqs = await Promise.all(specs.map(s => s.seq ? Promise.all(s.seq.map(loadTex)) : Promise.resolve(null)));
+  const texes = await Promise.all(specs.map((s, i) => seqs[i] ? Promise.resolve(seqs[i][0]) : s.tex ? loadTex(s.tex) : Promise.resolve(null)));
   // boxes of the elements marked data-lift in each page, measured when the pages were captured (texture px)
   const BOX = await fetch('/shots/boxes.json').then(r => r.json()).catch(() => ({}));
   const made = [];
-  specs.forEach((s, i) => { if (s.parent === undefined) made[i] = makeWindow(s, texes[i]); });
+  specs.forEach((s, i) => { if (s.parent === undefined) { made[i] = makeWindow(s, texes[i]); made[i].seq = seqs[i]; } });
   specs.forEach((s, i) => {
     if (s.parent === undefined) return;
     if (s.box) {   // lift an element out of its page by name instead of by hand-measured pixels
@@ -562,7 +570,7 @@ async function init() {
     }
     const P = made[s.parent], k = P.cw / P.crop[2], src = s.src;
     const lx = (src[0] + src[2] / 2 - P.crop[0]) * k - P.cw / 2, ly = P.chh / 2 - (src[1] + src[3] / 2 - P.crop[1]) * k;
-    const spec = { ...s, tex: P.spec.tex, crop: src, w: src[2] * k * (s.grow ?? 1), z: P.spec.z + (s.lift ?? 60), bar: false, parentRef: P, local: [lx, ly], castShadow: 0 };
+    const spec = { ...s, tex: P.spec.tex, seq: undefined, crop: src, w: src[2] * k * (s.grow ?? 1), z: P.spec.z + (s.lift ?? 60), bar: false, parentRef: P, local: [lx, ly], castShadow: 0 };
     made[i] = makeWindow(spec, texes[s.parent]);
     const hw = src[2] * k / 2 + 4, hh = src[3] * k / 2 + 4;
     P.mat.uniforms.uHole.value.set(lx - hw, ly - hh, lx + hw, ly + hh);
@@ -577,11 +585,29 @@ async function init() {
 }
 
 function renderAt(phase) {
-  const th = phase * Math.PI * 2;
+  // In a loop the camera and the windows may drift on every second frame only (LAYOUT.driftEvery: 2), which halves
+  // what the file has to send again. The content, the motes and the light still move on every frame.
+  const step = LAYOUT.driftEvery && LAYOUT.frames ? LAYOUT.driftEvery / LAYOUT.frames : 0;
+  const th = (step ? Math.floor(phase / step + 1e-6) * step : phase) * Math.PI * 2;
+  // the content motion of a loop: which two captures a sequence stands between, and how far the lifted element is out
+  const play = LAYOUT.play ? LAYOUT.play(phase) : { from: 0, to: 0, mix: 0, lift: 1 };
+  const out = Math.min(1, Math.max(0, play.lift / 0.5)), shown = out * out * (3 - 2 * out);
+  for (const w of windows) {
+    const u = w.mat.uniforms;
+    if (w.seq) {
+      const a = w.seq[Math.min(w.seq.length - 1, play.from)], b = w.seq[Math.min(w.seq.length - 1, play.to)];
+      u.tContent.value = a; u.uTexSize.value.set(a.image.width, a.image.height);
+      u.tContentB.value = b; u.uTexSizeB.value.set(b.image.width, b.image.height); u.uMix.value = play.mix;
+    }
+    if (w.spec.parentRef && LAYOUT.play) { u.uOpacity.value = shown; w.spec.parentRef.mat.uniforms.uHoleAmt.value = shown; }
+  }
   const cam = LAYOUT.cam || [12, 5];
   camera.position.set(Math.sin(th) * cam[0], Math.sin(th * 2) * cam[1] * 0.5 + Math.cos(th) * cam[1] * 0.5, D);
   camera.lookAt(0, 0, 0);
   camera.updateMatrixWorld();
+  // a `still` window (and what is lifted out of it) keeps the pose and the view of phase 0 while the rest drifts
+  camStill.position.set(0, cam[1] * 0.5, D); camStill.lookAt(0, 0, 0); camStill.updateMatrixWorld();
+  const viewOf = (w) => ((w.spec.parentRef ? w.spec.parentRef.spec : w.spec).still ? camStill : camera);
   ENV.uniforms.uPhase.value = phase;
   ENV.uniforms.uCamOff.value.set(-camera.position.x / CW * 0.08, -camera.position.y / CH * 0.08);
   // place the windows, then tell the wall where their shadows fall
@@ -590,16 +616,16 @@ function renderAt(phase) {
     const s = w.spec, b = s.breathe || [10, 0];
     if (s.parentRef) return;
     w.mesh.position.copy(w.base);
-    const MS = LAYOUT.motion ?? 1;
-    w.mesh.position.z += Math.sin(th + b[1] * Math.PI * 2) * b[0] * MS;
-    w.mesh.position.y += Math.sin(th * 1 + b[1] * 5.0) * (b[0] * 0.18) * MS;
+    const MS = LAYOUT.motion ?? 1, t = s.still ? 0 : th;
+    w.mesh.position.z += Math.sin(t + b[1] * Math.PI * 2) * b[0] * MS;
+    w.mesh.position.y += Math.sin(t * 1 + b[1] * 5.0) * (b[0] * 0.18) * MS;
     const r = s.rot || [0, 0, 0];
-    w.mesh.rotation.set(THREE.MathUtils.degToRad(r[0] + Math.sin(th + b[1] * 4) * 0.5 * MS), THREE.MathUtils.degToRad(r[1] + Math.cos(th + b[1] * 3) * 0.7 * MS), THREE.MathUtils.degToRad(r[2] || 0));
+    w.mesh.rotation.set(THREE.MathUtils.degToRad(r[0] + Math.sin(t + b[1] * 4) * 0.5 * MS), THREE.MathUtils.degToRad(r[1] + Math.cos(t + b[1] * 3) * 0.7 * MS), THREE.MathUtils.degToRad(r[2] || 0));
     w.mesh.updateMatrixWorld();
     if (i < MAXW) {
       const hv = w.mat.uniforms.uHalf.value, pts = [];
       for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
-        v.set(sx * hv.x, sy * hv.y, 0).applyMatrix4(w.mesh.matrixWorld).project(camera);
+        v.set(sx * hv.x, sy * hv.y, 0).applyMatrix4(w.mesh.matrixWorld).project(viewOf(w));
         pts.push(v.x * 0.5 + 0.5, v.y * 0.5 + 0.5);
       }
       ENV.uniforms.uQa.value[i].set(pts[0], pts[1], pts[2], pts[3]);
@@ -612,7 +638,7 @@ function renderAt(phase) {
   const M = new THREE.Matrix4(), R = new THREE.Matrix4();
   for (const w of windows) {
     const s = w.spec; if (!s.parentRef) continue;
-    const lift = (s.lift ?? 60) + Math.sin(th + (s.breathe ? s.breathe[1] : 0.4) * 6.283) * (s.breathe ? s.breathe[0] : 8);
+    const lift = ((s.lift ?? 60) + Math.sin((s.parentRef.spec.still ? 0 : th) + (s.breathe ? s.breathe[1] : 0.4) * 6.283) * (s.breathe ? s.breathe[0] : 8)) * play.lift;
     const r = s.rot || [0, 0, 0];
     M.copy(s.parentRef.mesh.matrixWorld).multiply(R.makeTranslation(s.local[0] + (s.shift ? s.shift[0] : 0), s.local[1] + (s.shift ? s.shift[1] : 0), lift));
     M.multiply(R.makeRotationFromEuler(new THREE.Euler(THREE.MathUtils.degToRad(r[0]), THREE.MathUtils.degToRad(r[1]), THREE.MathUtils.degToRad(r[2] || 0))));
@@ -620,7 +646,7 @@ function renderAt(phase) {
       // slide the lifted element toward the line of sight through the place it came from, so it floats over
       // its own hole instead of drifting off it in perspective (align 1 = exactly over it)
       const hole = new THREE.Vector3(s.local[0], s.local[1], 0).applyMatrix4(s.parentRef.mesh.matrixWorld);
-      const at = new THREE.Vector3().setFromMatrixPosition(M), cam = camera.position;
+      const at = new THREE.Vector3().setFromMatrixPosition(M), cam = viewOf(w).position;
       const onRay = hole.clone().sub(cam).multiplyScalar(at.distanceTo(cam) / hole.distanceTo(cam)).add(cam);
       M.premultiply(R.makeTranslation(...onRay.sub(at).multiplyScalar(s.align).toArray()));
     }
@@ -634,7 +660,7 @@ function renderAt(phase) {
     const bl = blurChain(rtScene, down, up, s.frostLevels ?? TH.glass.levels, 1.0);
     w.mat.uniforms.tFrost.value = bl.frost.texture; w.mat.uniforms.tSharp.value = bl.sharp.texture;
     w.mat.uniforms.uPhase.value = phase;
-    renderer.setRenderTarget(rtScene); renderer.render(w.scene, camera);
+    renderer.setRenderTarget(rtScene); renderer.render(w.scene, viewOf(w));
   }
   motesNear.mat.uniforms.uPhase.value = phase; renderer.setRenderTarget(rtScene); renderer.render(motesNear.scene, camera);
   // bloom

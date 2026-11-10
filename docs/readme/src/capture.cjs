@@ -1,12 +1,15 @@
 // Capture the running app on the demo workspace, in its dark theme and its light theme, for the Glass scenes.
-//   ORIGIN=http://127.0.0.1:8590 node capture.cjs
+//   ORIGIN=http://127.0.0.1:8590 node capture.cjs            every screen, then the replayed run
+//   node capture.cjs replay                                  only the replayed run (needs no server)
 // Desktop screens are 1280 px wide at 2x, phone screens 390 px at 3x. Every capture is the real app: the
 // scenes only crop, place and light them. Named elements are measured into build/shots/boxes.json
 // ([x, y, w, h, background] in capture pixels) so a scene can lift one out of its screen by name.
 const { chromium } = require('playwright');
-const path = require('path'), fs = require('fs');
+const path = require('path'), fs = require('fs'), { pathToFileURL } = require('url');
 const ORIGIN = process.env.ORIGIN || 'http://127.0.0.1:8484';
 const SHOTS = path.resolve(__dirname, '..', 'build', 'shots');
+const DEMO = path.resolve(__dirname, '..', '..', '..', 'web', 'dist');
+const ONLY = process.argv[2];
 
 // Skip to the "Ages in twelve years" pair, then (on desktop) fill a complete verdict the way a judge would.
 async function rateReady(page, fill) {
@@ -72,9 +75,68 @@ async function marksOf(page, marks, k) {
   return out;
 }
 
+// The hero's moving part: a new run of the core battery, start to finish, on the run page. The static demo
+// (web/dist, from `npm --prefix web run build:demo`) plays it: the same app, answering in the browser with the
+// answers recorded on the demo workspace. Its clock is stepped by hand, so every build photographs the same
+// moments: frame 0 is the queued run, the last frame the finished one, and each frame between is the first
+// moment its share of the answers is in (REPLAY.share in layouts.js). The demo's own notice is hidden.
+async function replay(browser, scheme, { frames, share }) {
+  const index = path.join(DEMO, 'index.html');
+  if (!fs.existsSync(index)) throw new Error('no static demo in web/dist: run `npm --prefix web run build:demo` first');
+  const base = (fs.readFileSync(index, 'utf8').match(/src="([^"]*\/)assets\//) || [0, '/'])[1];
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 880 }, deviceScaleFactor: 2, colorScheme: scheme, reducedMotion: 'reduce' });
+  await ctx.addInitScript(() => localStorage.setItem('evalbench:rater', 'sam'));
+  await ctx.route('http://demo.local/**', (r) => {
+    const p = decodeURIComponent(new URL(r.request().url()).pathname);
+    const f = path.join(DEMO, p.startsWith(base) ? p.slice(base.length) : p);
+    r.fulfill({ path: fs.existsSync(f) && fs.statSync(f).isFile() ? f : index });
+  });
+  const page = await ctx.newPage();
+  await page.clock.install();
+  await page.goto(`http://demo.local${base}runs`);
+  await page.clock.runFor(1000);
+  await page.addStyleTag({ content: 'aside[aria-label="About this demo"] { display: none !important; }' });
+  await page.getByRole('button', { name: 'New run' }).first().click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Select all' }).click();
+  await dialog.getByLabel(/Label/).fill('weekly check');
+  await dialog.getByRole('button', { name: /^Start/ }).click();
+  await page.waitForURL(/runs\/\d+$/);
+  const start = await page.evaluate(() => Date.now());
+  // Jump the clock so that the run page's next poll (one a second) lands exactly `t` ms into the run.
+  const at = async (t) => {
+    await page.clock.setSystemTime(start + t - 1000);
+    await page.clock.fastForward(1000);
+    let text = '', seen;
+    do { seen = text; await page.waitForTimeout(60); text = await page.locator('main').innerText(); } while (text !== seen);   // until the page has settled
+    const m = text.match(/(\d+) of (\d+) answers/);
+    return { status: (text.match(/^(Queued|Running|Done)$/m) || [])[1], done: m ? +m[1] : 0, total: m ? +m[2] : 0 };
+  };
+  const file = (i) => path.join(SHOTS, `replay-${scheme}-${String(i).padStart(2, '0')}.png`);
+  let state = await at(300), total = state.total, next = 1, last = await page.screenshot();
+  if (state.status !== 'Queued' || !total) throw new Error('the replayed run did not start queued: ' + JSON.stringify(state));
+  fs.writeFileSync(file(0), last);
+  const log = [0];
+  for (let t = 750; state.status !== 'Done'; t += t < 6000 ? 50 : 100) {
+    if (t > 90000) throw new Error('the replayed run never finished');
+    state = await at(t);
+    if (state.status !== 'Running') continue;
+    const want = () => Math.min(total - 1, Math.round(total * share(next / (frames - 1))));
+    if (next < frames - 1 && state.done >= want()) last = await page.screenshot();
+    while (next < frames - 1 && state.done >= want()) { fs.writeFileSync(file(next++), last); log.push(state.done); }
+  }
+  while (next < frames - 1) { fs.writeFileSync(file(next++), last); log.push(log[log.length - 1]); }
+  fs.writeFileSync(file(frames - 1), await page.screenshot());
+  console.log(`replay-${scheme}: ${frames} frames, answers in at each: ${log.join(' ')} ${total}`);
+  await ctx.close();
+}
+
 (async () => {
   fs.mkdirSync(SHOTS, { recursive: true });
   const browser = await chromium.launch();
+  const { REPLAY } = await import(pathToFileURL(path.join(__dirname, 'layouts.js')).href);
+  for (const scheme of ['dark', 'light']) await replay(browser, scheme, REPLAY);
+  if (ONLY === 'replay') return browser.close();
   const boxes = {};
   for (const scheme of ['dark', 'light']) {
     const desk = await browser.newContext({ viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2, colorScheme: scheme });

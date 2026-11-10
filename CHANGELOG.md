@@ -8,6 +8,7 @@
 - `npm --prefix web run build:demo` builds the demo into `web/dist` for the `/evalbench/` path, with a `404.html` copy so deep links and reloads work on GitHub Pages, and `serve:demo` serves it locally the way Pages does. `capture:demo` regenerates the sample data from a running demo server, so it is never edited by hand. A workflow deploys the demo to GitHub Pages on every push to main.
 - The server build behaves as before, and it now stops if the demo's adapter or sample data would be bundled into it.
 - Tests: the in-browser adapter is held to the numbers the server computed for the same data, and a browser smoke test loads every route of the built demo under `/evalbench/` in dark and light, at 1280 and 390 pixels wide, with reloads on deep links, and fails on any console error, failed request or sideways overflow.
+- The picture at the top of the README is now a loop instead of a still. It opens on the overview, the centre window plays a new run of the core battery from queued to done while the four pass rates fill in, and the overview comes back. The frames are captures of the demo replaying that run, and `docs/readme/src/build.sh` photographs the same moments of it on every build. The other README images were captured again from the current app, so the phone ones show the sections row.
 - The README counts the tests that run now: 171 in CI (93 Python, 17 end-to-end, 33 web unit and 28 demo smoke).
 
 ## 1.2.1
