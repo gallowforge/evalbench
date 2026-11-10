@@ -1,6 +1,7 @@
-import { AlertTriangle, Check, Loader2, X } from 'lucide-react';
+import { AlertTriangle, Check, Loader2, SearchX, X } from 'lucide-react';
 import { type ReactNode, useEffect, useRef } from 'react';
-import type { ModelRef, Result, RunStatus } from '../api';
+import { Link } from 'wouter';
+import { ApiError, type ModelRef, type Result, type RunStatus } from '../api';
 import { tone } from '../lib/theme';
 
 export function cx(...parts: (string | false | null | undefined)[]): string {
@@ -121,6 +122,26 @@ export function Empty({ icon, title, children, action }: { icon?: ReactNode; tit
   );
 }
 
+/** True when the server says the thing asked for does not exist. */
+export const isNotFound = (error: unknown) => error instanceof ApiError && error.status === 404;
+
+/** A page whose record is gone or never was: say so plainly and offer the way back. */
+export function NotFound({ what, href, back }: { what: string; href: string; back: string }) {
+  return (
+    <Empty
+      icon={<SearchX size={20} />}
+      title={`No such ${what}`}
+      action={
+        <Link href={href} className="btn-ghost">
+          {back}
+        </Link>
+      }
+    >
+      It may have been deleted, or the link has a typo in it.
+    </Empty>
+  );
+}
+
 export function ErrorNote({ error }: { error: unknown }) {
   if (!error) return null;
   const message = error instanceof Error ? error.message : String(error);
@@ -210,7 +231,7 @@ export function Modal({
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center p-4">
+    <div className="fixed inset-0 z-50 grid grid-cols-[minmax(0,1fr)] place-items-center p-4">
       <div className="absolute inset-0 bg-scrim backdrop-blur-[3px]" onClick={onClose} />
       <div
         ref={ref}

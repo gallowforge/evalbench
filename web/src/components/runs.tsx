@@ -147,7 +147,7 @@ export function NewRunModal({ open, onClose, suiteId }: { open: boolean; onClose
                   type="button"
                   onClick={() => toggle(m.id)}
                   className={cx(
-                    'flex items-center gap-3 rounded-[10px] border px-3 py-2.5 text-left transition-colors',
+                    'flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-[10px] border px-3 py-2.5 text-left transition-colors',
                     on ? 'border-ink bg-ink/[0.03]' : 'border-line-2 hover:bg-ink/[0.03]',
                   )}
                 >
@@ -155,12 +155,13 @@ export function NewRunModal({ open, onClose, suiteId }: { open: boolean; onClose
                     {on && <Check size={11} strokeWidth={3} />}
                   </span>
                   <ModelDot color={m.color} />
-                  <span className="min-w-0 flex-1">
+                  <span className="min-w-0 flex-[1_1_8rem]">
                     <span className="block truncate text-[14.5px] font-semibold text-ink">{m.label}</span>
                     <span className="block truncate font-mono text-[11.5px] text-faint">{m.model}</span>
                   </span>
+                  {/* On a phone the warning drops under the name, lined up with it. */}
                   {!m.key.present && (
-                    <span className="chip bg-warn-tint text-warn">
+                    <span className="chip bg-warn-tint text-warn max-sm:ml-[3.0625rem]">
                       <KeyRound size={11} /> {m.key.env} missing
                     </span>
                   )}

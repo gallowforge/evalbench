@@ -5,7 +5,7 @@ import { Link } from 'wouter';
 import { ApiError, api, type Check, type RubricDimension, type Suite, type SuitePayload, type Task } from '../api';
 import { NewRunModal } from '../components/runs';
 import { YamlEditor } from '../components/LazyYaml';
-import { cx, ErrorNote, Field, Loading, PageHeader, Tabs } from '../components/ui';
+import { cx, ErrorNote, Field, isNotFound, Loading, NotFound, PageHeader, Tabs } from '../components/ui';
 import { plural } from '../lib/format';
 
 type Tab = 'tasks' | 'rubric' | 'yaml';
@@ -58,6 +58,7 @@ function CheckEditor({ check, onChange, onRemove }: { check: Check; onChange: (c
       <div className="mb-3 flex items-center gap-2">
         <select
           className="input h-8 w-auto py-0 text-[12.5px] font-medium"
+          aria-label="Check type"
           value={t}
           onChange={(e) => onChange({ type: e.target.value as Check['type'] })}
         >
@@ -70,6 +71,7 @@ function CheckEditor({ check, onChange, onRemove }: { check: Check; onChange: (c
         <input
           className="input h-8 flex-1 py-0 text-[12.5px]"
           placeholder="Label (optional)"
+          aria-label="Check label"
           value={check.label ?? ''}
           onChange={(e) => set({ label: e.target.value })}
         />
@@ -79,10 +81,11 @@ function CheckEditor({ check, onChange, onRemove }: { check: Check; onChange: (c
           min={0.1}
           step={0.5}
           title="Weight"
+          aria-label="Weight"
           value={check.weight ?? 1}
           onChange={(e) => set({ weight: Number(e.target.value) || 1 })}
         />
-        <button className="btn-quiet h-8 w-8 p-0" title="Remove check" onClick={onRemove}>
+        <button className="btn-quiet h-8 w-8 p-0" title="Remove check" aria-label="Remove check" onClick={onRemove}>
           <Trash2 size={14} />
         </button>
       </div>
@@ -340,11 +343,13 @@ function RubricEditor({ rubric, onChange }: { rubric: RubricDimension[]; onChang
           <div key={i} className="grid items-start gap-2.5 rounded-[12px] border border-line-2 bg-panel-2 p-3 md:grid-cols-[180px_200px_1fr_auto]">
             <input
               className="input font-mono text-[12.5px]"
+              aria-label="Dimension id"
               value={d.id}
               onChange={(e) => onChange(rubric.map((x, j) => (j === i ? { ...x, id: e.target.value } : x)))}
             />
             <input
               className="input"
+              aria-label="Dimension name"
               value={d.label}
               onChange={(e) => onChange(rubric.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
             />
@@ -352,9 +357,15 @@ function RubricEditor({ rubric, onChange }: { rubric: RubricDimension[]; onChang
               className="input"
               value={d.description}
               placeholder="What a rater should look for"
+              aria-label="What a rater should look for"
               onChange={(e) => onChange(rubric.map((x, j) => (j === i ? { ...x, description: e.target.value } : x)))}
             />
-            <button className="btn-quiet h-9 w-9 p-0" onClick={() => onChange(rubric.filter((_, j) => j !== i))} title="Remove">
+            <button
+              className="btn-quiet h-9 w-9 p-0"
+              onClick={() => onChange(rubric.filter((_, j) => j !== i))}
+              title="Remove"
+              aria-label={`Remove ${d.label || 'dimension'}`}
+            >
               <Trash2 size={14} />
             </button>
           </div>
@@ -412,8 +423,10 @@ export function SuiteDetail({ id }: { id: string }) {
     onError: (e) => setErrors(e instanceof ApiError && e.details.length ? e.details : [String((e as Error).message)]),
   });
 
-  if (q.isLoading || !draft) return <Loading />;
+  // A failed load never fills the draft, so the error comes first or the spinner never ends.
+  if (isNotFound(q.error)) return <NotFound what="suite" href="/suites" back="All suites" />;
   if (q.error) return <ErrorNote error={q.error} />;
+  if (q.isLoading || !draft) return <Loading />;
   const p = q.data!;
   const categories = [...new Set(draft.tasks.map((t) => t.category))];
   const dirty = tab === 'yaml' ? yamlDirty : formDirty;
@@ -464,8 +477,12 @@ export function SuiteDetail({ id }: { id: string }) {
                   className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-ink/[0.02]"
                 >
                   <ChevronRight size={15} className={cx('shrink-0 text-faint transition-transform', isOpen && 'rotate-90')} />
-                  <span className="w-[150px] shrink-0 truncate font-mono text-[11.5px] text-faint">{t.id}</span>
-                  <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">{t.title || t.prompt.slice(0, 80)}</span>
+                  <span className="hidden w-[150px] shrink-0 truncate font-mono text-[11.5px] text-faint sm:block">{t.id}</span>
+                  {/* On a phone the id moves under the title, so the title gets the width. */}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13.5px] text-ink">{t.title || t.prompt.slice(0, 80)}</span>
+                    <span className="block truncate font-mono text-[11px] text-faint sm:hidden">{t.id}</span>
+                  </span>
                   <span className="chip hidden capitalize sm:inline-flex">{t.category}</span>
                   <span className="hidden w-[190px] justify-end gap-1 md:flex">
                     {t.checks.length ? (

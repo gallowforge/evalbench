@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Link } from 'wouter';
 import { api, type Result, type RunDetail, type TaskAnswers } from '../api';
 import { Markdown, Raw } from '../components/Markdown';
-import { cx, ErrorNote, Loading, ModelDot, Segmented } from '../components/ui';
+import { cx, ErrorNote, isNotFound, Loading, ModelDot, NotFound, Segmented } from '../components/ui';
 import { compact, ms } from '../lib/format';
 import { tone } from '../lib/theme';
 
@@ -22,6 +22,8 @@ export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
   const q = useQuery({ queryKey: ['answers', runId, taskId], queryFn: () => api.get<TaskAnswers>(`/runs/${runId}/tasks/${taskId}`) });
 
   if (run.isLoading || q.isLoading) return <Loading />;
+  if (isNotFound(run.error)) return <NotFound what="run" href="/runs" back="All runs" />;
+  if (isNotFound(q.error)) return <NotFound what="task in this run" href={`/runs/${runId}`} back={`Back to run ${runId}`} />;
   if (run.error || q.error) return <ErrorNote error={run.error ?? q.error} />;
   const r = run.data!;
   const { task, answers } = q.data!;

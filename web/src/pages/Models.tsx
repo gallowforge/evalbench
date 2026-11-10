@@ -121,7 +121,7 @@ function ModelForm({ initial, editing, onClose }: { initial?: Model; editing: bo
     >
       <div className="space-y-5">
         {!editing && (
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
             {presets.map((p) => (
               <button
                 key={p.id}

@@ -40,7 +40,17 @@ const highlight = HighlightStyle.define([
   { tag: t.content, color: 'var(--color-ink)' },
 ]);
 
-export function YamlEditor({ value, onChange, minHeight = 420 }: { value: string; onChange: (v: string) => void; minHeight?: number }) {
+export function YamlEditor({
+  value,
+  onChange,
+  minHeight = 420,
+  label = 'Suite YAML',
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  minHeight?: number;
+  label?: string;
+}) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const changeRef = useRef(onChange);
@@ -58,6 +68,8 @@ export function YamlEditor({ value, onChange, minHeight = 420 }: { value: string
           theme,
           syntaxHighlighting(highlight),
           EditorView.lineWrapping,
+          // A name for screen readers, and an explicit tab stop so checkers see the editor is reachable.
+          EditorView.contentAttributes.of({ 'aria-label': label, tabindex: '0' }),
           EditorView.updateListener.of((u) => u.docChanged && changeRef.current(u.state.doc.toString())),
         ],
       }),

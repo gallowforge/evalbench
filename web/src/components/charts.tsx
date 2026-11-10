@@ -241,7 +241,7 @@ export function WinMatrix({ board }: { board: Board }) {
   // One azure ramp, light to deep on paper and dark to bright after dark (index.css, --heat-*).
   const step = (v: number) => Math.min(5, Math.floor(v * 5) + 1);
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Head to head win rates">
       <table className="w-full border-separate" style={{ borderSpacing: 4 }}>
         <thead>
           <tr>
@@ -259,7 +259,7 @@ export function WinMatrix({ board }: { board: Board }) {
         <tbody>
           {models.map((row) => (
             <tr key={row.id}>
-              <td className="whitespace-nowrap pr-3 text-right text-[13px] font-medium text-ink-2">
+              <td className="pr-3 text-right text-[13px] font-medium text-ink-2 sm:whitespace-nowrap">
                 <span className="inline-flex items-center gap-1.5">
                   <ModelDot color={row.color} size={7} />
                   {row.label}
@@ -275,7 +275,7 @@ export function WinMatrix({ board }: { board: Board }) {
                     onMouseEnter={() => setHover(key)}
                     onMouseLeave={() => setHover(null)}
                     title={c ? `${row.label} preferred over ${col.label} in ${pct(c.rate)} of ${c.games} ratings` : 'No ratings yet'}
-                    className="num h-11 min-w-16 rounded-[8px] text-center text-[13.5px] font-bold transition-[filter]"
+                    className="num h-11 min-w-12 rounded-[8px] text-center text-[13.5px] font-bold transition-[filter] sm:min-w-16"
                     style={{
                       background: c ? `var(--heat-${step(c.rate)})` : 'var(--heat-0)',
                       color: c && step(c.rate) === 5 ? 'var(--heat-ink-5)' : 'var(--heat-ink)',

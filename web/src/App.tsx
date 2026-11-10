@@ -5,7 +5,7 @@ import { Link, Route, Switch, useLocation } from 'wouter';
 import { api, type Overview as OverviewData } from './api';
 import { Logo } from './components/Logo';
 import { ThemeMenu } from './components/ThemeMenu';
-import { cx, Loading } from './components/ui';
+import { cx, Loading, NotFound } from './components/ui';
 import { useMeta, useRater } from './lib/hooks';
 import { Compare } from './pages/Compare';
 import { DataPage } from './pages/Data';
@@ -38,7 +38,7 @@ function NavLink({ href, label, exact, badge }: { href: string; label: string; e
       href={href}
       aria-current={active ? 'page' : undefined}
       className={cx(
-        'relative flex h-16 shrink-0 items-center gap-1.5 text-[14.5px] font-semibold transition-colors',
+        'relative flex h-11 shrink-0 items-center gap-1.5 text-[14.5px] font-semibold transition-colors md:h-16',
         active ? 'text-ink' : 'text-muted hover:text-ink',
       )}
     >
@@ -67,12 +67,17 @@ function TopBar() {
   }, [location]);
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-[1240px] items-center gap-8 px-5 md:px-10">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+      {/* On a phone the sections get a row of their own, so every one of them is in sight. */}
+      <div className="mx-auto flex max-w-[1240px] flex-wrap items-center gap-x-8 px-5 md:flex-nowrap md:px-10">
+        <Link href="/" className="flex h-14 shrink-0 items-center gap-2.5 md:h-16">
           <Logo size={28} />
           <span className="text-[17px] font-bold tracking-[-0.02em]">Evalbench</span>
         </Link>
-        <nav ref={nav} aria-label="Main" className="-mb-px flex min-w-0 flex-1 gap-6 overflow-x-auto [scrollbar-width:none]">
+        <nav
+          ref={nav}
+          aria-label="Main"
+          className="order-last -mx-5 -mb-px flex w-[calc(100%+2.5rem)] gap-6 overflow-x-auto px-5 [scrollbar-width:none] md:order-none md:mx-0 md:w-auto md:min-w-0 md:flex-1 md:px-0"
+        >
           {NAV.map((n) => (
             <NavLink
               key={n.href}
@@ -85,7 +90,7 @@ function TopBar() {
             />
           ))}
         </nav>
-        <div className="flex shrink-0 items-center gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-4">
           {meta.data?.demo && (
             <span
               className="hidden text-[12.5px] font-semibold text-muted lg:inline"
@@ -147,12 +152,7 @@ export function App() {
           <Route path="/data" component={DataPage} />
           <Route path="/settings" component={SettingsPage} />
           <Route>
-            <div className="py-24 text-center text-muted">
-              Nothing here.{' '}
-              <Link href="/" className="link">
-                Back to the overview
-              </Link>
-            </div>
+            <NotFound what="page" href="/" back="Back to the overview" />
           </Route>
         </Switch>
       </main>

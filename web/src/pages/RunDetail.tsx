@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, Download, RotateCcw, Square } from 'lucide-react
 import { Fragment } from 'react';
 import { Link, useLocation } from 'wouter';
 import { api, type Result, type RunDetail } from '../api';
-import { cx, ErrorNote, Loading, ModelDot, ResultCell, StatusPill } from '../components/ui';
+import { cx, ErrorNote, isNotFound, Loading, ModelDot, NotFound, ResultCell, StatusPill } from '../components/ui';
 import { ago, compact, duration, ms, pct, plural } from '../lib/format';
 import { useNow } from '../lib/hooks';
 import { tone } from '../lib/theme';
@@ -26,6 +26,7 @@ export function RunDetailPage({ id }: { id: number }) {
   });
 
   if (q.isLoading) return <Loading />;
+  if (isNotFound(q.error)) return <NotFound what="run" href="/runs" back="All runs" />;
   if (q.error) return <ErrorNote error={q.error} />;
   const run = q.data!;
   const byKey = new Map<string, Result>(run.results.map((r) => [`${r.task_id}:${r.model_id}`, r]));
@@ -49,12 +50,15 @@ export function RunDetailPage({ id }: { id: number }) {
           <div className="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[14.5px] text-muted">
             <StatusPill status={run.status} />
             {run.label && <span className="chip">{run.label}</span>}
+            {/* Each dot ends the item before it, so a wrapped line never starts with one. */}
             <span>
               {plural(run.tasks.length, 'task')} × {plural(run.models.length, 'model')}
+              <span className="ml-3.5 text-faint">·</span>
             </span>
-            <span className="text-faint">·</span>
-            <span>started {ago(run.started_at ?? run.created_at, now)}</span>
-            <span className="text-faint">·</span>
+            <span>
+              started {ago(run.started_at ?? run.created_at, now)}
+              <span className="ml-3.5 text-faint">·</span>
+            </span>
             <span className="num">took {duration(run.started_at, run.finished_at, now)}</span>
           </div>
         </div>
@@ -152,9 +156,9 @@ export function RunDetailPage({ id }: { id: number }) {
           <table className="w-full border-separate" style={{ borderSpacing: '8px 5px' }}>
             <thead>
               <tr>
-                <th />
+                <th className="hidden sm:table-cell" />
                 {run.models.map((m) => (
-                  <th key={m.id} className="min-w-[110px] pt-3 pb-1 text-[13px] font-semibold text-ink-2">
+                  <th key={m.id} className="pt-3 pb-1 text-[13px] font-semibold text-ink-2 sm:min-w-[110px]">
                     <span className="inline-flex items-center gap-1.5">
                       <ModelDot color={m.color} size={8} />
                       {m.label}
@@ -166,28 +170,45 @@ export function RunDetailPage({ id }: { id: number }) {
             <tbody>
               {run.categories.map((cat) => (
                 <Fragment key={cat}>
-                  <tr>
+                  {/* The name column is hidden on a phone, so the heading spans one column fewer there. */}
+                  <tr className="sm:hidden">
+                    <td colSpan={cols} className="pt-5 pb-1 text-[12.5px] font-semibold capitalize text-faint">
+                      {cat}
+                    </td>
+                  </tr>
+                  <tr className="hidden sm:table-row">
                     <td colSpan={cols + 1} className="pt-5 pb-1 text-[12.5px] font-semibold capitalize text-faint">
                       {cat}
                     </td>
                   </tr>
                   {run.tasks
                     .filter((t) => t.category === cat)
-                    .map((t) => (
-                      <tr key={t.id}>
-                        <td className="max-w-[360px] pr-4">
-                          <Link href={`/runs/${run.id}/tasks/${t.id}`} className="group block truncate text-[14.5px] text-ink-2 hover:text-ink">
-                            {t.title}
-                            <span className="ml-2 font-mono text-[11.5px] text-faint group-hover:text-muted">{t.id}</span>
-                          </Link>
-                        </td>
-                        {run.models.map((m) => (
-                          <td key={m.id}>
-                            <ResultCell result={byKey.get(`${t.id}:${m.id}`)} onClick={() => navigate(`/runs/${run.id}/tasks/${t.id}`)} />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                    .map((t) => {
+                      const name = (
+                        <Link href={`/runs/${run.id}/tasks/${t.id}`} className="group block truncate text-[14.5px] text-ink-2 hover:text-ink">
+                          {t.title}
+                          <span className="ml-2 font-mono text-[11.5px] text-faint group-hover:text-muted">{t.id}</span>
+                        </Link>
+                      );
+                      return (
+                        <Fragment key={t.id}>
+                          {/* On a phone the task's name takes its own line above its verdicts, so all of them fit. */}
+                          <tr className="sm:hidden">
+                            <td colSpan={cols} className="max-w-0 pt-2">
+                              {name}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="hidden max-w-[360px] pr-4 sm:table-cell">{name}</td>
+                            {run.models.map((m) => (
+                              <td key={m.id}>
+                                <ResultCell result={byKey.get(`${t.id}:${m.id}`)} onClick={() => navigate(`/runs/${run.id}/tasks/${t.id}`)} />
+                              </td>
+                            ))}
+                          </tr>
+                        </Fragment>
+                      );
+                    })}
                 </Fragment>
               ))}
             </tbody>

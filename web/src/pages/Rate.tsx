@@ -86,7 +86,8 @@ function ScoreRow({
               aria-pressed={on}
               onClick={() => onChange(n)}
               className={cx(
-                'num h-[30px] w-[30px] rounded-[7px] border text-[13px] font-semibold transition-all',
+                // A little larger under a thumb.
+                'num h-[34px] w-[34px] rounded-[7px] border text-[13px] font-semibold transition-all sm:h-[30px] sm:w-[30px]',
                 on
                   ? 'border-transparent text-on-side shadow-[0_2px_6px_-2px_rgb(var(--shade)/0.4)]'
                   : under
@@ -361,7 +362,7 @@ function TastingCard({
                 aria-pressed={on}
                 onClick={() => setFlags((s) => ({ ...s, [side]: on ? s[side].filter((x) => x !== f.id) : [...s[side], f.id] }))}
                 className={cx(
-                  'flex items-center gap-2.5 rounded-[6px] py-1 text-left text-[13.5px] transition-colors',
+                  'flex items-center gap-2.5 rounded-[6px] py-2 text-left text-[13.5px] transition-colors sm:py-1',
                   on ? 'font-semibold text-ink' : 'text-ink-2 hover:text-ink',
                 )}
               >

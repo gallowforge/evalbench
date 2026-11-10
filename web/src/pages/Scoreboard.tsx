@@ -96,7 +96,8 @@ export function Scoreboard({ suite }: { suite?: string }) {
             {plural(b.runs, 'run')} · {plural(b.ratings, 'blind verdict')}
           </span>
         </div>
-        <div className="overflow-x-auto px-3 pb-3">
+        {/* Wider than a phone: it scrolls sideways, and takes focus so a keyboard can scroll it. */}
+        <div className="overflow-x-auto px-3 pb-3" tabIndex={0} role="region" aria-label={`${title} scoreboard`}>
           <table className="w-full min-w-[880px] text-left">
             <thead>
               <tr className="text-[12.5px] font-semibold text-muted">
@@ -171,7 +172,7 @@ export function Scoreboard({ suite }: { suite?: string }) {
         </div>
       </section>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
         <Card title="Pass rate over time" className="min-w-0">
           <HistoryChart board={b} height={300} />
         </Card>
@@ -180,7 +181,7 @@ export function Scoreboard({ suite }: { suite?: string }) {
         </Card>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
         <Card title="What changed" action={<span className="text-[12.5px] text-muted">each model, latest run against the one before</span>}>
           {b.regressions.length === 0 && <div className="py-6 text-center text-[14px] text-muted">Each model needs two runs of this suite.</div>}
           <div className="space-y-6">

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Phones: the sections get a full-width row of their own under the logo, with the page you are on scrolled into view, instead of one name beside a strip nobody knew scrolled. The scoreboard no longer forces the page wider than the screen, the head-to-head grid fits, a run's verdict grid puts each task's name above its verdicts so all of them show, and the task list keeps the titles readable. The new-run dialog fits the screen with its Start button, the provider choice wraps, and the judging buttons are a little larger under a thumb.
+- A run, task or suite that does not exist now says so at once and links back, instead of a bare error or, for a suite, a spinner that never ended. Unknown addresses get the same page.
+- Accessibility: the YAML editor, the check and rubric fields, and the tables that scroll sideways all have names or a tab stop. A wrapped line of run details no longer starts with a dot.
+
 ## 1.2.0
 
 - A dark theme: the same editorial scorecard printed the other way round, ink-black stock with warm off-white type. Azure still marks only what you can click and red only the judge's marks; both are stepped up so every line of text keeps AA contrast.
