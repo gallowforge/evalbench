@@ -154,6 +154,16 @@ def clean_model(data: dict) -> dict:
         params["timeout"] = max(5, min(int(raw["timeout"]), 3600))
     concurrency = max(1, min(int(data.get("concurrency") or (1 if provider == "openai-compatible" else 4)), 32))
     color = str(data.get("color") or "").strip()
+    prices = {}
+    for key in ("price_in", "price_out"):
+        value = data.get(key)
+        if value in (None, ""):
+            prices[key] = None  # unknown. Zero is a real price: a model you run yourself
+            continue
+        value = float(value)
+        if not 0 <= value <= 100000:
+            raise ValueError("a price is dollars per million tokens, zero or more")
+        prices[key] = value
     return {
         "label": label,
         "provider": provider,
@@ -163,6 +173,7 @@ def clean_model(data: dict) -> dict:
         "params": params,
         "concurrency": concurrency,
         "color": color,
+        **prices,
     }
 
 
@@ -172,9 +183,10 @@ def create_model(db: Database, data: dict) -> dict:
         used = {r["color"] for r in db.all("SELECT color FROM models WHERE archived=0")}
         m["color"] = next((c for c in PALETTE if c not in used), PALETTE[db.scalar("SELECT COUNT(*) FROM models") % len(PALETTE)])
     model_id = db.insert(
-        """INSERT INTO models(label, provider, base_url, model, api_key_env, params, concurrency, color, created_at)
-           VALUES(?,?,?,?,?,?,?,?,?)""",
-        (m["label"], m["provider"], m["base_url"], m["model"], m["api_key_env"], dumps(m["params"]), m["concurrency"], m["color"], now()),
+        """INSERT INTO models(label, provider, base_url, model, api_key_env, params, concurrency, color, created_at,
+           price_in, price_out) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+        (m["label"], m["provider"], m["base_url"], m["model"], m["api_key_env"], dumps(m["params"]), m["concurrency"], m["color"], now(),
+         m["price_in"], m["price_out"]),
     )
     return get_model(db, model_id)  # type: ignore[return-value]
 
@@ -185,9 +197,10 @@ def update_model(db: Database, model_id: int, data: dict) -> dict:
         raise KeyError(model_id)
     m = clean_model({**current, **data})
     db.execute(
-        """UPDATE models SET label=?, provider=?, base_url=?, model=?, api_key_env=?, params=?, concurrency=?, color=?
-           WHERE id=?""",
-        (m["label"], m["provider"], m["base_url"], m["model"], m["api_key_env"], dumps(m["params"]), m["concurrency"], m["color"] or current["color"], model_id),
+        """UPDATE models SET label=?, provider=?, base_url=?, model=?, api_key_env=?, params=?, concurrency=?, color=?,
+           price_in=?, price_out=? WHERE id=?""",
+        (m["label"], m["provider"], m["base_url"], m["model"], m["api_key_env"], dumps(m["params"]), m["concurrency"], m["color"] or current["color"],
+         m["price_in"], m["price_out"], model_id),
     )
     return get_model(db, model_id)  # type: ignore[return-value]
 

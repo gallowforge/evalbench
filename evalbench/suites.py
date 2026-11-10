@@ -205,6 +205,8 @@ class Suite(BaseModel):
     title: str
     description: str = ""
     version: int | str = 1
+    # The share of tasks a model must get right to be good enough for this job (0.9 = 90%).
+    bar: float | None = Field(default=None, gt=0, le=1)
     system: str | None = None
     rubric: list[RubricDimension] = Field(default_factory=lambda: list(DEFAULT_RUBRIC))
     tasks: list[Task] = Field(min_length=1)
@@ -303,7 +305,7 @@ def dump_suite(suite: Suite) -> str:
     if suite.rubric == DEFAULT_RUBRIC:
         data.pop("rubric", None)
     # Keep the key order readable: metadata, then rubric, then tasks.
-    ordered = {k: data[k] for k in ("id", "title", "description", "version", "system", "rubric") if k in data}
+    ordered = {k: data[k] for k in ("id", "title", "description", "version", "bar", "system", "rubric") if k in data}
     ordered["tasks"] = [
         {"id": t["id"], **{k: v for k, v in t.items() if k != "id"}} for t in data.get("tasks", [])
     ]

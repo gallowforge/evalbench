@@ -71,6 +71,18 @@ def parse_model_spec(spec: str) -> dict:
     return {"provider": provider, "model": model, "base_url": base_url or None, "label": model}
 
 
+def parse_price(spec: str) -> tuple[str, float, float]:
+    """model=in/out in dollars per million tokens, e.g. claude-haiku-5-5=1/5 or qwen3-8b=0/0"""
+    model, sep, rest = spec.rpartition("=")
+    try:
+        if not sep or not model:
+            raise ValueError
+        price_in, price_out = (float(x) for x in rest.split("/"))
+    except ValueError:
+        raise ValueError(f"price '{spec}' should look like model=in/out, in dollars per million tokens") from None
+    return model, price_in, price_out
+
+
 def _run(args: argparse.Namespace) -> int:
     from evalbench.config import load_settings
     from evalbench.db import Database
@@ -79,6 +91,7 @@ def _run(args: argparse.Namespace) -> int:
     from evalbench.sandbox import Sandbox
     from evalbench.stats import run_detail
     from evalbench.store import create_model, save_suite
+    from evalbench.verdict import decide, explain, verdict
 
     s = load_settings()
     db = Database(":memory:" if args.ephemeral else s.db_path)
@@ -88,7 +101,17 @@ def _run(args: argparse.Namespace) -> int:
         suite_id = suite.id
     else:
         suite_id = args.suite
-    model_ids = [create_model(db, parse_model_spec(spec))["id"] for spec in args.model]
+    try:
+        specs = [parse_model_spec(spec) for spec in args.model]
+        prices = [parse_price(p) for p in args.price or []]
+    except ValueError as e:
+        raise SystemExit(str(e)) from None
+    for model, price_in, price_out in prices:
+        hit = [m for m in specs if m["model"] == model]
+        if not hit:
+            raise SystemExit(f"--price names '{model}', which is not one of the --model ids")
+        hit[0].update(price_in=price_in, price_out=price_out)
+    model_ids = [create_model(db, m)["id"] for m in specs]
 
     async def go() -> dict:
         pool, sandbox = ProviderPool(), Sandbox(s.sandbox_url, allow_local=s.sandbox_local or args.allow_local_code)
@@ -101,15 +124,41 @@ def _run(args: argparse.Namespace) -> int:
         return run_detail(db, run_id)
 
     detail = asyncio.run(go())
+    # The verdict covers the models of this run only, so an old model in the same database
+    # cannot win a run it was not part of.
+    board = verdict(db, suite_id)
+    ran = [m for m in board["models"] if m["id"] in model_ids and m["run_id"] == detail["id"]]
+    decision = decide(ran, args.bar if args.bar is not None else board["suite"]["bar"], "speed" if args.fastest else "cost")
     worst = 1.0
     if args.json:
-        print(json.dumps({"run": detail["id"], "models": [{"label": m["label"], **m["summary"]} for m in detail["models"]]}, indent=2))
+        print(json.dumps({
+            "run": detail["id"],
+            "models": [{"label": m["label"], **m["summary"]} for m in detail["models"]],
+            "verdict": {
+                "bar": decision["bar"],
+                "objective": decision["objective"],
+                "pick": next((m["label"] for m in ran if m["id"] == decision["pick"]), None),
+                "clears": [m["label"] for i in decision["order"] for m in ran if m["id"] == i],
+                "models": [
+                    {"label": m["label"], "passed": m["passed"], "attempted": m["attempted"], "cost_per_1k": m["cost"],
+                     "latency_ms": m["latency_ms"], **{k: decision["rows"][m["id"]][k] for k in ("need", "margin", "clears")}}
+                    for m in ran
+                ],
+            },
+        }, indent=2))
     for m in detail["models"]:
         sm = m["summary"]
         rate = sm["pass_rate"] if sm["pass_rate"] is not None else 0.0
         worst = min(worst, rate)
         if not args.json:
             print(f"{m['label']:<32} {sm['passed']:>3}/{sm['attempted']:<3} passed  {rate:6.1%}  errors {sm['errors']}")
+    if not args.json:
+        print()
+        for line in explain(ran, decision):
+            print(line)
+    if args.require_pick and decision["pick"] is None:
+        print(f"no model reaches the {decision['bar']:.0%} bar", file=sys.stderr)
+        return 2
     if args.fail_under is not None and worst < args.fail_under:
         print(f"pass rate {worst:.1%} is below --fail-under {args.fail_under:.0%}", file=sys.stderr)
         return 2
@@ -138,9 +187,13 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("demo", help="load the demo workspace into the data directory")
     p.set_defaults(func=_demo)
 
-    p = sub.add_parser("run", help="run a suite headless and print pass rates")
+    p = sub.add_parser("run", help="run a suite headless, print pass rates and the model to use")
     p.add_argument("suite", help="a suite file, or the id of a suite in the database")
     p.add_argument("--model", action="append", required=True, help="provider:model[@base_url]; repeat for more")
+    p.add_argument("--price", action="append", help="model=in/out in dollars per million tokens; repeat for more")
+    p.add_argument("--bar", type=float, help="the share of tasks a model must get right (0..1); default: the suite's bar, or 0.9")
+    p.add_argument("--fastest", action="store_true", help="pick the fastest model that clears the bar instead of the cheapest")
+    p.add_argument("--require-pick", action="store_true", help="exit 2 if no model clears the bar")
     p.add_argument("--label", default="")
     p.add_argument("--fail-under", type=float, help="exit 2 if any model's pass rate is below this (0..1)")
     p.add_argument("--ephemeral", action="store_true", help="keep nothing: use an in-memory database")

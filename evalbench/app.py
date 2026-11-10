@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Res
 from fastapi.staticfiles import StaticFiles
 
 from evalbench import __version__, export, ratings, stats, store
+from evalbench import verdict as verdicts
 from evalbench.auth import COOKIE, MIN_PASSWORD, SESSION_DAYS, Auth, clean_username, username_key
 from evalbench.config import Settings, load_settings
 from evalbench.db import Database
@@ -461,6 +462,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/scoreboard/{suite_id}")
     def scoreboard(suite_id: str) -> dict:
         return stats.scoreboard(state.db, suite_id)
+
+    @app.get("/api/verdict/{suite_id}")
+    def verdict(suite_id: str) -> dict:
+        out = verdicts.verdict(state.db, suite_id)
+        if out is None:
+            raise HTTPException(404, "no such suite")
+        return out
 
     @app.get("/api/export/summary")
     def export_summary() -> dict:

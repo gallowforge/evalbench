@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (
@@ -38,7 +38,9 @@ CREATE TABLE IF NOT EXISTS models (
   concurrency INTEGER NOT NULL DEFAULT 2,
   color       TEXT NOT NULL DEFAULT '',
   archived    INTEGER NOT NULL DEFAULT 0,
-  created_at  TEXT NOT NULL
+  created_at  TEXT NOT NULL,
+  price_in    REAL,
+  price_out   REAL
 );
 CREATE TABLE IF NOT EXISTS runs (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -120,7 +122,16 @@ class Database:
         self.conn.execute("PRAGMA busy_timeout=5000")
         with self.lock:
             self.conn.executescript(SCHEMA)
+            self._upgrade()
             self.conn.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
+
+    def _upgrade(self) -> None:
+        """Brings a database made by an older version up to date. Version 2 added what a model
+        costs: dollars per million tokens, in and out."""
+        have = {r["name"] for r in self.conn.execute("PRAGMA table_info(models)")}
+        for column in ("price_in", "price_out"):
+            if column not in have:
+                self.conn.execute(f"ALTER TABLE models ADD COLUMN {column} REAL")
 
     def execute(self, sql: str, params: tuple | dict = ()) -> sqlite3.Cursor:
         with self.lock:
