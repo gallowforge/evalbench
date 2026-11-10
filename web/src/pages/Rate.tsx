@@ -518,8 +518,8 @@ function Rater({
               ? `You judged all ${plural(progress.total, 'pair')} in this scope${saved ? `, ${saved} of them just now` : ''}.`
               : 'This scope needs answers from at least two models to the same task.'}
           </p>
-          <Link href="/scoreboard" className="btn-primary mt-6">
-            See the scoreboard
+          <Link href={suiteId ? `/verdict/${suiteId}` : '/'} className="btn-primary mt-6">
+            See the verdict
           </Link>
         </div>
         {progress && progress.remaining === 0 && <Reveal rater={rater} runId={runId} suiteId={suiteId} />}

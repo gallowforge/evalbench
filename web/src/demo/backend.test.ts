@@ -362,7 +362,10 @@ describe('a new run replays the recorded answers', () => {
     expect(board.runs).toBe(runsOf(SUITE) + 1);
     expect(board.models.find((m) => m.id === 1)!.auto!.run_id).toBe(id);
     expect(board.history.at(-1)).toMatchObject({ run_id: id, label: 'second look' });
-    expect((await d.get<{ counts: { runs: number; answers: number } }>('/overview')).counts).toMatchObject({ runs: fixtures.runs.length + 1, answers: fixtures.results.length + 40 });
+    expect((await d.get<{ counts: { runs: number; answers: number } }>('/overview')).counts).toMatchObject({
+      runs: fixtures.runs.length + 1,
+      answers: fixtures.results.length + 40,
+    });
   });
 
   it('stops when cancelled and picks up again when resumed', async () => {
@@ -410,7 +413,12 @@ describe('a new run replays the recorded answers', () => {
     d.wait(600_000);
     const after = await d.get<Verdict>(`/verdict/${TRIAGE}`);
     expect(after.runs).toBe(runsOf(TRIAGE) + 1);
-    expect(after.models.find((m) => m.id === orion.id)).toMatchObject({ run_id: made.data.id, run_label: 'again', passed: orion.passed, cost: orion.cost });
+    expect(after.models.find((m) => m.id === orion.id)).toMatchObject({
+      run_id: made.data.id,
+      run_label: 'again',
+      passed: orion.passed,
+      cost: orion.cost,
+    });
     expect(after.history.at(-1)!.models[orion.id]).toMatchObject({ passed: orion.passed, attempted: orion.attempted });
     await d.call('PUT', `/models/${orion.id}`, { price_in: orion.price_in! * 10, price_out: orion.price_out! * 10 });
     const dearer = (await d.get<Verdict>(`/verdict/${TRIAGE}`)).models.find((m) => m.id === orion.id)!;

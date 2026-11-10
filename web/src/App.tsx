@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Database, Settings as SettingsIcon } from 'lucide-react';
 import { type ReactNode, useEffect, useRef } from 'react';
-import { Link, Route, Switch, useLocation } from 'wouter';
+import { Link, Redirect, Route, Switch, useLocation } from 'wouter';
 import { api, type Overview as OverviewData } from './api';
 import { Logo } from './components/Logo';
 import { ThemeMenu } from './components/ThemeMenu';
@@ -11,29 +11,28 @@ import { useMeta, useRater } from './lib/hooks';
 import { Compare } from './pages/Compare';
 import { DataPage } from './pages/Data';
 import { Models } from './pages/Models';
-import { Overview } from './pages/Overview';
 import { Rate } from './pages/Rate';
 import { RunDetailPage } from './pages/RunDetail';
 import { Runs } from './pages/Runs';
-import { Scoreboard } from './pages/Scoreboard';
 import { SettingsPage } from './pages/Settings';
 import { SignIn } from './pages/SignIn';
 import { SuiteDetail } from './pages/SuiteDetail';
 import { Suites } from './pages/Suites';
+import { Verdict } from './pages/Verdict';
 
-const NAV: { href: string; label: string; exact?: boolean }[] = [
-  { href: '/', label: 'Overview', exact: true },
+/** The verdict is the home page, and each job's verdict lives under /verdict. */
+const NAV: { href: string; label: string; also?: string }[] = [
+  { href: '/', label: 'Verdict', also: '/verdict' },
   { href: '/rate', label: 'Judge' },
-  { href: '/scoreboard', label: 'Scoreboard' },
   { href: '/runs', label: 'Runs' },
   { href: '/suites', label: 'Suites' },
   { href: '/models', label: 'Models' },
-  { href: '/data', label: 'Data' },
 ];
 
-function NavLink({ href, label, exact, badge }: { href: string; label: string; exact?: boolean; badge?: ReactNode }) {
+function NavLink({ href, label, also, badge }: { href: string; label: string; also?: string; badge?: ReactNode }) {
   const [location] = useLocation();
-  const active = exact ? location === href : location === href || location.startsWith(`${href}/`);
+  const under = (base: string) => location === base || location.startsWith(`${base}/`);
+  const active = href === '/' ? location === '/' || Boolean(also && under(also)) : under(href);
   return (
     <Link
       href={href}
@@ -107,6 +106,9 @@ function TopBar() {
           )}
           <div className="flex items-center gap-0.5">
             <ThemeMenu />
+            <Link href="/data" className="btn-quiet h-9 w-9 p-0" aria-label="Data" title="Data: export and import">
+              <Database size={16} />
+            </Link>
             <Link href="/settings" className="btn-quiet h-9 w-9 p-0" aria-label="Settings" title="Settings">
               <SettingsIcon size={17} />
             </Link>
@@ -160,7 +162,8 @@ export function App() {
       <TopBar />
       <main className="mx-auto max-w-[1240px] px-5 pt-10 pb-24 md:px-10 md:pt-14">
         <Switch>
-          <Route path="/" component={Overview} />
+          <Route path="/">{() => <Verdict />}</Route>
+          <Route path="/verdict/:suite">{(p) => <Verdict suite={p.suite} />}</Route>
           <Route path="/suites" component={Suites} />
           <Route path="/suites/:id">{(p) => <SuiteDetail id={p.id} />}</Route>
           <Route path="/models" component={Models} />
@@ -168,12 +171,13 @@ export function App() {
           <Route path="/runs/:id">{(p) => <RunDetailPage id={Number(p.id)} />}</Route>
           <Route path="/runs/:id/tasks/:task">{(p) => <Compare runId={Number(p.id)} taskId={p.task} />}</Route>
           <Route path="/rate" component={Rate} />
-          <Route path="/scoreboard">{() => <Scoreboard />}</Route>
-          <Route path="/scoreboard/:suite">{(p) => <Scoreboard suite={p.suite} />}</Route>
+          {/* The scoreboard became the verdict: old links still land on the right job. */}
+          <Route path="/scoreboard">{() => <Redirect to="/" replace />}</Route>
+          <Route path="/scoreboard/:suite">{(p) => <Redirect to={`/verdict/${p.suite}`} replace />}</Route>
           <Route path="/data" component={DataPage} />
           <Route path="/settings" component={SettingsPage} />
           <Route>
-            <NotFound what="page" href="/" back="Back to the overview" />
+            <NotFound what="page" href="/" back="Back to the verdict" />
           </Route>
         </Switch>
       </main>

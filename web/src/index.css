@@ -65,14 +65,14 @@
   color-scheme: light;
   --shade: 23 24 28;
   --card-shadow: 0 1px 0 rgb(23 24 28 / 0.03), 0 10px 30px -22px rgb(23 24 28 / 0.35);
-  --heat-0: rgb(23 24 28 / 0.03);
-  --heat-1: #eef2fd;
-  --heat-2: #d3defb;
-  --heat-3: #a9bff6;
-  --heat-4: #6f93ee;
-  --heat-5: #2457f0;
+  --heat-0: rgb(23 24 28 / 0.025);
+  --heat-1: rgb(23 24 28 / 0.05);
+  --heat-2: rgb(23 24 28 / 0.1);
+  --heat-3: rgb(23 24 28 / 0.19);
+  --heat-4: rgb(23 24 28 / 0.33);
+  --heat-5: #17181c;
   --heat-ink: #17181c;
-  --heat-ink-5: #ffffff;
+  --heat-ink-5: #fffdf8;
   --heat-hover: brightness(0.94);
   --code-keyword: #b4531c;
   --code-string: #1d7a4b;
@@ -130,12 +130,12 @@
 
   --shade: 0 0 0;
   --card-shadow: inset 0 1px 0 rgb(255 255 255 / 0.035), 0 1px 0 rgb(0 0 0 / 0.4), 0 14px 32px -20px rgb(0 0 0 / 0.75);
-  --heat-0: rgb(239 233 222 / 0.04);
-  --heat-1: #1c2130;
-  --heat-2: #212c50;
-  --heat-3: #2a3d80;
-  --heat-4: #3a5bc4;
-  --heat-5: #6a8eff;
+  --heat-0: rgb(239 233 222 / 0.03);
+  --heat-1: rgb(239 233 222 / 0.06);
+  --heat-2: rgb(239 233 222 / 0.11);
+  --heat-3: rgb(239 233 222 / 0.19);
+  --heat-4: rgb(239 233 222 / 0.3);
+  --heat-5: #efe9de;
   --heat-ink: #efe9de;
   --heat-ink-5: #121110;
   --heat-hover: brightness(1.15);
@@ -207,8 +207,10 @@
   .label {
     @apply text-[12px] font-semibold uppercase tracking-[0.07em] text-faint;
   }
+  /* Lining figures. Not tabular: this grotesk widens the full stop and the comma with the digits,
+     which pulls "$0.68" and "1,000" apart. Columns that must align are set in the slab. */
   .num {
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums;
   }
   .slab {
     font-family: var(--font-slab);
@@ -243,6 +245,58 @@
   .chip {
     @apply inline-flex items-center gap-1.5 rounded-[6px] bg-ink/[0.05] px-2 h-6 text-[12.5px] font-medium text-ink-2 whitespace-nowrap;
   }
+  /* The bar slider: a hairline with an ink thumb, filled up to --fill. */
+  .range {
+    @apply block h-7 w-full cursor-pointer appearance-none bg-transparent;
+    --fill: 50%;
+  }
+  .range::-webkit-slider-runnable-track {
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--color-ink) var(--fill), var(--color-line-2) var(--fill));
+  }
+  .range::-moz-range-track {
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--color-ink) var(--fill), var(--color-line-2) var(--fill));
+  }
+  .range::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    margin-top: -8px;
+    border-radius: 50%;
+    background: var(--color-ink);
+    border: 3px solid var(--color-bg);
+    box-shadow: 0 0 0 1px var(--color-ink);
+    transition: transform 0.12s ease;
+  }
+  .range::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-ink);
+    border: 3px solid var(--color-bg);
+    box-shadow: 0 0 0 1px var(--color-ink);
+  }
+  .range:hover::-webkit-slider-thumb,
+  .range:active::-webkit-slider-thumb {
+    transform: scale(1.12);
+  }
+  .range:focus-visible {
+    outline: none;
+  }
+  .range:focus-visible::-webkit-slider-thumb {
+    box-shadow:
+      0 0 0 1px var(--color-ink),
+      0 0 0 4px color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+  .range:focus-visible::-moz-range-thumb {
+    box-shadow:
+      0 0 0 1px var(--color-ink),
+      0 0 0 4px color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+
   .kbd {
     @apply inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-[5px] border border-line-2 bg-panel font-mono text-[10.5px] text-muted;
     box-shadow: 0 1px 0 var(--color-line-2);

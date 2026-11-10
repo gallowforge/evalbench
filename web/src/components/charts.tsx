@@ -1,16 +1,36 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Board, ModelRef } from '../api';
+import type { ModelRef } from '../api';
 import { pct, shortDate } from '../lib/format';
 import { ModelDot } from './ui';
 import { tone } from '../lib/theme';
 
-/** Pass rate per model across runs: one line per model, labelled at its end, with a hover rule. */
-export function HistoryChart({ board, height = 260 }: { board: Board; height?: number }) {
+export interface HistoryPoint {
+  run_id: number;
+  label: string;
+  created_at: string;
+  models: Record<string, { pass_rate: number }>;
+}
+
+/**
+ * Pass rate per model across runs: one line per model, labelled at its end, with a hover rule.
+ * Given a bar it draws the line a model has to reach, and given each run's pick it rings it.
+ */
+export function HistoryChart({
+  models,
+  history: points,
+  height = 260,
+  bar,
+  picks,
+}: {
+  models: ModelRef[];
+  history: HistoryPoint[];
+  height?: number;
+  bar?: number;
+  picks?: (number | null)[];
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<number | null>(null);
   const [width, setWidth] = useState(640);
-  const models = board.models;
-  const points = board.history;
 
   useEffect(() => {
     const el = ref.current;
@@ -29,7 +49,11 @@ export function HistoryChart({ board, height = 260 }: { board: Board; height?: n
   const innerW = w - pad.l - pad.r;
   const innerH = h - pad.t - pad.b;
   const x = (i: number) => pad.l + (points.length <= 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
-  const y = (v: number) => pad.t + (1 - v) * innerH;
+  // The share axis starts at the nearest quarter under the weakest run, so close races are not squeezed into the top of the plot.
+  const lowest = Math.min(bar ?? 1, ...points.flatMap((p) => Object.values(p.models).map((m) => m.pass_rate)));
+  const floor = [0.5, 0.25].find((f) => lowest - 0.04 >= f) ?? 0;
+  const ticks = floor === 0.5 ? [0.5, 0.6, 0.7, 0.8, 0.9, 1] : floor === 0.25 ? [0.25, 0.5, 0.75, 1] : [0, 0.25, 0.5, 0.75, 1];
+  const y = (v: number) => pad.t + (1 - (v - floor) / (1 - floor)) * innerH;
 
   const series = useMemo(
     () =>
@@ -77,11 +101,11 @@ export function HistoryChart({ board, height = 260 }: { board: Board; height?: n
     <div>
       <div ref={ref} className="relative" onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
         <svg width={w} height={h} className="block" role="img" aria-label="Pass rate by run for each model">
-          {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+          {ticks.map((t) => (
             <g key={t}>
-              <line x1={pad.l} x2={w - pad.r} y1={y(t)} y2={y(t)} className="stroke-ink" strokeOpacity={t === 0 ? 0.22 : 0.07} />
+              <line x1={pad.l} x2={w - pad.r} y1={y(t)} y2={y(t)} className="stroke-ink" strokeOpacity={t === floor ? 0.22 : 0.07} />
               <text x={pad.l - 10} y={y(t) + 4} textAnchor="end" className="num fill-faint text-[11px]">
-                {t * 100}%
+                {Math.round(t * 100)}%
               </text>
             </g>
           ))}
@@ -92,6 +116,18 @@ export function HistoryChart({ board, height = 260 }: { board: Board; height?: n
           ))}
           {hover !== null && (
             <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + innerH} className="stroke-ink" strokeOpacity={0.25} strokeDasharray="3 3" />
+          )}
+          {bar !== undefined && (
+            <line
+              x1={pad.l}
+              x2={w - pad.r}
+              y1={y(bar)}
+              y2={y(bar)}
+              className="stroke-ink"
+              strokeWidth={1.5}
+              strokeDasharray="1 5"
+              strokeLinecap="round"
+            />
           )}
           {series.map(({ model, pts }) => (
             <g key={model.id}>
@@ -109,13 +145,19 @@ export function HistoryChart({ board, height = 260 }: { board: Board; height?: n
                   cx={x(p.i)}
                   cy={y(p.v)}
                   r={hover === p.i ? 5 : 3.5}
-                  className="stroke-panel"
+                  className="stroke-bg"
                   style={{ fill: tone(model.color) }}
                   strokeWidth={2}
                 />
               ))}
             </g>
           ))}
+          {picks?.map((id, i) => {
+            const v = id === null ? undefined : points[i]?.models[String(id)]?.pass_rate;
+            return v === undefined ? null : (
+              <circle key={points[i].run_id} cx={x(i)} cy={y(v)} r={8.5} fill="none" stroke="var(--color-mark)" strokeWidth={2} />
+            );
+          })}
           {labelled &&
             ends.map((e) => (
               // The label is set in ink; the short stroke beside it carries the model's colour.
@@ -157,6 +199,26 @@ export function HistoryChart({ board, height = 260 }: { board: Board; height?: n
         )}
       </div>
       {!labelled && <Legend models={models} />}
+      {/* The bar and the ring are named under the plot, where no line can cross the words. */}
+      {bar !== undefined && (
+        <div
+          className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1.5 text-[12.5px] text-muted"
+          style={labelled ? { paddingLeft: pad.l } : undefined}
+        >
+          <span className="inline-flex items-center gap-2">
+            <svg width={22} height={4} aria-hidden>
+              <line x1={1} x2={21} y1={2} y2={2} className="stroke-ink" strokeWidth={1.5} strokeDasharray="1 5" strokeLinecap="round" />
+            </svg>
+            The bar, {Math.round(bar * 100)}%
+          </span>
+          {picks?.some((p) => p !== null) && (
+            <span className="inline-flex items-center gap-2">
+              <span className="h-[13px] w-[13px] rounded-full border-2 border-mark" aria-hidden />
+              The answer on that run
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -174,71 +236,18 @@ export function Legend({ models }: { models: ModelRef[] }) {
   );
 }
 
-export function Sparkline({ values, color, width = 104, height = 30 }: { values: number[]; color: string; width?: number; height?: number }) {
-  if (values.length < 2) return <svg width={width} height={height} />;
-  const x = (i: number) => 3 + (i / (values.length - 1)) * (width - 6);
-  const y = (v: number) => 4 + (1 - v) * (height - 8);
-  const d = values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-  const last = values[values.length - 1];
-  return (
-    <svg width={width} height={height} aria-hidden>
-      <path d={d} fill="none" style={{ stroke: tone(color) }} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={x(values.length - 1)} cy={y(last)} r={3} className="stroke-panel" style={{ fill: tone(color) }} strokeWidth={1.5} />
-    </svg>
-  );
-}
-
-/** Pass rate per category: one row per category, one thin bar per model in fixed model order. */
-export function CategoryBars({ board }: { board: Board }) {
-  const [hover, setHover] = useState<string | null>(null);
-  const models = board.models.filter((m) => m.auto);
-  return (
-    <div className="space-y-6">
-      {board.categories.map((cat) => (
-        <div key={cat}>
-          <div className="mb-2.5 text-[14px] font-semibold capitalize text-ink">{cat}</div>
-          <div className="space-y-[5px]">
-            {models.map((m) => {
-              const v = m.auto?.categories[cat] ?? 0;
-              const key = `${cat}:${m.id}`;
-              return (
-                <div
-                  key={m.id}
-                  className="flex items-center gap-3"
-                  onMouseEnter={() => setHover(key)}
-                  onMouseLeave={() => setHover(null)}
-                  title={`${m.label}: ${pct(v)}`}
-                >
-                  <div className="relative h-[8px] flex-1 rounded-full bg-ink/[0.06]">
-                    <div
-                      className="h-full rounded-full transition-[width,opacity] duration-500"
-                      style={{ width: `${Math.max(v * 100, 1.5)}%`, background: tone(m.color), opacity: hover && hover !== key ? 0.4 : 1 }}
-                    />
-                  </div>
-                  <span className={`num w-11 text-right text-[12.5px] font-semibold ${hover === key ? 'text-ink' : 'text-muted'}`}>{pct(v)}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /** Head-to-head preference: row model against column model, on one azure ramp. */
-export function WinMatrix({ board }: { board: Board }) {
-  const models = board.models.filter((m) => m.human);
+export function WinMatrix({ models, h2h }: { models: ModelRef[]; h2h: Record<string, { wins: number; games: number }> }) {
   const [hover, setHover] = useState<string | null>(null);
   if (models.length < 2) return <div className="py-10 text-center text-[14px] text-muted">Judge a few pairs to see head-to-head results.</div>;
   const cell = (a: number, b: number) => {
     const key = a < b ? `${a}-${b}` : `${b}-${a}`;
-    const c = board.h2h[key];
+    const c = h2h[key];
     if (!c || !c.games) return null;
     const lowWins = c.wins / c.games;
     return { rate: a < b ? lowWins : 1 - lowWins, games: c.games };
   };
-  // One azure ramp, light to deep on paper and dark to bright after dark (index.css, --heat-*).
+  // One ink ramp, pale to solid: the heavier the cell, the more often the row model won (index.css, --heat-*).
   const step = (v: number) => Math.min(5, Math.floor(v * 5) + 1);
   return (
     <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Head to head win rates">
@@ -266,7 +275,7 @@ export function WinMatrix({ board }: { board: Board }) {
                 </span>
               </td>
               {models.map((col) => {
-                if (row.id === col.id) return <td key={col.id} className="h-11 rounded-[8px] bg-ink/[0.03]" />;
+                if (row.id === col.id) return <td key={col.id} className="h-11 rounded-[6px] bg-ink/[0.03]" />;
                 const c = cell(row.id, col.id);
                 const key = `${row.id}:${col.id}`;
                 return (
@@ -275,7 +284,7 @@ export function WinMatrix({ board }: { board: Board }) {
                     onMouseEnter={() => setHover(key)}
                     onMouseLeave={() => setHover(null)}
                     title={c ? `${row.label} preferred over ${col.label} in ${pct(c.rate)} of ${c.games} ratings` : 'No ratings yet'}
-                    className="num h-11 min-w-12 rounded-[8px] text-center text-[13.5px] font-bold transition-[filter] sm:min-w-16"
+                    className="num h-11 min-w-12 rounded-[6px] text-center text-[13.5px] font-bold transition-[filter]"
                     style={{
                       background: c ? `var(--heat-${step(c.rate)})` : 'var(--heat-0)',
                       color: c && step(c.rate) === 5 ? 'var(--heat-ink-5)' : 'var(--heat-ink)',
@@ -309,7 +318,7 @@ export function RatingBar({ rating, ci, domain, color }: { rating: number; ci: [
         />
       )}
       <div
-        className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] border-panel"
+        className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[2.5px] border-bg"
         style={{ left: pos(rating), background: tone(color) }}
       />
     </div>

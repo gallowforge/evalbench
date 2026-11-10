@@ -858,7 +858,10 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
 
   // ---------- the verdict ----------
 
-  type Measured = Omit<VerdictModel, 'id' | 'label' | 'color' | 'provider' | 'model' | 'price_in' | 'price_out' | 'archived' | 'run_id' | 'run_label' | 'run_at'>;
+  type Measured = Omit<
+    VerdictModel,
+    'id' | 'label' | 'color' | 'provider' | 'model' | 'price_in' | 'price_out' | 'archived' | 'run_id' | 'run_label' | 'run_at'
+  >;
 
   /** Dollars for 1,000 answers at these prices, from the tokens the run used (`cost_per_1k` in verdict.py). */
   function costPer1k(rows: ResultRow[], priceIn: number | null | undefined, priceOut: number | null | undefined): number | null {
@@ -877,7 +880,11 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
     return failed ? failed.label || failed.type || 'a check failed' : '';
   }
 
-  function candidate(rows: ResultRow[], unscored: ReadonlySet<string>, prices: { price_in?: number | null; price_out?: number | null }): Measured | null {
+  function candidate(
+    rows: ResultRow[],
+    unscored: ReadonlySet<string>,
+    prices: { price_in?: number | null; price_out?: number | null },
+  ): Measured | null {
     const s = summarize(rows, unscored);
     if (!s.attempted) return null;
     const done = rows.filter((r) => r.status === 'done');
@@ -925,14 +932,25 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
       byRunModel.set(key, [...(byRunModel.get(key) ?? []), r]);
     }
 
-    type Info = Pick<VerdictModel, 'label' | 'color' | 'provider' | 'model'> & { price_in?: number | null; price_out?: number | null; archived?: boolean };
+    type Info = Pick<VerdictModel, 'label' | 'color' | 'provider' | 'model'> & {
+      price_in?: number | null;
+      price_out?: number | null;
+      archived?: boolean;
+    };
     const info = new Map<number, Info>();
     for (const run of runs) {
       for (const snap of run.models) info.set(snap.id, { label: snap.label, color: snap.color, provider: snap.provider, model: snap.model });
     }
     for (const m of db.models) {
       const known = info.get(m.id); // today's name, colour and prices; what was run stays as it was
-      if (known) Object.assign(known, { label: m.label, color: m.color || known.color, price_in: m.price_in, price_out: m.price_out, archived: Boolean(m.archived) });
+      if (known)
+        Object.assign(known, {
+          label: m.label,
+          color: m.color || known.color,
+          price_in: m.price_in,
+          price_out: m.price_out,
+          archived: Boolean(m.archived),
+        });
     }
 
     const history: Verdict['history'] = [];
@@ -968,7 +986,9 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
         ...candidate(byRunModel.get(`${runId}:${mid}`)!, unscored, about)!,
       });
     }
-    models.sort((a, b) => b.pass_rate - a.pass_rate || Number(a.cost === null) - Number(b.cost === null) || (a.cost ?? 0) - (b.cost ?? 0) || a.id - b.id);
+    models.sort(
+      (a, b) => b.pass_rate - a.pass_rate || Number(a.cost === null) - Number(b.cost === null) || (a.cost ?? 0) - (b.cost ?? 0) || a.id - b.id,
+    );
 
     const human = humanBoard(suiteId);
     return {
