@@ -528,7 +528,9 @@ export function SuiteDetail({ id }: { id: string }) {
                     className="group flex w-full items-center gap-3 py-3 text-left"
                   >
                     <ChevronRight size={15} className={cx('shrink-0 text-faint transition-transform group-hover:text-ink', isOpen && 'rotate-90')} />
-                    <span className="hidden w-[150px] shrink-0 truncate font-mono text-[11.5px] text-faint sm:block">{t.id}</span>
+                    <span className="hidden w-[170px] shrink-0 truncate font-mono text-[11.5px] text-faint sm:block" title={t.id}>
+                      {t.id}
+                    </span>
                     {/* On a phone the id moves under the title, so the title gets the width. */}
                     <span className="min-w-0 flex-1">
                       <span className={cx('block truncate text-[14px] text-ink underline-offset-4 group-hover:underline', isOpen && 'font-semibold')}>

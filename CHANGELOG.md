@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- Text is no longer cut short in four places that had room to show it. On a wide screen the Models page shows each endpoint whole, where `https://api.example.com/v1` used to lose its last characters to an ellipsis. A JSON answer shown in its fields gives a field name room for 24 characters instead of 14, so the core battery's `population_millions` is no longer `population_m…`. The task list of a suite and the reveal at the end of a judging queue give the task id a wider column, so `j04-embedded-instruction` fits. In each of those places, text that is still too long carries the whole of it as a tooltip.
+- The demo workspace's two local models sit at `192.0.2.40`, an address reserved for documentation, instead of a private one. The sample data behind the live demo was captured again from that seed: every answer, check result, rating, date and verdict is the same, byte for byte, and only the address differs.
+
 ## 2.0.0
 
 Evalbench now answers one question: which model should do this job? It names the cheapest model that is good enough, and shows the proof.

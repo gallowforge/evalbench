@@ -317,7 +317,9 @@ function Reveal({ rater, runId, suiteId }: { rater: string; runId?: number; suit
         <div className="space-y-2">
           {mine.slice(0, 12).map((r, i) => (
             <div key={r.id} className="flex items-center gap-2.5">
-              <span className="hidden w-[150px] shrink-0 truncate font-mono text-[11.5px] text-faint sm:block">{r.task_id}</span>
+              <span className="hidden w-[170px] shrink-0 truncate font-mono text-[11.5px] text-faint sm:block" title={r.task_id}>
+                {r.task_id}
+              </span>
               <span className="slab w-5 text-center text-[18px] font-bold text-side-a">A</span>
               {card(r.model_a, r.preference < 0, i * 70)}
               <span className="slab w-5 text-center text-[18px] font-bold text-side-b">B</span>

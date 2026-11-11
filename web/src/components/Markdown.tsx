@@ -89,7 +89,10 @@ export function Answer({ text }: { text: string }) {
     <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 gap-y-2.5">
       {parts.map(([key, value]) => (
         <Fragment key={key}>
-          <dt className="max-w-[14ch] truncate pt-[4px] font-mono text-[12px] text-muted">{key}</dt>
+          {/* Wide enough for a name such as population_millions; a longer one is cut, and its title holds the rest. */}
+          <dt className="max-w-[24ch] truncate pt-[4px] font-mono text-[12px] text-muted" title={key}>
+            {key}
+          </dt>
           <dd className="min-w-0 text-[15px] leading-[1.68] [overflow-wrap:anywhere] text-ink-2">{value}</dd>
         </Fragment>
       ))}

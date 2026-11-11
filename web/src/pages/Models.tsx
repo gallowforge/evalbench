@@ -318,10 +318,12 @@ function ModelRow({ m, first, onEdit }: { m: Model; first: boolean; onEdit: () =
     m.params.max_tokens ? `${m.params.max_tokens.toLocaleString()} max tokens` : null,
     `${m.concurrency} parallel`,
   ].filter(Boolean);
+  const endpoint = m.base_url ?? (m.provider === 'anthropic' ? 'api.anthropic.com' : 'api.openai.com');
   const facts = 'grid grid-cols-[4.75rem_minmax(0,1fr)] content-start gap-x-3 gap-y-1.5 text-[13.5px]';
   return (
     <div className={cx('py-7', !first && 'border-t border-line')}>
-      <div className="grid gap-x-10 gap-y-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.3fr)_auto]">
+      {/* On a full-width desk the endpoint column is wide enough for an address such as http://192.0.2.40:11434/v1. */}
+      <div className="grid gap-x-10 gap-y-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.3fr)_auto] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)_minmax(0,1.15fr)_auto]">
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
             <ModelDot color={m.color} size={10} />
@@ -333,8 +335,8 @@ function ModelRow({ m, first, onEdit }: { m: Model; first: boolean; onEdit: () =
           <dt className="text-faint">Provider</dt>
           <dd className="text-ink-2">{providerName(m)}</dd>
           <dt className="text-faint">Endpoint</dt>
-          <dd className="truncate pt-px font-mono text-[12px] text-ink-2">
-            {m.base_url ?? (m.provider === 'anthropic' ? 'api.anthropic.com' : 'api.openai.com')}
+          <dd className="truncate pt-px font-mono text-[12px] text-ink-2" title={endpoint}>
+            {endpoint}
           </dd>
           <dt className="text-faint">Key</dt>
           <dd className="min-w-0">

@@ -1,6 +1,6 @@
 [project]
 name = "evalbench"
-version = "2.0.0"
+version = "2.0.1"
 description = "A self-hosted LLM evaluation workbench: tasks and rubrics, local and API models, automatic checks, blind pairwise rating, scoreboards and regression tracking."
 readme = "README.md"
 license = "MIT"
