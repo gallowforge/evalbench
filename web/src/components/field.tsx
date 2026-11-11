@@ -1,20 +1,12 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { VerdictModel } from '../api';
 import { ms } from '../lib/format';
+import { type Box, placeLabels } from '../lib/labels';
 import { tone } from '../lib/theme';
 import { type Decision, money, need, type Objective, share } from '../lib/verdict';
 
 /** The lowest bar the page lets you set. Below half right, "good enough" stops meaning anything. */
 export const MIN_BAR = 0.5;
-
-interface Box {
-  x0: number;
-  x1: number;
-  y0: number;
-  y1: number;
-}
-
-const hit = (a: Box, b: Box) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
 
 let pen: CanvasRenderingContext2D | null | undefined;
 
@@ -173,79 +165,24 @@ export function FieldChart({
       cx += n * 17; // two models that scored and cost the same sit side by side, not on top of each other
       const row = decision.rows[m.id];
       const isPick = decision.pick === m.id;
-      return { m, cx, cy, r: isPick ? 8 : 6.5, isPick, clears: !!row?.clears };
-    });
-    // The pick wears a ring, so it takes up more room than its dot.
-    const obstacles: Box[] = dots.map((d) =>
-      d.isPick
-        ? { x0: d.cx - 23, x1: d.cx + 23, y0: d.cy - 17, y1: d.cy + 17 }
-        : { x0: d.cx - d.r - 3, x1: d.cx + d.r + 3, y0: d.cy - d.r - 3, y1: d.cy + d.r + 3 },
-    );
-    // The bar is a line across the whole plot, and no label may be struck through by it.
-    const line = y(decision.bar);
-    const struck = (b: Box) => b.y0 < line + 4 && b.y1 > line - 4;
-    // Nor may one sit on the handle at the end of the line, on the count written over it, or on the caption under it.
-    const above = line > pad.t + 30;
-    const fixed: Box[] = [{ x0: pad.l + innerW - 2, x1: w, y0: line - (above ? 34 : 16), y1: line + (above ? 16 : 38) }];
-    if (bottom - line > 30)
-      fixed.push({ x0: pad.l + innerW - 22 - widthOf('NOT GOOD ENOUGH', 11, 600), x1: pad.l + innerW, y0: bottom - 24, y1: bottom - 2 });
-    const placed: Box[] = [];
-    const order = [...dots].sort((a, b) => Number(b.isPick) - Number(a.isPick) || a.cy - b.cy);
-    const labels = new Map<number, { x: number; y: number; anchor: 'start' | 'end' | 'middle'; sub: string }>();
-    for (const d of order) {
-      const m = d.m;
+      const clears = !!row?.clears;
       const metric =
         objective === 'cost' ? (m.cost === null ? '' : m.cost === 0 ? '$0' : money(m.cost)) : m.latency_ms === null ? '' : ms(m.latency_ms);
-      const sub = d.isPick ? `${m.passed} of ${m.attempted}${metric ? ` · ${metric}` : ''}` : '';
-      const tw = Math.max(widthOf(m.label, d.isPick ? 15 : 13, d.isPick ? 700 : d.clears ? 600 : 500), sub ? widthOf(sub, 12, 500) : 0) + 4;
-      const th = sub ? 34 : 18;
-      // A model that clears the bar is labelled on the clear side of it; one that does not, underneath.
-      const side = d.clears ? -1 : 1;
-      type Spot = { x: number; y: number; anchor: 'start' | 'end' | 'middle' };
-      // Beside the dot first, then around it on the right side of the bar, then the other side; then the same a step further out.
-      const ring = (out: number): Spot[] => {
-        const gap = d.r + (d.isPick ? 14 : 8) + out;
-        const lift = th / 2 + 7 + out;
-        const over = gap + th / 2;
-        const around = (s: number): Spot[] => [
-          { x: d.cx + gap, y: d.cy + s * lift, anchor: 'start' },
-          { x: d.cx - gap, y: d.cy + s * lift, anchor: 'end' },
-          { x: d.cx, y: d.cy + s * over, anchor: 'middle' },
-          { x: d.cx - d.r, y: d.cy + s * over, anchor: 'start' },
-          { x: d.cx + d.r, y: d.cy + s * over, anchor: 'end' },
-        ];
-        return [{ x: d.cx + gap, y: d.cy, anchor: 'start' }, { x: d.cx - gap, y: d.cy, anchor: 'end' }, ...around(side), ...around(-side)];
-      };
-      const spots = [...ring(0), ...ring(10)];
-      const boxOf = (s: Spot): Box => {
-        const x0 = s.anchor === 'start' ? s.x : s.anchor === 'end' ? s.x - tw : s.x - tw / 2;
-        return { x0, x1: x0 + tw, y0: s.y - th / 2, y1: s.y + th / 2 };
-      };
-      // Inside the plot and clear of every other mark. `left` is how far left a label may reach: not over the scale, unless nothing else fits.
-      const free = (b: Box, left: number) =>
-        b.x0 >= left &&
-        b.x1 <= w - 2 &&
-        b.y0 >= 20 &&
-        b.y1 <= bottom - 2 &&
-        !fixed.some((f) => hit(f, b)) &&
-        !placed.some((q) => hit(q, b)) &&
-        !obstacles.some((o, i) => dots[i] !== d && hit(o, b));
-      const boxes = spots.map(boxOf);
-      const pick = (ok: (b: Box) => boolean) => {
-        const i = boxes.findIndex(ok);
-        return i < 0 ? null : spots[i];
-      };
-      const spot =
-        pick((b) => free(b, pad.l - 2) && !struck(b)) ??
-        pick((b) => free(b, 2) && !struck(b)) ??
-        pick((b) => free(b, pad.l - 2)) ??
-        pick((b) => free(b, 2)) ??
-        spots[0];
-      placed.push(boxOf(spot));
-      labels.set(m.id, { ...spot, sub });
-    }
-    return dots.map((d) => ({ ...d, label: labels.get(d.m.id)! }));
-  }, [models, decision, objective, scale, floor, innerH, innerW, w, faces]);
+      const sub = isPick ? `${m.passed} of ${m.attempted}${metric ? ` · ${metric}` : ''}` : '';
+      const tw = Math.max(widthOf(m.label, isPick ? 15 : 13, isPick ? 700 : clears ? 600 : 500), sub ? widthOf(sub, 12, 500) : 0) + 4;
+      return { m, id: m.id, cx, cy, r: isPick ? 8 : 6.5, isPick, clears, sub, tw, th: sub ? 34 : 18 };
+    });
+    // No label may sit on the handle at the end of the line, on the count written over it, or on the caption under it.
+    const line = y(decision.bar);
+    const above = line > pad.t + 30;
+    const fixed: Box[] = [{ x0: pad.l + innerW - 2, x1: w, y0: line - (above ? 34 : 16), y1: line + (above ? 16 : 38) }];
+    // Nor on a number of the scale, when a label has to reach into that column.
+    for (const t of shareTicks) fixed.push({ x0: pad.l - 42, x1: pad.l - 7, y0: y(t) - 9, y1: y(t) + 8 });
+    if (bottom - line > 30)
+      fixed.push({ x0: pad.l + innerW - 22 - widthOf('NOT GOOD ENOUGH', 11, 600), x1: pad.l + innerW, y0: bottom - 24, y1: bottom - 2 });
+    const spots = placeLabels(dots, { w, left: pad.l, bottom, line, fixed });
+    return dots.map((d) => ({ ...d, label: { ...spots.get(d.id)!, sub: d.sub } }));
+  }, [models, decision, objective, scale, shareTicks, floor, innerH, innerW, w, faces]);
 
   const barY = y(bar);
   const fromPointer = (e: ReactPointerEvent) => {

@@ -14,7 +14,8 @@ Evalbench now answers one question: which model should do this job? It names the
 - Databases from before prices and bars are upgraded in place. Suites written for 1.x run unchanged.
 - The README is rewritten around the verdict with a new set of pictures, and the starter suite shows a bar and a field check.
 - Only finished work counts. A model is judged on the latest run it finished: a run that was cancelled or is still going does not move the verdict, so three right out of three so far is never mistaken for a result. An archived model leaves the verdict, and its runs stay on the runs page.
-- The README counts the tests that run now: 280 in CI (142 Python, 19 end-to-end, 87 web unit and 32 demo smoke).
+- The names on the verdict chart are placed, not just printed. Each one sits beside its own dot and moves only when it has to: never across the bar, over a dot, the scale or another name, next to a dot it does not belong to, or off the edge of the drawing. That holds at every bar position on a 360-pixel phone as well as a wide screen.
+- The README counts the tests that run now: 291 in CI (142 Python, 19 end-to-end, 98 web unit and 32 demo smoke).
 
 ## 1.3.0
 
