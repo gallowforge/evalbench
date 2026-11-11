@@ -5,6 +5,8 @@ id: starter                      # lowercase letters, digits, ".", "_" or "-"; m
 title: Starter suite
 description: Shows each check type on a small task.
 version: 1                       # free-form; bump it when you change tasks
+bar: 0.8                         # the share of graded tasks a model must pass to be good enough;
+                                 # the verdict names the cheapest model that clears it. Default 0.9
 system: You are a concise assistant.   # optional; a task's own `system` overrides it
 
 # Dimensions human raters score on a 1-5 scale. Leave this out to use the default five:
@@ -20,13 +22,13 @@ rubric:
 tasks:
   - id: capital
     title: Capital of Australia
-    category: knowledge          # anything you like; the scoreboard breaks results down by it
+    category: knowledge          # anything you like; the verdict page groups the tasks by it
     prompt: "What is the capital of Australia? End with `Answer: <city>`."
     reference: Canberra          # shown to raters on request; never sent to the model
     notes: Sydney is the common wrong answer.
     checks:
       # Compares the extracted answer after trimming, collapsing spaces and ignoring case.
-      # A numeric expect also matches the first number in the answer ("4.50 hours" = 4.5).
+      # A numeric expect also matches an answer that holds exactly one number ("4.50 hours" = 4.5).
       - type: exact
         extract: final_answer    # full | last_line | final_answer | code | json
         expect: Canberra         # or a list of accepted answers
@@ -57,6 +59,11 @@ tasks:
       - type: json               # reads the first JSON value; add `extract: full` to require JSON only
         required: [element, symbol]
         equals: { symbol: Fe }   # strings compare without case unless case_sensitive: true
+      # exact, contains, not_contains, regex and length can grade one field of a JSON answer
+      # instead of the whole text. A dotted path reaches inside: `customer.name`.
+      - type: exact
+        field: element
+        expect: iron
       - type: contains
         mode: any                # all (default) or any
         expect: ['"Iron"', '"iron"']

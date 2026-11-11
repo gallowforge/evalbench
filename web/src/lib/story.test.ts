@@ -51,6 +51,10 @@ describe('the headline', () => {
     ]);
   });
 
+  it('says a bar that is not a whole percent as it is', () => {
+    expect(read(battery, 0.925).text[1]).toBe('The bar is 92.5%: 19 of 20. Atlas 70B comes closest with 18, 1 short.');
+  });
+
   it('has something to say before the first run', () => {
     expect(headline([], decide([], 0.9, 'cost')).title).toBe('Nothing to decide yet.');
   });
@@ -116,6 +120,9 @@ describe('whether the answer holds', () => {
   it('says when the latest run alone would answer differently', () => {
     expect(holding([3, 2], 3, name)).toBe(
       "The answer has been Atlas 70B for the last run. Before that it was Orion Mini. Counting each model's latest run, today's answer is Orion Mini.",
+    );
+    expect(holding([3, 3], null, name)).toBe(
+      "The answer has been Orion Mini on all 2 runs. Counting each model's latest run, no model clears the bar today.",
     );
   });
 });

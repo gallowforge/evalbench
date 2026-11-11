@@ -1,6 +1,7 @@
 // Capture the running app on the demo workspace, in its dark theme and its light theme, for the Glass scenes.
-//   ORIGIN=http://127.0.0.1:8590 node capture.cjs            every screen, then the replayed run
+//   ORIGIN=http://127.0.0.1:8590 node capture.cjs            the replayed run, then every screen
 //   node capture.cjs replay                                  only the replayed run (needs no server)
+//   ORIGIN=http://127.0.0.1:8590 node capture.cjs screens    only the screens
 // Desktop screens are 1280 px wide at 2x, phone screens 390 px at 3x. Every capture is the real app: the
 // scenes only crop, place and light them. Named elements are measured into build/shots/boxes.json
 // ([x, y, w, h, background] in capture pixels) so a scene can lift one out of its screen by name.
@@ -11,61 +12,77 @@ const SHOTS = path.resolve(__dirname, '..', 'build', 'shots');
 const DEMO = path.resolve(__dirname, '..', '..', '..', 'web', 'dist');
 const ONLY = process.argv[2];
 
-// Skip to the "Ages in twelve years" pair, then (on desktop) fill a complete verdict the way a judge would.
+// The refund example runs through the pictures: a customer who forgot to cancel wants her money back, and
+// support may not promise it. Skip to a pair on it where one answer promises the refund and the other hands the
+// request to the billing team, then (on desktop) fill a complete verdict the way a judge would.
 async function rateReady(page, fill) {
-  for (let i = 0; i < 80; i++) {
+  let wrong = -1;
+  for (let i = 0; i < 260 && wrong < 0; i++) {
     const title = await page.locator('main section h2').first().textContent();
-    if (title && title.includes('Ages in twelve years')) break;
+    if (title && title.includes('Forgot to cancel')) {
+      const bad = (await page.locator('article').allInnerTexts()).map((t) => t.includes('you will be refunded'));
+      if (bad[0] !== bad[1]) { wrong = bad[0] ? 0 : 1; break; }
+    }
     await page.keyboard.press('s');
     await page.waitForTimeout(220);
   }
+  if (wrong < 0) throw new Error('no pair on the refund example with one promise in it');
   if (!fill) return;
-  const texts = await page.locator('article').allInnerTexts();
-  const wrong = texts[0].includes('Answer: 24') ? 0 : 1;
-  const scores = (i) => (i === wrong ? [4, 1, 3, 4] : [5, 5, 4, 5]);
+  const scores = (i) => (i === wrong ? [5, 1, 3, 4] : [5, 5, 4, 4]);     // accuracy, policy, helpfulness, tone
   for (const i of [0, 1]) {
     const rows = page.locator('article').nth(i).locator('footer > div').filter({ has: page.locator('button') });
     for (let r = 0; r < 4; r++) await rows.nth(r).getByRole('button').nth(scores(i)[r] - 1).click();
   }
-  await page.locator('article').nth(wrong).getByRole('button', { name: 'Factual or logic error' }).click();
+  await page.locator('article').nth(wrong).getByRole('button', { name: 'Ignores a constraint' }).click();
   await page.mouse.click(4, 400);
   await page.keyboard.press(wrong === 0 ? '7' : '1');
   const right = wrong === 0 ? 'B' : 'A', bad = wrong === 0 ? 'A' : 'B';
-  await page.getByPlaceholder(/Point at the parts/).fill(`${right} sets up 3t + 12 = 2(t + 12) and lands on 36. ${bad} slips in the algebra (t = 8) and answers 24, which fails the one thing that matters.`);
+  await page.getByPlaceholder(/Point at the parts/).fill(`${right} hands the request to the billing team and promises nothing. ${bad} promises the full 190.00 back within five working days, which support is not allowed to do.`);
   await page.mouse.click(4, 400);
   await page.waitForTimeout(800);
 }
-const openTask = async (p) => { await p.getByRole('button', { name: /Binary search that hangs/ }).click(); await p.waitForTimeout(400); };
+const openTask = async (p) => { await p.getByRole('button', { name: /Forgot to cancel, wants refund/ }).click(); await p.waitForTimeout(400); };
 const scrollTo = (sel, offset = 80) => async (p) => {
   await p.evaluate(({ sel, offset }) => { const el = document.querySelector(sel); window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - offset); }, { sel, offset });
   await p.waitForTimeout(400);
 };
 
-// [name, url, prepare, marks]; a mark is { css, text?, index? } (index -1 = the last match)
+// [name, url, prepare, marks]; a mark is { css, text?, value?, index?, and? }: the element matching `css` whose text
+// holds `text`, or that holds a field with the value `value` (index -1 = the last match), joined with the first
+// match of `and` when that is given.
+const SHEET = 'main section > div.min-w-0';       // the home page's sections, in order
 const DESK = [
-  ['overview', '/', null, { lead: { css: 'main section.card > div.grid', index: 0 }, head: { css: 'main h1' } }],
-  ['run', '/runs/6', null, { grid: { css: 'main section', index: 1 } }],
-  ['compare', '/runs/6/tasks/c04-summary', null, { broke: { css: 'main article [title="3 sentences (max 2)"]' } }],
-  ['rate', '/rate?run=6', (p) => rateReady(p, true), { verdict: { css: 'main section .grid-cols-7' }, cards: { css: 'main article', index: 0 } }],
-  ['scoreboard', '/scoreboard', null, { top: { css: 'main section table tbody tr', index: 0 }, history: { css: 'main section', index: 1 }, changes: { css: 'main section', index: 3 } }],
-  ['suite', '/suites/core-battery', openTask, { tests: { css: 'main .card textarea', index: -1 } }],
-  ['data', '/data', null, { pairs: { css: 'main .grid > div', text: 'Preference pairs', index: -1 } }],
+  ['verdict', '/', null, {
+    say: { css: 'main header h1', and: 'main header h1 + div' }, chart: { css: 'main header svg' },
+    pick: { css: 'main section div.grid.grid-cols-2.items-center', text: 'The pick' },
+    clears: { css: 'main section div.grid.grid-cols-2.items-center', index: 0, and: 'main section div.relative.h-0.border-t-2' },
+    models: { css: SHEET, index: 0 }, ship: { css: SHEET, index: 1 }, tasks: { css: SHEET, index: 2 }, judges: { css: SHEET, index: 3 }, holds: { css: SHEET, index: 4 },
+    since: { css: 'main section div.mt-10', text: 'Since the run before', index: -1 },
+  }],
+  ['run', '/runs/9', null, { models: { css: 'main section', index: 0 } }],
+  ['compare', '/runs/9/tasks/p01-forgot-to-cancel', null, { first: { css: 'main article', index: 0 } }],
+  ['rate', '/rate?run=9', (p) => rateReady(p, true), { verdict: { css: 'main section .grid-cols-7' }, cards: { css: 'main article', index: 0 }, yours: { css: 'main section.card', index: -1 } }],
+  ['suite', '/suites/support-triage', openTask, { rule: { css: 'main div.bg-panel-2.p-4', value: 'Does not promise a refund' }, checks: { css: 'main div.bg-panel-2.p-4', index: 0 } }],
 ];
 const PHONE = [
-  ['m-overview', '/', null],
-  ['m-rate', '/rate?run=6', async (p) => { await rateReady(p, false); await scrollTo('article', 76)(p); }],
-  ['m-scoreboard', '/scoreboard', scrollTo('main section', 76)],
-  ['m-run', '/runs/6', scrollTo('main section', 76)],
+  ['m-verdict', '/', null],
+  ['m-rate', '/rate?run=9', async (p) => { await rateReady(p, false); await scrollTo('article', 76)(p); }],
 ];
 
 async function marksOf(page, marks, k) {
   const out = {};
   for (const [key, m] of Object.entries(marks || {})) {
     out[key] = await page.evaluate(({ m, k }) => {
-      const els = [...document.querySelectorAll(m.css)].filter((el) => !m.text || el.textContent.includes(m.text));
+      const els = [...document.querySelectorAll(m.css)].filter((el) => !m.text || el.textContent.includes(m.text))
+        .filter((el) => !m.value || [...el.querySelectorAll('input, textarea')].some((f) => f.value === m.value));
       const el = els[m.index === -1 ? els.length - 1 : (m.index || 0)];
       if (!el) throw new Error('no mark ' + JSON.stringify(m));
-      const r = el.getBoundingClientRect();
+      let r = el.getBoundingClientRect();
+      if (m.and) {
+        const o = document.querySelector(m.and).getBoundingClientRect();
+        const left = Math.min(r.left, o.left), top = Math.min(r.top, o.top);
+        r = { left, top, width: Math.max(r.right, o.right) - left, height: Math.max(r.bottom, o.bottom) - top };
+      }
       let bg = 'rgba(0, 0, 0, 0)', e = el;
       while (e && /rgba\(\d+, \d+, \d+, 0\)|transparent/.test(bg)) { bg = getComputedStyle(e).backgroundColor; e = e.parentElement; }
       const hex = '#' + bg.match(/\d+/g).slice(0, 3).map((v) => (+v).toString(16).padStart(2, '0')).join('');
@@ -75,7 +92,7 @@ async function marksOf(page, marks, k) {
   return out;
 }
 
-// The hero's moving part: a new run of the core battery, start to finish, on the run page. The static demo
+// The hero's moving part: a new run of the job on the home page, start to finish, on the run page. The static demo
 // (web/dist, from `npm --prefix web run build:demo`) plays it: the same app, answering in the browser with the
 // answers recorded on the demo workspace. Its clock is stepped by hand, so every build photographs the same
 // moments: frame 0 is the queued run, the last frame the finished one, and each frame between is the first
@@ -135,7 +152,7 @@ async function replay(browser, scheme, { frames, share }) {
   fs.mkdirSync(SHOTS, { recursive: true });
   const browser = await chromium.launch();
   const { REPLAY } = await import(pathToFileURL(path.join(__dirname, 'layouts.js')).href);
-  for (const scheme of ['dark', 'light']) await replay(browser, scheme, REPLAY);
+  if (ONLY !== 'screens') for (const scheme of ['dark', 'light']) await replay(browser, scheme, REPLAY);
   if (ONLY === 'replay') return browser.close();
   const boxes = {};
   for (const scheme of ['dark', 'light']) {
@@ -149,7 +166,10 @@ async function replay(browser, scheme, { frames, share }) {
       if (prepare) await prepare(d);
       await d.waitForTimeout(700);
       const h = await d.evaluate(() => document.documentElement.scrollHeight);
-      if (h > 860) { await d.setViewportSize({ width: 1280, height: Math.min(h, 4000) }); await d.waitForTimeout(500); }
+      if (h > 860) { await d.setViewportSize({ width: 1280, height: Math.min(h, 4600) }); await d.waitForTimeout(500); }
+      // a page taller than that keeps the scroll its own controls left it at; the marks are read from the top
+      await d.evaluate(() => window.scrollTo(0, 0));
+      await d.waitForTimeout(300);
       boxes[`${name}-${scheme}`] = await marksOf(d, marks, 2);
       await d.screenshot({ path: path.join(SHOTS, `${name}-${scheme}.png`) });
       console.log(`${name}-${scheme}`);

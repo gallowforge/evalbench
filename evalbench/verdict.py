@@ -120,6 +120,11 @@ def _why(row: dict) -> str:
 
 
 def _candidate(rows: list[dict], unscored: frozenset[str], prices: dict) -> dict | None:
+    # A model counts in a run once it has answered everything it was given. A run that was
+    # cancelled or is still going leaves answers waiting, and three right out of three so far
+    # is not evidence: the model keeps the last run it finished.
+    if any(r["status"] in ("pending", "running") for r in rows):
+        return None
     s = summarize(rows, unscored)
     if not s["attempted"]:
         return None
@@ -181,6 +186,8 @@ def verdict(db: Database, suite_id: str) -> dict | None:
             s = json.loads(snap["snapshot"])
             info[snap["model_id"]] = {k: s.get(k) for k in ("label", "color", "provider", "model", "base_url")}
     for m in db.all("SELECT id, label, color, price_in, price_out, archived FROM models"):
+        if m["archived"]:  # an archived model is out of the running; its runs stay on the runs page
+            info.pop(m["id"], None)
         if m["id"] in info:  # today's name, colour and prices; what was run stays as it was
             info[m["id"]].update(
                 label=m["label"], color=m["color"] or info[m["id"]]["color"],
@@ -255,13 +262,23 @@ def money(x: float) -> str:
         return "$0"
     if x < 0.995:
         return f"${x:.2f}" if x >= 0.095 else f"${x:.3f}"
-    return f"${x:,.2f}" if x < 100 else f"${x:,.0f}"
+    return f"${x:,.2f}" if x < 99.995 else f"${x:,.0f}"
+
+
+def times(ratio: float) -> str:
+    """How many times the price: 22x, 3.4x, 1.2x."""
+    return f"{ratio:.0f}x" if ratio >= 9.95 else f"{ratio:.1f}".removesuffix(".0") + "x"
+
+
+def share(bar: float) -> str:
+    """The bar as a percentage, with a decimal only when it has one: 90%, 87.5%."""
+    return f"{round(bar * 100, 1):g}%"
 
 
 def explain(models: list[dict], decision: dict) -> list[str]:
     """The verdict as a few plain lines, for the terminal."""
     by_id = {m["id"]: m for m in models}
-    bar = f"{decision['bar']:.0%}"
+    bar = share(decision["bar"])
     if not by_id:
         return ["No graded answers yet, so there is nothing to decide."]
     best = by_id[decision["best"]]
@@ -282,11 +299,11 @@ def explain(models: list[dict], decision: dict) -> list[str]:
         how = "no API bill"
     else:
         how = f"{money(pick['cost'])} per 1,000 answers"
-    lines = [f"Use {pick['label']}: {got} at a {bar} bar, {how}."]
+    lines = [f"Use {pick['label']}: {got} at the {bar} bar, {how}."]
     if best["id"] != pick["id"] and best["passed"] / best["attempted"] > pick["passed"] / pick["attempted"]:
         extra = f"{best['label']} gets {best['passed']} of {best['attempted']}"
         if not speed and pick["cost"] and best["cost"]:
-            extra += f", at {best['cost'] / pick['cost']:.0f}x the price"
+            extra += f", at {times(best['cost'] / pick['cost'])} the price"
         elif not speed and best["cost"]:
             extra += f", for {money(best['cost'])} per 1,000 answers"
         lines.append(extra + ".")

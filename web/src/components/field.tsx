@@ -2,7 +2,7 @@ import { type PointerEvent as ReactPointerEvent, useEffect, useId, useMemo, useR
 import type { VerdictModel } from '../api';
 import { ms } from '../lib/format';
 import { tone } from '../lib/theme';
-import { type Decision, money, need, type Objective } from '../lib/verdict';
+import { type Decision, money, need, type Objective, share } from '../lib/verdict';
 
 /** The lowest bar the page lets you set. Below half right, "good enough" stops meaning anything. */
 export const MIN_BAR = 0.5;
@@ -69,12 +69,15 @@ export function FieldChart({
   decision,
   objective,
   onBar,
+  minBar = MIN_BAR,
   height,
 }: {
   models: VerdictModel[];
   decision: Decision;
   objective: Objective;
   onBar: (bar: number) => void;
+  /** The lowest bar the line can be dragged to: 50%, or the job's own bar when that is lower. */
+  minBar?: number;
   height?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -112,9 +115,9 @@ export function FieldChart({
 
   // The share axis starts a little under the weakest model, and never above 40%, so the bar always has room to move.
   const floor = useMemo(() => {
-    const lo = Math.min(MIN_BAR, ...models.map((m) => m.pass_rate));
+    const lo = Math.min(minBar, ...models.map((m) => m.pass_rate));
     return Math.max(0, Math.floor((lo - 0.05) * 10 + 1e-9) / 10);
-  }, [models]);
+  }, [models, minBar]);
   const y = (v: number) => pad.t + (1 - (Math.max(floor, v) - floor) / (1 - floor)) * innerH;
   const shareTicks = useMemo(() => {
     const step = 1 - floor <= 0.7 ? 0.1 : 0.2;
@@ -249,7 +252,7 @@ export function FieldChart({
     const rect = svg.current?.getBoundingClientRect();
     if (!rect) return;
     const v = floor + (1 - (e.clientY - rect.top - pad.t) / innerH) * (1 - floor);
-    onBar(Math.min(1, Math.max(MIN_BAR, Math.round(v * 100) / 100)));
+    onBar(Math.min(1, Math.max(minBar, Math.round(v * 100) / 100)));
   };
   const grab = {
     onPointerDown: (e: ReactPointerEvent<SVGElement>) => {
@@ -430,7 +433,7 @@ export function FieldChart({
           <g style={{ cursor: 'ns-resize', touchAction: 'none' }} {...grab}>
             <rect x={pad.l + innerW + 6} y={barY - 13} width={pad.r - 8} height={26} rx={7} className="fill-ink" />
             <text x={pad.l + innerW + 6 + (pad.r - 8) / 2} y={barY + 4.5} textAnchor="middle" className="num fill-bg text-[13px] font-bold">
-              {Math.round(bar * 100)}%
+              {share(bar)}
             </text>
             <rect x={pad.l + innerW - 6} y={barY - 22} width={pad.r + 8} height={44} fill="transparent" />
           </g>

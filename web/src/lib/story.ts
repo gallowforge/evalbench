@@ -5,7 +5,7 @@
  */
 import type { Verdict, VerdictModel } from '../api';
 import { ms } from './format';
-import { type Decision, money, type Objective, times } from './verdict';
+import { type Decision, money, type Objective, share, times } from './verdict';
 
 /** A run of text, or a run to set in bold. */
 export type Part = string | { b: string };
@@ -13,8 +13,6 @@ export type Part = string | { b: string };
 export const plain = (parts: Part[]): string => parts.map((p) => (typeof p === 'string' ? p : p.b)).join('');
 
 export type Measured = Pick<VerdictModel, 'id' | 'label' | 'passed' | 'attempted' | 'pass_rate' | 'cost' | 'latency_ms'>;
-
-const share = (bar: number) => `${Math.round(bar * 100)}%`;
 
 /** "all 24", or "22 of 24". */
 const count = (m: Measured) => (m.passed === m.attempted && m.attempted > 1 ? `all ${m.attempted}` : `${m.passed} of ${m.attempted}`);
@@ -167,6 +165,10 @@ export function holding(picks: (number | null)[], current: number | null, name: 
   } else {
     text = `The answer has been ${name(last)} for the last ${runs(streak)}. ${before === null ? 'Before that no model cleared the bar.' : `Before that it was ${name(before as number)}.`}`;
   }
-  if (current !== last && current !== null) text += ` Counting each model's latest run, today's answer is ${name(current)}.`;
+  if (current !== last)
+    text +=
+      current === null
+        ? " Counting each model's latest run, no model clears the bar today."
+        : ` Counting each model's latest run, today's answer is ${name(current)}.`;
   return text;
 }

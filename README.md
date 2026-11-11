@@ -1,43 +1,69 @@
-<a href="https://gallowforge.github.io/evalbench/#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/hero-dark-phone.webp 2.835x"><source srcset="docs/readme/hero-dark.webp 2x"><img src="docs/readme/hero-dark.webp" width="840" alt="Evalbench. Evaluate language models on your own tasks, with sandboxed checks and blind judging. The overview, headlined Nimbus Pro leads the core battery, floats at the centre as a glass window, with the leading model&#39;s row lifted out. Around it: the judging screen on a phone, two answers side by side, the suite editor, the scoreboard and the result matrix. The image is a loop: the centre window turns to a new run of the core battery, the pass rates of the four models fill in as the answers arrive, and the overview comes back."></picture></a><a href="https://gallowforge.github.io/evalbench/#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/hero-light-phone.webp 2.835x"><source srcset="docs/readme/hero-light.webp 2x"><img src="docs/readme/hero-light.webp" width="840" alt="Evalbench. Evaluate language models on your own tasks, with sandboxed checks and blind judging. The overview, headlined Nimbus Pro leads the core battery, floats at the centre as a glass window, with the leading model&#39;s row lifted out. Around it: the judging screen on a phone, two answers side by side, the suite editor, the scoreboard and the result matrix. The image is a loop: the centre window turns to a new run of the core battery, the pass rates of the four models fill in as the answers arrive, and the overview comes back."></picture></a>
+<a href="https://gallowforge.github.io/evalbench/#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/hero-dark-phone.webp 2.835x"><source srcset="docs/readme/hero-dark.webp 2x"><img src="docs/readme/hero-dark.webp" width="840" alt="Evalbench. Which model should do your job? The cheapest one that clears your bar, with the proof. The verdict page floats at the centre as a glass window, with its headline lifted out: Use Orion Mini. It gets 22 of 24 right for $0.12 per 1,000 answers; Nimbus Pro gets all 24, at 26× the price. Around it: blind judging on a phone, two answers side by side, the suite editor, the judging screen and the result grid. The image is a loop: the centre window turns to a new run of the support triage job, the pass rates of the five models fill in as the answers arrive, and the verdict comes back."></picture></a><a href="https://gallowforge.github.io/evalbench/#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/hero-light-phone.webp 2.835x"><source srcset="docs/readme/hero-light.webp 2x"><img src="docs/readme/hero-light.webp" width="840" alt="Evalbench. Which model should do your job? The cheapest one that clears your bar, with the proof. The verdict page floats at the centre as a glass window, with its headline lifted out: Use Orion Mini. It gets 22 of 24 right for $0.12 per 1,000 answers; Nimbus Pro gets all 24, at 26× the price. Around it: blind judging on a phone, two answers side by side, the suite editor, the judging screen and the result grid. The image is a loop: the centre window turns to a new run of the support triage job, the pass rates of the five models fill in as the answers arrive, and the verdict comes back."></picture></a>
 
-Picking a model by vibes is easy and wrong: a few chats feel convincing, a leaderboard measured someone else's tasks, and the next update quietly breaks the one prompt your product depends on. **Evalbench is a self-hosted workbench for evaluating language models on your own tasks.** Write tasks and rubrics in YAML or in the browser, run them against local models in LM Studio or Ollama and API models from Anthropic and OpenAI, grade every answer with automatic checks, rate pairs of answers blind, and watch both scores move from run to run. It runs from one compose file, keeps everything in one SQLite file, and never stores an API key.
+A leaderboard tells you which model is best at someone else's tasks. A few chats tell you which one sounds best. Neither tells you which model to put behind the job you actually have, or what a cheaper one would cost you in mistakes. **Evalbench answers that for your own job.** Write down what a good answer is, run the models you are considering, and it names the one to use: the cheapest model that clears your bar, with every number behind the pick on the page. When nothing clears the bar, it says that instead. It runs local models in LM Studio or Ollama and API models from Anthropic and OpenAI, starts from one compose file, keeps everything in one SQLite file, and never stores an API key.
 
 <p align="center"><a href="https://gallowforge.github.io/evalbench/"><b>Try the demo</b></a> &nbsp;·&nbsp; <a href="#quickstart">Quickstart</a> &nbsp;·&nbsp; <a href="#how-it-works">How it works</a> &nbsp;·&nbsp; <a href="https://github.com/gallowforge/evalbench/releases">Releases</a></p>
 
-<a href="evalbench/data/suites/core-battery.yaml#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/numbers-dark-phone.webp 2.835x"><source srcset="docs/readme/numbers-dark.webp 2x"><img src="docs/readme/numbers-dark.webp" width="840" alt="20 tasks in the core battery, 7 kinds of automatic check, 171 tests in CI, and 0 API keys stored, because keys are read from the environment." loading="lazy"></picture></a><a href="evalbench/data/suites/core-battery.yaml#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/numbers-light-phone.webp 2.835x"><source srcset="docs/readme/numbers-light.webp 2x"><img src="docs/readme/numbers-light.webp" width="840" alt="20 tasks in the core battery, 7 kinds of automatic check, 171 tests in CI, and 0 API keys stored, because keys are read from the environment." loading="lazy"></picture></a>
+<a href="evalbench/data/suites/support-triage.yaml#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/numbers-dark-phone.webp 2.835x"><source srcset="docs/readme/numbers-dark.webp 2x"><img src="docs/readme/numbers-dark.webp" width="840" alt="2,924 checks run in the demo workspace, 7 kinds of automatic check, 274 tests in CI, and 0 API keys stored, because keys are read from the environment." loading="lazy"></picture></a><a href="evalbench/data/suites/support-triage.yaml#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/numbers-light-phone.webp 2.835x"><source srcset="docs/readme/numbers-light.webp 2x"><img src="docs/readme/numbers-light.webp" width="840" alt="2,924 checks run in the demo workspace, 7 kinds of automatic check, 274 tests in CI, and 0 API keys stored, because keys are read from the environment." loading="lazy"></picture></a>
 
-<a href="web/src/pages/Overview.tsx#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/overview-dark-phone.webp 2.835x"><source srcset="docs/readme/overview-dark.webp 2x"><img src="docs/readme/overview-dark.webp" width="840" alt="Know what happened before you scroll. The overview in glass, headlined Nimbus Pro leads the core battery, with the leading row lifted out: 90% of checks passed, a judge rating of 1142 and a 71% win rate in blind judging. Beside it, the same overview on a phone. 90% of checks passed by the leader, a 71% win rate in blind judging, 3 tasks Vega 8B dropped." loading="lazy"></picture></a><a href="web/src/pages/Overview.tsx#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/overview-light-phone.webp 2.835x"><source srcset="docs/readme/overview-light.webp 2x"><img src="docs/readme/overview-light.webp" width="840" alt="Know what happened before you scroll. The overview in glass, headlined Nimbus Pro leads the core battery, with the leading row lifted out: 90% of checks passed, a judge rating of 1142 and a 71% win rate in blind judging. Beside it, the same overview on a phone. 90% of checks passed by the leader, a 71% win rate in blind judging, 3 tasks Vega 8B dropped." loading="lazy"></picture></a>
+<a href="evalbench/verdict.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/verdict-dark-phone.webp 2.835x"><source srcset="docs/readme/verdict-dark.webp 2x"><img src="docs/readme/verdict-dark.webp" width="840" alt="Set the bar, get the answer. The verdict page for the support triage job says Use Orion Mini, and the chart beside it is lifted out: every model is a dot placed by its cost and the share of answers it got right, and a line across the chart marks the 90% bar. 22 of 24 right for the pick, $0.12 per 1,000 answers, 26× the price for the most accurate model." loading="lazy"></picture></a><a href="evalbench/verdict.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/verdict-light-phone.webp 2.835x"><source srcset="docs/readme/verdict-light.webp 2x"><img src="docs/readme/verdict-light.webp" width="840" alt="Set the bar, get the answer. The verdict page for the support triage job says Use Orion Mini, and the chart beside it is lifted out: every model is a dot placed by its cost and the share of answers it got right, and a line across the chart marks the 90% bar. 22 of 24 right for the pick, $0.12 per 1,000 answers, 26× the price for the most accurate model." loading="lazy"></picture></a>
 
-Under the headline sits a scorecard of every model: pass rate, judge rating, the last six runs and median latency.
+The bar is the share of examples a model must get right. Of the models that clear it, the pick is the cheapest, or the fastest if you ask for that. In the demo's support triage job the bar is 90%: Orion Mini gets 22 of 24 right for $0.12 per 1,000 answers, and Nimbus Pro gets all 24 at 26× the price. Drag the bar to 80% and the answer becomes Atlas 70B, a local model with no API bill. Drag it to 95% and only Nimbus Pro is left. On the core battery at 95% nothing clears it, and the page says so: **No model is good enough yet**, then the closest model and how far short it is.
 
-<a href="examples/suite-template.yaml#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/write-dark-phone.webp 2.835x"><source srcset="docs/readme/write-dark.webp 2x"><img src="docs/readme/write-dark.webp" width="840" alt="Write the test before you trust the model. The suite editor with the Binary search that hangs task open, and its Python tests check lifted out of the form: five assertions that run against the answer&#39;s code in the sandbox. 7 check types, 5 parts of an answer a check can read, 0 routes out of the code sandbox." loading="lazy"></picture></a><a href="examples/suite-template.yaml#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/write-light-phone.webp 2.835x"><source srcset="docs/readme/write-light.webp 2x"><img src="docs/readme/write-light.webp" width="840" alt="Write the test before you trust the model. The suite editor with the Binary search that hangs task open, and its Python tests check lifted out of the form: five assertions that run against the answer&#39;s code in the sandbox. 7 check types, 5 parts of an answer a check can read, 0 routes out of the code sandbox." loading="lazy"></picture></a>
+The rule is small on purpose. Every number it uses is on the page, so the pick can be checked by hand, and cost is worked out from the tokens the run really used at the prices you set.
+
+<a href="web/src/pages/Verdict.tsx#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/proof-dark-phone.webp 2.835x"><source srcset="docs/readme/proof-dark.webp 2x"><img src="docs/readme/proof-dark.webp" width="840" alt="See why it is not the others. The sheet of every model, with the two that clear the bar lifted out: Nimbus Pro, 24 of 24, $3.03, clears the bar at 26× the price of the pick; Orion Mini, 22 of 24, $0.12, the pick. Below the bar line, Lyra Flash and Vega 8B with the reason each lost, and the two examples the pick gets wrong, by name. 5 models on one sheet, 2 misses of the pick by name, and 74 to 98%, where its true pass rate lies." loading="lazy"></picture></a><a href="web/src/pages/Verdict.tsx#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/proof-light-phone.webp 2.835x"><source srcset="docs/readme/proof-light.webp 2x"><img src="docs/readme/proof-light.webp" width="840" alt="See why it is not the others. The sheet of every model, with the two that clear the bar lifted out: Nimbus Pro, 24 of 24, $3.03, clears the bar at 26× the price of the pick; Orion Mini, 22 of 24, $0.12, the pick. Below the bar line, Lyra Flash and Vega 8B with the reason each lost, and the two examples the pick gets wrong, by name. 5 models on one sheet, 2 misses of the pick by name, and 74 to 98%, where its true pass rate lies." loading="lazy"></picture></a>
+
+- **Every model, one line each.** How many it got right, what 1,000 answers cost, its median latency, and where it stands: the pick, clears the bar, or how many short. A model that another one beats says so in words: `Atlas 70B is cheaper and more accurate`.
+- **Before you ship it.** The pick's margin (`It needs 22 of 24 and gets exactly 22`), the range its true pass rate could lie in on a sample this size (74% to 98% on 24 examples), what a million answers would cost ($116, against $3,032 for the most accurate model), and the examples it gets wrong, by name, with the check each one fails.
+- **Task by task.** One square per example and model, red for a miss. Each square opens that example with every model's answer in columns.
+
+<a href="examples/suite-template.yaml#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/write-dark-phone.webp 2.835x"><source srcset="docs/readme/write-dark.webp 2x"><img src="docs/readme/write-dark.webp" width="840" alt="Write down what a good answer is. The suite editor for the support triage job, with one check lifted out: Avoids, Does not promise a refund, graded on the reply field of a JSON answer, with the phrases it must never say. 7 kinds of check, up to Python tests; 152 checks in the triage job; 0 routes out of the code sandbox." loading="lazy"></picture></a><a href="examples/suite-template.yaml#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/write-light-phone.webp 2.835x"><source srcset="docs/readme/write-light.webp 2x"><img src="docs/readme/write-light.webp" width="840" alt="Write down what a good answer is. The suite editor for the support triage job, with one check lifted out: Avoids, Does not promise a refund, graded on the reply field of a JSON answer, with the phrases it must never say. 7 kinds of check, up to Python tests; 152 checks in the triage job; 0 routes out of the code sandbox." loading="lazy"></picture></a>
 
 - **Seven check types.** Exact answer (numbers compare by value, so `4.50 hours` matches `4.5`), contains, avoids, regular expression, length in words, characters, lines or sentences, JSON with required keys and values, and Python tests that run the answer's code in the sandbox.
-- **Grade the part that matters.** A check can read the whole answer, the last line, an `Answer:` line, the first code block or the first JSON value. Reasoning blocks that some local models print (`<think>…</think>`) are removed first.
-- **Rubrics for people.** Each suite defines the dimensions raters score from 1 to 5, such as instruction following, correctness and concision. A task can override them.
+- **Grade the part that matters.** A check can read the whole answer, the last line, an `Answer:` line, the first code block or the first JSON value. A text check can also grade one field of a JSON answer, so `category` must equal `billing` while `reply` stays under 60 words and never promises a refund. Reasoning blocks that some local models print (`<think>…</think>`) are removed first.
+- **The bar lives with the job.** A suite can set its own `bar`, so the triage job asks for 90% wherever it is run. Without one, the bar is 90%.
+- **Rubrics for people.** Each suite defines the dimensions judges score from 1 to 5, such as instruction following, correctness and concision. A task can override them.
 
-<a href="evalbench/ratings.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/judge-dark-phone.webp 2.835x"><source srcset="docs/readme/judge-dark.webp 2x"><img src="docs/readme/judge-dark.webp" width="840" alt="Judge blind, the way training teams do. Two anonymous answers, A and B, scored on the rubric with a factual error ticked, and the seven-stop verdict scale lifted out with the judge&#39;s red loop around B, clearly. 7 stops from A, clearly to B, clearly, 0 model names on screen, 1 to 5 on every rubric line." loading="lazy"></picture></a><a href="evalbench/ratings.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/judge-light-phone.webp 2.835x"><source srcset="docs/readme/judge-light.webp 2x"><img src="docs/readme/judge-light.webp" width="840" alt="Judge blind, the way training teams do. Two anonymous answers, A and B, scored on the rubric with a factual error ticked, and the seven-stop verdict scale lifted out with the judge&#39;s red loop around B, clearly. 7 stops from A, clearly to B, clearly, 0 model names on screen, 1 to 5 on every rubric line." loading="lazy"></picture></a>
+<a href="evalbench/ratings.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/judge-dark-phone.webp 2.835x"><source srcset="docs/readme/judge-dark.webp 2x"><img src="docs/readme/judge-dark.webp" width="840" alt="Judge what checks can&#39;t count. Two anonymous answers to a support message, A and B, each shown in its fields and scored on the rubric, with one ticked for ignoring a constraint, and the seven-stop verdict scale lifted out with the judge&#39;s red loop around B, clearly. 7 stops on the preference scale, 0 model names on screen, 239 blind verdicts in the demo." loading="lazy"></picture></a><a href="evalbench/ratings.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/judge-light-phone.webp 2.835x"><source srcset="docs/readme/judge-light.webp 2x"><img src="docs/readme/judge-light.webp" width="840" alt="Judge what checks can&#39;t count. Two anonymous answers to a support message, A and B, each shown in its fields and scored on the rubric, with one ticked for ignoring a constraint, and the seven-stop verdict scale lifted out with the judge&#39;s red loop around B, clearly. 7 stops on the preference scale, 0 model names on screen, 239 blind verdicts in the demo." loading="lazy"></picture></a>
+
+Checks grade what can be counted. Tone and judgement take a person, so answers are also compared blind, two at a time.
 
 - **The questions rating platforms ask.** Score each answer from 1 to 5 on every rubric dimension, tick issues such as a factual error or an ignored constraint, choose a side on a seven-point scale, and write a justification. Confidence and time spent are recorded too.
 - **A queue that stays balanced.** The next pair is always the least-rated one, so every pair of models gets coverage. Each rater has their own queue, and skipped pairs come back last. Keys `1` to `7` choose, `S` skips, `Ctrl`+`Enter` submits.
 - **The labels come off at the end.** When your queue is done, the cards turn over: every pair you judged shows who wrote what. Never before, so it can never sway a verdict.
 
-<a href="evalbench/stats.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/board-dark-phone.webp 2.835x"><source srcset="docs/readme/board-dark.webp 2x"><img src="docs/readme/board-dark.webp" width="840" alt="One leaderboard for checks and people. The scoreboard with Nimbus Pro&#39;s row lifted out: 90% of checks passed, a judge rating of 1142 with its 95% interval, a 71% win rate over 48 blind pairs, 1.1 s median. 95% interval on every rating, 200 bootstrap resamples, 88 blind verdicts in the demo." loading="lazy"></picture></a><a href="evalbench/stats.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/board-light-phone.webp 2.835x"><source srcset="docs/readme/board-light.webp 2x"><img src="docs/readme/board-light.webp" width="840" alt="One leaderboard for checks and people. The scoreboard with Nimbus Pro&#39;s row lifted out: 90% of checks passed, a judge rating of 1142 with its 95% interval, a 71% win rate over 48 blind pairs, 1.1 s median. 95% interval on every rating, 200 bootstrap resamples, 88 blind verdicts in the demo." loading="lazy"></picture></a>
+Preferences are fitted with a Bradley-Terry model and shown on an Elo-like scale with a 95% bootstrap interval, so a lead inside the noise looks like one. The result sits under the verdict in plain words: `Judges clearly prefer Nimbus Pro to Orion Mini (1,302 against 1,029)`, or, when the ranges overlap, that the ratings cannot separate the two yet.
 
-Preferences are fitted with a Bradley-Terry model and shown on an Elo-like scale with a 95% bootstrap interval, so a lead inside the noise looks like one. Pass rates by category, head-to-head win rates, latency and output tokens sit beside it.
+<a href="evalbench/stats.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/holds-dark-phone.webp 2.835x"><source srcset="docs/readme/holds-dark.webp 2x"><img src="docs/readme/holds-dark.webp" width="840" alt="Know when the answer changes. The pass rate of each model over the last three runs of the triage job, with the 90% bar dotted across and the answer on each run circled, above the list of what changed since the run before: Nimbus Pro now passes Two problems, one blocking; Orion Mini now fails it; Vega 8B now fails Praise for the dashboard; Lyra Flash now passes Polite, but locked out. 3 runs in a row with the same pick, 4 examples that changed since last time, 1 flag to fail CI with no pick." loading="lazy"></picture></a><a href="evalbench/stats.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/holds-light-phone.webp 2.835x"><source srcset="docs/readme/holds-light.webp 2x"><img src="docs/readme/holds-light.webp" width="840" alt="Know when the answer changes. The pass rate of each model over the last three runs of the triage job, with the 90% bar dotted across and the answer on each run circled, above the list of what changed since the run before: Nimbus Pro now passes Two problems, one blocking; Orion Mini now fails it; Vega 8B now fails Praise for the dashboard; Lyra Flash now passes Polite, but locked out. 3 runs in a row with the same pick, 4 examples that changed since last time, 1 flag to fail CI with no pick." loading="lazy"></picture></a>
 
-<a href="evalbench/stats.py#gh-dark-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/changes-dark-phone.webp 2.835x"><source srcset="docs/readme/changes-dark.webp 2x"><img src="docs/readme/changes-dark.webp" width="840" alt="Catch a regression the day it lands. Pass rate over time for four models across six runs, with Vega 8B dropping at run 6, and in front of it what changed from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B. 3 tasks Vega 8B now fails, 6 runs on one chart, 1 flag to fail CI below a pass rate." loading="lazy"></picture></a><a href="evalbench/stats.py#gh-light-mode-only"><picture><source media="(max-width: 767px)" srcset="docs/readme/changes-light-phone.webp 2.835x"><source srcset="docs/readme/changes-light.webp 2x"><img src="docs/readme/changes-light.webp" width="840" alt="Catch a regression the day it lands. Pass rate over time for four models across six runs, with Vega 8B dropping at run 6, and in front of it what changed from run 5 to run 6: one task now fails for Atlas 70B and three for Vega 8B. 3 tasks Vega 8B now fails, 6 runs on one chart, 1 flag to fail CI below a pass rate." loading="lazy"></picture></a>
+The same rule is applied to every past run at the bar you set, so the page can say `The answer has been Orion Mini on all 3 runs`, or when it changed and what it was before. Under it sits every example a model gained or lost since the run before. If a task was edited between two runs, the change is marked as an edit, not blamed on the model.
 
-If a task was edited between two runs, the change is marked as an edit, not blamed on the model. The same check runs in CI: `evalbench run` sends a suite to one or more models headless and exits non-zero below a pass rate, so a prompt change or a new quantisation can fail a pull request.
+The same verdict comes from a terminal or a CI job. `evalbench run` sends a suite to one or more models headless and prints the verdict. With `--require-pick` it exits non-zero when no model clears the bar, so a prompt change, a new quantisation or a price rise can fail a pull request.
 
 ```bash
-evalbench run suites/support.yaml \
+evalbench run triage.yaml \
   --model anthropic:claude-haiku-5-5 \
   --model openai-compatible:qwen3-8b@http://localhost:1234/v1 \
-  --fail-under 0.85 --ephemeral --allow-local-code
+  --price claude-haiku-5-5=1/5 --price qwen3-8b=0/0 \
+  --bar 0.9 --require-pick --ephemeral
 ```
 
-`--allow-local-code` lets Python checks run on the CI machine, which is fine for a throwaway runner; without it, and without a sandbox service, they are recorded as errors.
+It prints one line per model and then the verdict. For the demo's triage job that reads:
+
+```text
+Nimbus Pro                        24/24  passed  100.0%  errors 0
+Orion Mini                        22/24  passed   91.7%  errors 0
+Atlas 70B                         21/24  passed   87.5%  errors 0
+Lyra Flash                        20/24  passed   83.3%  errors 0
+Vega 8B                           15/24  passed   62.5%  errors 0
+
+Use Orion Mini: 22 of 24 right at the 90% bar, $0.12 per 1,000 answers.
+Nimbus Pro gets 24 of 24, at 26x the price.
+It clears the bar with nothing to spare: one more miss and it would not.
+```
+
+`--price` takes dollars per million input and output tokens. `--fastest` picks on latency instead of cost, `--json` prints the run and the verdict for a script, and `--fail-under 0.85` still fails the build when any model's pass rate drops below a floor. `--allow-local-code` lets Python checks run on the CI machine, which is fine for a throwaway runner; without it, and without a sandbox service, they are recorded as errors.
 
 ## Runs you can trust
 
@@ -47,9 +73,19 @@ evalbench run suites/support.yaml \
 - **Every answer side by side.** Click any cell of a run and every model's answer to that task opens in columns, with each check's verdict and its reason: `3 sentences (max 2)`, `expected "36", got "24"`.
 - **Your data, in one click.** Ratings as CSV or JSONL, preference pairs as `{prompt, chosen, rejected}` JSONL from every decisive rating, ready for DPO-style training, and run results with every verdict, score, latency and token count.
 
-## The core battery
+## Two jobs in the box
 
-Evalbench ships with a 20-task suite that separates careful models from fluent ones. Every task has one right answer or a hard constraint, and every one is graded automatically.
+Evalbench ships with two suites, and the demo workspace runs both.
+
+**Support ticket triage** is the kind of job a product team has. Twenty-four customer messages arrive at an invented invoicing tool; the model labels each one with a category and an urgency and writes a short reply, as one JSON object. 152 checks verify both labels, the 60-word limit, and that the reply never promises money back or asks for a password or card details. Its bar is 90%.
+
+| Group | Tasks | What it tests |
+| --- | --- | --- |
+| Routine | 10 | Clear requests: a double charge, blank PDFs, a new sign-in email, a wish for dark mode |
+| Policy | 8 | Messages that invite a mistake: a refund demand, a password offered, card details in the message, a credit someone says was promised |
+| Judgement | 6 | A polite message that is urgent, a furious one that is not, two problems where one is blocking, and a message that carries an instruction for the model |
+
+**The core battery** is a 20-task suite that separates careful models from fluent ones. Every task has one right answer or a hard constraint, and every one is graded automatically.
 
 | Category | Tasks | What it tests | Graded by |
 | --- | --- | --- | --- |
@@ -63,11 +99,12 @@ Evalbench ships with a 20-task suite that separates careful models from fluent o
 
 |                    | Evalbench                                  | A notebook and a spreadsheet | Hosted eval platforms     |
 | ------------------ | ------------------------------------------ | ---------------------------- | ------------------------- |
+| The answer         | One model named, at your bar and prices    | A table you read yourself    | Scores and dashboards     |
 | Where it runs      | Your machine, one compose file             | Your machine                 | Their cloud               |
 | Local models       | LM Studio, Ollama, any compatible server   | If you write the client      | Often not                 |
 | Human rating       | Blind, shuffled, rubric and justification  | Rater sees the model         | Usually, at a price       |
 | Code checks        | Sandboxed container, no network            | Runs in your shell           | Varies                    |
-| History            | Every run frozen, regressions per model    | Overwritten cells            | Yes                       |
+| History            | Every run frozen, the pick tracked by run  | Overwritten cells            | Yes                       |
 | Your data          | One SQLite file, open exports              | Scattered files              | On their servers          |
 | API keys           | Environment only, never stored             | Pasted into code             | Uploaded to the platform  |
 
@@ -127,7 +164,7 @@ Without the sandbox container there is nowhere safe to run model-written code, s
 ```mermaid
 flowchart LR
   S[Suite YAML] --> R[Run<br/>suite and model settings frozen]
-  M[Models<br/>key names only] --> R
+  M[Models<br/>key names and prices] --> R
   R --> Q{Per-model limit<br/>and global cap}
   Q --> P[Provider SDK<br/>Anthropic · OpenAI · compatible]
   P --> A[Answer]
@@ -135,8 +172,8 @@ flowchart LR
   A --> X[Python tests<br/>sandbox container]
   C & X --> D[(SQLite)]
   D --> B[Blind pairs] --> H[Ratings<br/>rubric · flags · 7-point · why]
-  D --> G[Scoreboard<br/>pass rate · Bradley-Terry · regressions]
-  H --> G
+  D --> V[Verdict<br/>the bar · cost per 1,000 · the pick]
+  H --> V
   D --> E[Exports<br/>CSV · JSONL · preference pairs]
 ```
 
@@ -149,6 +186,12 @@ flowchart LR
 | Task score | Weighted share of checks passed; a task passes only when every check passes. Tasks without checks are left to human rating. |
 | Pass rate | Passed tasks over graded tasks, where an answer that errored (a timeout, a rate limit) counts as not passed, so a model that keeps failing to answer cannot look perfect. |
 | Exact answers | Trimmed, spaces collapsed, case ignored unless asked; a numeric expectation also matches an answer that contains exactly one number, so `4.50 hours` counts and `3 + 4 = 7` does not. |
+| The bar | The share of graded tasks a model must pass. It needs the bar times the task count, rounded up: 22 of 24 at 90%. A suite can set its own; otherwise it is 90%. |
+| The pick | Each model is judged on the latest run of the suite it finished; a run that was cancelled or is still going does not count, and an archived model is left out. Of those at or above the bar, the cheapest wins (or the fastest), and a tie goes to the more accurate model. A model with no price is never called the cheapest. |
+| Cost per 1,000 answers | The input and output tokens the run really used, at the model's prices per million tokens. |
+| How sure | A 95% Wilson score interval on passed over graded: 22 of 24 could be anywhere from 74% to 98%. |
+| Beaten models | A model is beaten when another is at least as accurate and at least as cheap (or fast), and strictly better on one of the two. |
+| Whether it holds | The same rule, applied to each past run on its own at the bar on screen. |
 | Which answers form a pair | Two models' answers to the same version of the same task, in one run or each model's latest answer across runs. Identical answers are skipped. |
 | Which pair comes next | The least-rated pair, then the least-rated pair of models, ties broken at random; sides are shuffled. |
 | Human rating | Bradley-Terry strengths by minorise-maximise (Hunter, 2004), with one virtual draw per model against a fixed reference so unbeaten models stay finite. Reported as 1000 + 400·log10 of strength over the geometric mean. |
@@ -188,11 +231,12 @@ CI checks the network layer, the app's refusal and the per-run users on every pu
 
 | Check | What it covers |
 | --- | --- |
-| 93 Python tests | Suite parsing and error messages, every check type, the sandbox limits (no fork, no processes, memory and output caps, empty environment, timeouts), early-exit tricks that must not pass, Bradley-Terry and bootstrap maths, pair blindness and balance, rating validation and duplicates, the API end to end through the real Anthropic and OpenAI SDKs against a local fake server, keys that cannot be redirected, sign-in, throttling, localhost-only mode, runs without a sandbox, provider errors, exports and the CLI gate. |
-| Battery consistency | Every scripted demo answer is graded by the real engine: strong answers must pass every check and weak ones must fail one, which keeps the suite, the checks and the demo honest with each other. |
-| 17 end-to-end tests | Playwright against the built app: the overview, the result matrix and side-by-side answers, a complete blind rating with no model name on screen, editing a task in the form and reading it back as YAML, the exports, sign-in filled the way a password manager fills it, the theme following the device, a phone layout where nothing runs off the side, and the pages for a run, suite or task that does not exist. axe checks every screen against WCAG 2.1 AA, contrast included, in the dark theme and the light one. |
-| 33 web unit tests | Formatting of rates, durations and relative times, and the sanitiser: highlighted code survives, remote images, scripts, styles, forms and borrowed layout classes do not. The live demo's in-browser adapter: it must give the answers the server gave for the same data on every page, list and download, keep ratings and model edits for the visit, replay a new run to its recorded outcome, and answer an unknown path with a clear error. |
-| 28 demo smoke tests | Playwright against the built static demo, served under `/evalbench/` the way GitHub Pages serves it, in dark and light at 1280 and 390 pixels wide: every route from a deep link, reloads, a replayed run, a rating, the downloads, and what needs the server saying so. Any console error, failed request, call to a server or sideways overflow fails the run. |
+| 142 Python tests | Suite parsing and error messages, every check type and checks on one field of a JSON answer, the verdict rule, cost from the tokens a run used, the sentences the terminal prints, the sandbox limits (no fork, no processes, memory and output caps, empty environment, timeouts), early-exit tricks that must not pass, Bradley-Terry and bootstrap maths, pair blindness and balance, rating validation and duplicates, the API end to end through the real Anthropic and OpenAI SDKs against a local fake server, keys that cannot be redirected, sign-in, throttling, localhost-only mode, runs without a sandbox, provider errors, exports and the CLI gates. |
+| One rule, two languages | The verdict rule exists in Python for the server and in TypeScript for the live demo. Both run the same 33 cases from [`tests/verdict-cases.json`](tests/verdict-cases.json), so the browser and the server cannot disagree about the pick. |
+| Demo consistency | Every scripted demo answer is graded by the real engine. In the core battery, strong answers must pass every check and weak ones must fail one; in the triage job, every model must end on the score, the cost and the pick this README quotes. That keeps the suites, the checks and the demo honest with each other. |
+| 19 end-to-end tests | Playwright against the built app: the verdict and the bar it follows, a JSON job shown in its fields, the result matrix and side-by-side answers, a complete blind rating with no model name on screen, editing a task in the form and reading it back as YAML, the exports, sign-in filled the way a password manager fills it, the theme following the device, a phone layout where nothing runs off the side, and the pages for a run, suite or task that does not exist. axe checks every screen against WCAG 2.1 AA, contrast included, in the dark theme and the light one. |
+| 87 web unit tests | The verdict rule's twin, and every sentence on the verdict page read against the demo data, so a change to the rule or the sample shows up as a changed sentence. Formatting of rates, durations and relative times, and the sanitiser: highlighted code survives, remote images, scripts, styles, forms and borrowed layout classes do not. The live demo's in-browser adapter: it must give the answers the server gave for the same data on every page, list and download, keep ratings and model edits for the visit, replay a new run to its recorded outcome, and answer an unknown path with a clear error. |
+| 32 demo smoke tests | Playwright against the built static demo, served under `/evalbench/` the way GitHub Pages serves it, in dark and light at 1280 and 390 pixels wide: every route from a deep link, reloads, the answer following the bar, a replayed run, a rating, the downloads, and what needs the server saying so. Any console error, failed request, call to a server or sideways overflow fails the run. |
 | Docker in CI | Builds the image, starts the compose stack, signs in, loads the demo through the sandbox container, and proves the sandbox has no route out, is refused by the app and runs each execution as its own user. |
 | Lint and format | Ruff for Python; TypeScript strict mode and Prettier for the web app. |
 
@@ -210,11 +254,13 @@ evalbench/
   providers.py    Anthropic, OpenAI and OpenAI-compatible clients; keys from the environment
   runner.py       runs: snapshots, per-model limits, grading, cancel and resume
   ratings.py      blind pairs, rating validation, Bradley-Terry and bootstrap
-  stats.py        run summaries, scoreboard, history and regressions
+  verdict.py      the rule: the bar, cost per 1,000 answers, the pick, and its words for the terminal
+  stats.py        run summaries, judge ratings, history and what changed between runs
   export.py       CSV, JSONL and preference-pair exports
   app.py          the HTTP API, password gate and the web app
-  data/           the core battery and the scripted demo answers
-web/src/          the React app: overview, suites, models, runs, compare, rate, scoreboard, data
+  data/           the two suites and the scripted demo answers
+web/src/          the React app: verdict, judge, runs, compare, suites, models, data
+web/src/lib/      the verdict rule's twin, and the sentences the page says
 web/src/demo/     the live demo: an in-browser stand-in for the API, and its sample data
 web/e2e/          Playwright tests
 web/e2e-demo/     Playwright smoke tests for the live demo
@@ -249,7 +295,19 @@ The images in this README come from `npm --prefix web run readme:visuals` ([`doc
 <details>
 <summary><b>Are the screenshots real?</b></summary>
 <br />
-Yes. They are captures of the app running the bundled demo workspace, in its dark theme for the dark images and its light theme for the light ones, set in glass. The run that plays in the loop at the top is the demo replaying recorded answers, photographed one moment at a time. The four demo models (Nimbus Pro, Atlas 70B, Orion Mini, Vega 8B) are fictional and their answers are scripted, but every check result, pass rate, rating and regression in the images is computed by the same code that grades real runs.
+Yes. They are captures of the app running the bundled demo workspace, in its dark theme for the dark images and its light theme for the light ones, set in glass. The run that plays in the loop at the top is the demo replaying recorded answers, photographed one moment at a time. The five demo models (Nimbus Pro, Atlas 70B, Orion Mini, Lyra Flash, Vega 8B) are fictional, and so are their prices. Their answers are scripted, but every check result, pass rate, cost, verdict, rating and change in the images is computed by the same code that grades real runs.
+</details>
+
+<details>
+<summary><b>How many examples do I need?</b></summary>
+<br />
+Enough that one miss does not decide it. On 24 examples, a model that gets 22 right could truly be anywhere from 74% to 98%; on 240 examples at the same rate, the range is 87% to 95%. The verdict page prints that range under every pick, and says when the pick clears the bar with nothing to spare.
+</details>
+
+<details>
+<summary><b>Where do the prices come from?</b></summary>
+<br />
+From you: dollars per million input and output tokens, set per model on the Models page or with <code>--price</code>. Evalbench does not look prices up, so nothing changes behind your back. A model with no price is never picked as the cheapest: its row says no price is set, and the terminal lists it as not ranked.
 </details>
 
 <details>

@@ -2,7 +2,7 @@
 // light ones, as frosted-glass windows: copy flush left on the page colour, glass on the right, and one element
 // lifted out of its screen. Positions are the apparent centre in CSS px (y down); sizes are apparent CSS px;
 // z is depth (+ toward the viewer). Textures are capture.cjs's screenshots, `<screen>-dark.png` and
-// `<screen>-light.png`, at 2x (desktop) and 3x (phone). A lifted element names its box (`box: 'lead'`).
+// `<screen>-light.png`, at 2x (desktop) and 3x (phone). A lifted element names its box (`box: 'say'`).
 
 // Night: an ink-black tasting room, a little azure (the colour of a face-down card) low in the haze.
 const NIGHT = {
@@ -42,11 +42,11 @@ const LIFT = (n) => ({ key: 'auto', keyAmt: n ? 0.35 : 0.85, shadowOff: n ? [0, 
 const DESK = (n, screen, crop, pos, extra = {}) => ({ tex: tx(screen, n), crop, ...pos, key: BG(n), keyAmt: n ? 0.5 : 0.7, bezel: 10, ...extra });
 const PHONE = (n, screen, crop, pos, extra = {}) => ({ tex: tx(screen, n), crop, ...pos, key: BG(n), keyAmt: n ? 0.45 : 0.6, bezel: 8, ...extra });
 
-// Crops of the captures, in capture pixels.
+// Crops of the captures, in capture pixels. The home page is one long sheet, so three panels read three parts of it.
 const CROP = {
-  overview: [0, 0, 2560, 1760], since: [0, 1770, 2560, 820], rate: [0, 860, 2560, 2000], scoreboard: [0, 0, 2560, 1500],
-  history: [70, 1520, 1460, 1050], changes: [70, 2570, 1200, 800], suite: [0, 2350, 2560, 1900], compare: [0, 0, 2560, 2240],
-  run: [0, 1150, 2560, 1700], phone: [0, 0, 1170, 2400],
+  verdict: [0, 0, 2560, 1760], proof: [520, 1540, 1960, 1400], holds: [520, 5590, 1960, 1380],
+  rate: [0, 880, 2560, 2000], suite: [0, 4790, 2560, 1900], compare: [0, 0, 2560, 2240], run: [0, 1290, 2560, 1700],
+  phone: [0, 0, 1170, 2400],
 };
 
 function panel(o) {
@@ -73,7 +73,7 @@ function panelPhone(o) {
     windows: (n) => o.win(n, true),
     type: [
       T('kick', o.kick, 4, 26, { fontSize: '9.5px' }),
-      T('head', o.head.replace(/<br>/g, ' '), 2, 46, { fontSize: '31px', whiteSpace: 'normal', width: '360px' }),
+      T('head', o.head, 2, 46, { fontSize: '31px', whiteSpace: 'normal', width: '372px' }),
       T('line', o.line, 4, 46 + (o.headLinesPhone ?? 2) * 33 + 14, { fontSize: '15px', whiteSpace: 'normal', width: '352px' }),
       T('rule', '', 4, ry, { width: '372px' }),
       ...o.facts.map((fc, i) => T('fact', FACT(fc[0], fc[1]), 4 + i * 124, ry + 18, { width: '112px', whiteSpace: 'normal' })),
@@ -81,69 +81,40 @@ function panelPhone(o) {
   };
 }
 
-const OVERVIEW = {
-  kick: 'Overview', head: 'Know what happened<br>before you scroll',
-  line: 'The overview writes its headline from the latest run: who leads, by how much, what the judges think, and what broke since last time.',
-  facts: [['90%', 'of checks passed by the leader'], ['71%', 'win rate in blind judging'], ['3', 'tasks Vega 8B dropped']],
-  win: (n, ph) => {
-    const P = ph ? { a: { x: 176, y: 372, w: 330, z: -60, rot: [2, -10, 0] }, b: { x: 300, y: 430, h: 220, z: 70, rot: [0, -14, 0] } }
-      : { a: { x: 566, y: 224, w: 400, z: -80, rot: [2, -18, 0] }, b: { x: 742, y: 300, h: 236, z: 60, rot: [0, -14, 0] } };
-    return [
-      DESK(n, 'overview', CROP.overview, P.a, { breathe: [8, 0.0] }),
-      PHONE(n, 'm-overview', CROP.phone, P.b, { breathe: [8, 0.45] }),
-      { parent: 0, box: 'lead', pad: [0, 0], lift: 70, breathe: [10, 0.25], bezel: 8, radius: 14, ...LIFT(n), glow: 0.2 },
-    ];
-  },
+const one = (n, ph, screen, crop, box, child = {}, desk = { x: 566, y: 230, w: 392 }, phone = { x: 186, y: 384, w: 332 }) => [
+  DESK(n, screen, crop, ph ? { z: -40, rot: [2, -8, 0], ...phone } : { z: -60, rot: [2, -16, 0], ...desk }, { breathe: [8, 0.0] }),
+  { parent: 0, box, pad: [16, 12], lift: 64, breathe: [10, 0.25], bezel: 8, radius: 14, ...LIFT(n), glow: 0.2, ...child },
+];
+const VERDICT = {
+  kick: 'The verdict', head: 'Set the bar,<br>get the answer',
+  line: 'Say how good is good enough. Evalbench names the cheapest model that clears it, and says so when nothing does.',
+  facts: [['22', 'of 24 right, for the pick'], ['$0.12', 'per 1,000 answers'], ['26×', 'the price of the most accurate']],
+  win: (n, ph) => one(n, ph, 'verdict', CROP.verdict, 'chart', { pad: [10, 10], lift: 70 }, { x: 572, y: 228, w: 404 }, { x: 186, y: 380, w: 336 }),
+};
+const PROOF = {
+  kick: 'The proof', head: 'See why it is<br>not the others',
+  line: 'Every model sits above or below the bar with its accuracy, its cost and its speed, and the plain reason it lost.',
+  facts: [['5', 'models on one sheet'], ['2', 'misses of the pick, by name'], ['74–98%', 'where its true pass rate lies']],
+  win: (n, ph) => one(n, ph, 'verdict', CROP.proof, 'clears'),
 };
 const WRITE = {
-  kick: 'Suites', head: 'Write the test before<br>you trust the model',
-  line: 'Tasks, checks and rubrics in YAML or in the browser: the form and the YAML are one document, validated on every keystroke.',
-  facts: [['7', 'check types, exact match to Python tests'], ['5', 'parts of an answer a check can read'], ['0', 'routes out of the code sandbox']],
-  win: (n, ph) => {
-    const P = ph ? { a: { x: 190, y: 384, w: 344, z: -40, rot: [2, -8, 0] } } : { a: { x: 590, y: 232, w: 420, z: -60, rot: [2, -16, 0] } };
-    return [
-      DESK(n, 'suite', CROP.suite, P.a, { breathe: [8, 0.0] }),
-      { parent: 0, box: 'tests', pad: [10, 10], lift: 80, breathe: [10, 0.25], bezel: 8, radius: 12, ...LIFT(n), glow: 0.2 },
-    ];
-  },
+  kick: 'Your job', head: 'Write down what<br>a good answer is',
+  line: 'A job is real examples and the checks an answer must pass: the right label, a word limit, a phrase it must never say.',
+  facts: [['7', 'kinds of check, up to Python tests'], ['152', 'checks in the triage job'], ['0', 'routes out of the code sandbox']],
+  win: (n, ph) => one(n, ph, 'suite', CROP.suite, 'rule', { pad: [10, 10] }),
 };
 const JUDGE = {
-  kick: 'Blind judging', head: 'Judge blind, the way<br>training teams do',
-  line: 'Two answers to the same task, names hidden, order shuffled. Score each on the rubric, tick what went wrong, circle a verdict, say why.',
-  facts: [['7', 'stops from A, clearly to B, clearly'], ['0', 'model names on screen'], ['1 to 5', 'on every rubric line']],
+  kick: 'Blind judging', head: 'Judge what checks<br>can’t count',
+  line: 'Tone and judgement take a person. Two answers, names hidden, order shuffled: score them, pick a side, say why.',
+  facts: [['7', 'stops on the preference scale'], ['0', 'model names on screen'], ['239', 'blind verdicts in the demo']],
   h: 440, ry: 330,
-  win: (n, ph) => {
-    const P = ph ? { a: { x: 190, y: 392, w: 344, z: -40, rot: [2, -8, 0] } } : { a: { x: 590, y: 240, w: 410, z: -60, rot: [2, -16, 0] } };
-    return [
-      DESK(n, 'rate', CROP.rate, P.a, { breathe: [8, 0.0] }),
-      { parent: 0, box: 'verdict', pad: [20, 16], lift: 80, breathe: [10, 0.25], bezel: 8, radius: 14, ...LIFT(n), glow: 0.25, glowColor: n ? '#4a1a14' : undefined },
-    ];
-  },
+  win: (n, ph) => one(n, ph, 'rate', CROP.rate, 'verdict', { pad: [20, 16], lift: 80, glow: 0.25, glowColor: n ? '#4a1a14' : undefined }, { x: 584, y: 240, w: 404 }, { x: 188, y: 392, w: 340 }),
 };
-const BOARD = {
-  kick: 'Scoreboard', head: 'One leaderboard for<br>checks and people',
-  line: 'How many tasks each model passes, and how often people prefer its answers, fitted with Bradley-Terry and a bootstrap interval.',
-  facts: [['95%', 'interval on every rating'], ['200', 'bootstrap resamples'], ['88', 'blind verdicts in the demo']],
-  win: (n, ph) => {
-    const P = ph ? { a: { x: 186, y: 384, w: 330, z: -40, rot: [2, -8, 0] } } : { a: { x: 568, y: 230, w: 388, z: -60, rot: [2, -16, 0] } };
-    return [
-      DESK(n, 'scoreboard', CROP.scoreboard, P.a, { breathe: [8, 0.0] }),
-      { parent: 0, box: 'top', pad: [0, 0], lift: 80, breathe: [10, 0.25], bezel: 8, radius: 14, ...LIFT(n), glow: 0.2 },
-    ];
-  },
-};
-const CHANGES = {
-  kick: 'Regressions', head: 'Catch a regression<br>the day it lands',
-  line: 'Every model’s latest run against the one before: each task that now fails or now passes, and an edited task marked as an edit.',
-  facts: [['3', 'tasks Vega 8B now fails'], ['6', 'runs on one chart'], ['1', 'flag to fail CI below a pass rate']],
-  win: (n, ph) => {
-    const P = ph ? { a: { x: 166, y: 350, w: 300, z: -60, rot: [2, -10, 0] }, b: { x: 262, y: 452, w: 210, z: 70, rot: [0, -12, 0] } }
-      : { a: { x: 552, y: 210, w: 360, z: -80, rot: [2, -18, 0] }, b: { x: 688, y: 334, w: 226, z: 60, rot: [0, -14, 0] } };
-    return [
-      DESK(n, 'scoreboard', CROP.history, P.a, { breathe: [8, 0.0] }),
-      DESK(n, 'scoreboard', CROP.changes, P.b, { breathe: [8, 0.45], bezel: 9 }),
-    ];
-  },
+const HOLDS = {
+  kick: 'Over time', head: 'Know when the<br>answer changes',
+  line: 'The same rule runs over every past run and lists the examples each model gained or lost. In CI, one flag fails the build with no pick.',
+  facts: [['3', 'runs in a row with the same pick'], ['4', 'examples that changed since last time'], ['1', 'flag to fail CI with no pick']],
+  win: (n, ph) => one(n, ph, 'verdict', CROP.holds, 'since'),
 };
 
 // ---------- the hero ----------
@@ -151,19 +122,19 @@ const HERO_NIGHT = merge(NIGHT, { env: {
   shafts: [[0.30, 0.050, 0.05, 0.13], [0.42, 0.020, 0.02, 0.10], [0.58, 0.022, -0.02, 0.11], [0.71, 0.050, -0.05, 0.13], [0.50, 0.22, 0.0, 0.06]],
   glows: [[0.50, 0.32, 0.42, 0.10, '#2457f0'], [0.5, 1.15, 0.65, 0.09, '#c8c0aa'], [0.5, -0.15, 0.6, 0.05, '#3a4a78']] } });
 const HERO_DAY = merge(DAY, { env: { sun: [0.10, 0, -0.80, 0.95] } });
-// The hero is a loop. Its centre window plays a new run of the core battery on the run page: capture.cjs
+// The hero is a loop. Its centre window plays a new run of the support triage job on the run page: capture.cjs
 // photographs REPLAY.frames moments of it, the queued run first and the finished run last, and frame i between
 // them is the first moment REPLAY.share(i / (frames - 1)) of the answers are in (slow, quicker, slow again).
 const ease = (u) => u * u * (3 - 2 * u);
 export const REPLAY = { frames: 38, share: (u) => u + (ease(u) - u) * 0.7 };
 const replayFrames = (n) => Array.from({ length: REPLAY.frames }, (_, i) => `replay-${n ? 'dark' : 'light'}-${String(i).padStart(2, '0')}.png`);
-// One turn of the loop, in frames at 12 a second. It opens on the finished state, the overview with the leader's
-// row lifted out, and holds it; the row settles back into its page; the page turns to the new run, which plays
-// one captured moment a frame and comes to rest on its scores; the page turns back and the row lifts out again.
+// One turn of the loop, in frames at 12 a second. It opens on the finished state, the verdict with its headline
+// lifted out, and holds it; the headline settles back into its page; the page turns to the new run, which plays
+// one captured moment a frame and comes to rest on its scores; the page turns back and the headline lifts out again.
 const HERO_LOOP = { hold: 24, settle: 6, turn: 6, run: REPLAY.frames - 1, rest: 7, back: 6, lift: 6, tail: 4 };
 export const HERO_FRAMES = Object.values(HERO_LOOP).reduce((a, b) => a + b, 0);
 function heroPlay(phase) {
-  const T = HERO_LOOP, last = REPLAY.frames;       // sequence index 0 is the overview, 1..last the run
+  const T = HERO_LOOP, last = REPLAY.frames;       // sequence index 0 is the verdict, 1..last the run
   let f = Math.round((((phase % 1) + 1) % 1) * HERO_FRAMES * 1000) / 1000, u;
   const part = (n) => { u = (f + 1) / (n + 1); f -= n; return f < 0; };   // u: how far through this part the frame is
   if (part(T.hold)) return { from: 0, to: 0, mix: 0, lift: 1 };
@@ -178,16 +149,16 @@ function heroPlay(phase) {
 }
 
 const heroWindows = (n, P) => [
-  DESK(n, 'scoreboard', CROP.scoreboard, {}, { fog: n ? 0.58 : 0.38, lod: 1.2, defocus: 2.5, breathe: [16, 0.15], bezel: 8 }),
+  DESK(n, 'rate', CROP.rate, {}, { fog: n ? 0.58 : 0.38, lod: 1.2, defocus: 2.5, breathe: [16, 0.15], bezel: 8 }),
   DESK(n, 'run', CROP.run, {}, { fog: n ? 0.58 : 0.38, lod: 1.2, defocus: 2.5, breathe: [12, 0.8], bezel: 8 }),
   DESK(n, 'compare', CROP.compare, {}, { lod: 0.4, defocus: 0.8, fog: n ? 0.18 : 0.10, breathe: [12, 0.5] }),
   DESK(n, 'suite', CROP.suite, {}, { lod: 0.4, defocus: 0.8, fog: n ? 0.18 : 0.10, breathe: [12, 0.0] }),
-  DESK(n, 'overview', CROP.overview, {}, { breathe: [10, 0.6], bezel: 11, glow: 0.6, still: true, seq: [tx('overview', n), ...replayFrames(n)] }),
+  DESK(n, 'verdict', CROP.verdict, {}, { breathe: [10, 0.6], bezel: 11, glow: 0.6, still: true, seq: [tx('verdict', n), ...replayFrames(n)] }),
   PHONE(n, 'm-rate', CROP.phone, {}, { breathe: [9, 0.3], still: true }),
-  { parent: 4, box: 'lead', pad: [0, 0], lift: 110, breathe: [12, 0.85], bezel: 8, radius: 14, ...LIFT(n), align: 0.6, glow: 0.25 },
+  { parent: 4, box: 'say', pad: [24, 18], lift: 110, breathe: [12, 0.85], bezel: 8, radius: 14, ...LIFT(n), align: 0.6, glow: 0.25 },
 ].map((w, i) => ({ ...w, ...(P[i] || {}) }));
 
-const NUMBERS = [['20', 'tasks in the<br>core battery'], ['7', 'kinds of<br>automatic check'], ['171', 'tests in CI'], ['0', 'API keys stored,<br>read from the environment']];
+const NUMBERS = [['2,924', 'checks run in<br>the demo workspace'], ['7', 'kinds of<br>automatic check'], ['274', 'tests in CI'], ['0', 'API keys stored,<br>read from the environment']];
 
 export const LAYOUTS = {
   hero: {
@@ -203,7 +174,7 @@ export const LAYOUTS = {
     ]),
     type: [
       T('name', 'Evalbench', 420, 34, { fontSize: '60px' }, 'center'),
-      T('line', 'Evaluate language models on your own tasks, with sandboxed checks and blind judging.', 420, 110, { fontSize: '16.5px' }, 'center'),
+      T('line', 'Which model should do your job? The cheapest one that clears your bar, with the proof.', 420, 110, { fontSize: '16.5px' }, 'center'),
     ],
   },
   'hero-phone': {
@@ -219,7 +190,7 @@ export const LAYOUTS = {
     ]),
     type: [
       T('name', 'Evalbench', 190.5, 34, { fontSize: '52px' }, 'center'),
-      T('line', 'Evaluate language models on your own tasks,<br>with sandboxed checks and blind judging.', 190.5, 102, { fontSize: '14.5px', textAlign: 'center' }, 'center'),
+      T('line', 'Which model should do your job? The cheapest<br>one that clears your bar, with the proof.', 190.5, 102, { fontSize: '14.5px', textAlign: 'center' }, 'center'),
     ],
   },
   numbers: {
@@ -236,10 +207,26 @@ export const LAYOUTS = {
     windows: () => [{ x: 190.5, y: 165, w: 337, crop: [0, 0, 337, 266], z: 0, rot: [0, 0, 0], bar: false, bezel: 12, radius: 24, breathe: [3, 0], glow: 0.0, shadowOff: [0, -10, 30] }],
     type: NUMBERS.map(([v, l], i) => T('big', `<b style="font-size:40px">${v}</b><span style="font-size:13px;margin-top:8px">${l}</span>`, 38 + (i % 2) * 172, 46 + Math.floor(i / 2) * 134)),
   },
-  overview: panel(OVERVIEW), 'overview-phone': panelPhone(OVERVIEW),
+  verdict: panel(VERDICT), 'verdict-phone': panelPhone(VERDICT),
+  proof: panel(PROOF), 'proof-phone': panelPhone(PROOF),
   write: panel(WRITE), 'write-phone': panelPhone(WRITE),
   judge: panel(JUDGE), 'judge-phone': panelPhone(JUDGE),
-  board: panel(BOARD), 'board-phone': panelPhone(BOARD),
-  changes: panel(CHANGES), 'changes-phone': panelPhone(CHANGES),
+  holds: panel(HOLDS), 'holds-phone': panelPhone(HOLDS),
+
+  // ---------- the social preview, 1280 x 640, dark ----------
+  social: {
+    css: [640, 320], fade: [26, 26, 22, 26], cam: [0, 0], motion: 0, pool: [0.70, 0.52, 0.42, 0.78],
+    night: merge(NIGHT, { env: { glows: [[0.72, 1.1, 0.6, 0.07, '#c8c0aa'], [0.70, 0.36, 0.44, 0.09, '#2457f0']] } }), day: DAY,
+    windows: (n) => [
+      DESK(n, 'verdict', CROP.verdict, { x: 442, y: 146, w: 304, z: -80, rot: [2, -18, 0] }, { breathe: [0, 0], bezel: 9 }),
+      PHONE(n, 'm-rate', CROP.phone, { x: 572, y: 204, h: 166, z: 60, rot: [0, -14, 0] }, { breathe: [0, 0] }),
+      { parent: 0, box: 'say', pad: [24, 18], lift: 76, breathe: [0, 0], bezel: 8, radius: 14, ...LIFT(n), align: 0.6, glow: 0.25 },
+    ],
+    type: [
+      T('kick', 'Self-hosted · Open source', 40, 104, { fontSize: '10px' }),
+      T('name', 'Evalbench', 38, 122, { fontSize: '46px' }),
+      T('line', 'Names the cheapest model that is good enough for your job.', 40, 182, { fontSize: '15.5px', whiteSpace: 'normal', width: '236px' }),
+    ],
+  },
 };
 for (const k in LAYOUTS) LAYOUTS[k].dpr = LAYOUTS[k].dpr || 2;

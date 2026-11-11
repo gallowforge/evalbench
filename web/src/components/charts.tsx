@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ModelRef } from '../api';
 import { pct, shortDate } from '../lib/format';
+import { share } from '../lib/verdict';
 import { ModelDot } from './ui';
 import { tone } from '../lib/theme';
 
@@ -209,7 +210,7 @@ export function HistoryChart({
             <svg width={22} height={4} aria-hidden>
               <line x1={1} x2={21} y1={2} y2={2} className="stroke-ink" strokeWidth={1.5} strokeDasharray="1 5" strokeLinecap="round" />
             </svg>
-            The bar, {Math.round(bar * 100)}%
+            The bar, {share(bar)}
           </span>
           {picks?.some((p) => p !== null) && (
             <span className="inline-flex items-center gap-2">

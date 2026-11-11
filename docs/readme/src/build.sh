@@ -10,7 +10,7 @@
 # can launch (a GPU helps; the scenes are WebGL), ImageMagick, and python3 with Pillow and NumPy.
 # capture.cjs photographs the running app in its dark theme and its light theme, and a new run playing start to
 # finish in the static demo (built here, into web/dist); render.cjs composes the glass scenes from layouts.js;
-# ImageMagick writes the stills as WebP. The hero is a loop at 12 frames a second: it opens on the overview, plays
+# ImageMagick writes the stills as WebP. The hero is a loop at 12 frames a second: it opens on the verdict, plays
 # that run in the centre window and comes back. render.cjs writes one turn of it as frames and loop.py packs them.
 set -euo pipefail
 SRC=$(cd "$(dirname "$0")" && pwd)
@@ -28,7 +28,7 @@ mkdir -p "$BUILD/png" "$BUILD/loop"
 
 jobs=()
 for t in dark light; do
-  for l in numbers overview write judge board changes; do
+  for l in numbers verdict proof write judge holds; do
     jobs+=("$l:$t:still:$BUILD/png/$l-$t.png" "$l-phone:$t:still:$BUILD/png/$l-$t-phone.png")
   done
   jobs+=("hero:$t:anim:loop:$BUILD/loop/hero-$t" "hero-phone:$t:anim:loop:$BUILD/loop/hero-$t-phone")
@@ -42,5 +42,9 @@ for t in dark light; do
   python3 "$SRC/loop.py" "$BUILD/loop/hero-$t" "$OUT/hero-$t.webp" 12 62
   python3 "$SRC/loop.py" "$BUILD/loop/hero-$t-phone" "$OUT/hero-$t-phone.webp" 12 56
 done
+
+# The plate for the repository's social preview (Settings, Social preview on GitHub), 1280 x 640, dark.
+node "$SRC/render.cjs" "social:dark:still:$OUT/social.png"
+magick "$OUT/social.png" -strip -define png:compression-level=9 "$OUT/social.png"
 
 du -ch "$OUT"/*.webp | tail -1

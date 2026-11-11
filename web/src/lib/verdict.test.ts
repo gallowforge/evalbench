@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import cases from '../../../tests/verdict-cases.json';
-import { type Candidate, decide, money, need, type Objective, times, wilson } from './verdict';
+import { type Candidate, decide, money, need, type Objective, share, times, wilson } from './verdict';
 
 // The same cases the Python tests run (tests/test_verdict.py): the page and the server must agree.
 
@@ -41,5 +41,11 @@ describe('money', () => {
   });
   it('says how many times the price', () => {
     expect([21.75, 3.44, 1.2, 10].map(times)).toEqual(['22×', '3.4×', '1.2×', '10×']);
+  });
+  it('rounds to whole dollars only from a hundred up', () => {
+    expect([99.99, 99.996].map(money)).toEqual(['$99.99', '$100']);
+  });
+  it('says the bar exactly, with a decimal only when it has one', () => {
+    expect([0.9, 0.875, 0.3, 1].map(share)).toEqual(['90%', '87.5%', '30%', '100%']);
   });
 });

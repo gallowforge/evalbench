@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0
+
+Evalbench now answers one question: which model should do this job? It names the cheapest model that is good enough, and shows the proof.
+
+- The home page is the verdict. It opens on one sentence, such as "Use Orion Mini.", with the reasons under it: every model as a dot on accuracy against cost, the bar as a line you can drag, who clears it and who falls short, what to know before you ship, the misses example by example, what the blind judges say, and whether the answer held on earlier runs. When nothing clears the bar it says "No model is good enough yet." and names the closest one. The overview and the scoreboard are gone; old scoreboard links land on the matching verdict.
+- A suite sets its bar, the share of examples a model must get right (`bar: 0.9` by default), and a model can carry a price in dollars per million tokens in and out. The pick is the cheapest model that clears the bar, or the fastest if you ask. A model with no price is never called the cheapest.
+- Every pick comes with its caveats: how many examples it has to spare, the range its true pass rate could lie in on a sample this size, and what a million answers would cost next to the most accurate model.
+- `evalbench run` prints the same verdict in the terminal and takes `--price`, `--bar` and `--fastest`. `--require-pick` exits non-zero when no model clears the bar, so a build can fail on it. `/api/verdict/{suite}` serves it as JSON.
+- Text checks can grade one field of a JSON answer: `exact`, `contains`, `not_contains`, `regex` and `length` take a `field` (a dotted path such as `customer.name`), so a job that returns a category, an urgency and a reply is graded label by label. An answer that is one flat JSON object is shown as its fields on the task page and while judging.
+- The demo holds two jobs with different answers at the same bar: support ticket triage for an invented invoicing tool, five models over three runs, and the core battery. Nine runs, 820 answers and 239 blind ratings in all. The static demo computes the verdict in the browser with a twin of the server's rule, and both are held to the same 33 shared cases.
+- Every page follows the home page: runs, a run, two answers side by side, judging, suites, a suite, models, data and settings are ruled sheets with one left edge instead of stacks of cards. The new run dialog offers the job that was run last, the first visit explains the three steps and offers the demo workspace, and failure text and small counts meet AA contrast in both themes.
+- Databases from before prices and bars are upgraded in place. Suites written for 1.x run unchanged.
+- The README is rewritten around the verdict with a new set of pictures, and the starter suite shows a bar and a field check.
+- Only finished work counts. A model is judged on the latest run it finished: a run that was cancelled or is still going does not move the verdict, so three right out of three so far is never mistaken for a result. An archived model leaves the verdict, and its runs stay on the runs page.
+- The README counts the tests that run now: 280 in CI (142 Python, 19 end-to-end, 87 web unit and 32 demo smoke).
+
 ## 1.3.0
 
 - A live demo at [gallowforge.github.io/evalbench](https://gallowforge.github.io/evalbench/): the web app itself, built as a static site and answering in the browser from the demo workspace's own data. Every screen works. Ratings, model edits and settings are kept for the visit and forgotten on reload.

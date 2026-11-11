@@ -1,5 +1,5 @@
-"""Aggregates for the run page, the scoreboard and the overview: pass rates, categories, history
-over time and regressions between consecutive runs of the same model."""
+"""Aggregates for the run page, the judging queue and the counts in the header: pass rates,
+categories, history over time and regressions between consecutive runs of the same model."""
 
 from __future__ import annotations
 

@@ -427,6 +427,32 @@ describe('a new run replays the recorded answers', () => {
     expect((await d.call('GET', '/verdict/nope')).status).toBe(404);
   });
 
+  it('leaves a run that was cut short out of the verdict, and an archived model too', async () => {
+    const d = demo();
+    const before = await d.get<Verdict>(`/verdict/${TRIAGE}`);
+    const orion = before.models.find((m) => m.label === 'Orion Mini')!;
+    const made = await d.call<{ id: number }>('POST', '/runs', { suite_id: TRIAGE, model_ids: [orion.id], label: 'cut short' });
+    d.wait(2500);
+    await d.call('POST', `/runs/${made.data.id}/cancel`);
+    d.wait(30_000);
+    const stopped = await d.get<RunDetail>(`/runs/${made.data.id}`);
+    expect(stopped.status).toBe('cancelled');
+    expect(stopped.progress.finished).toBeGreaterThan(0);
+    expect(stopped.progress.finished).toBeLessThan(stopped.progress.total);
+    // A few answers in is not a result: the model keeps the last run it finished.
+    const during = await d.get<Verdict>(`/verdict/${TRIAGE}`);
+    expect(during.runs).toBe(before.runs + 1);
+    expect(during.models).toEqual(before.models);
+    expect(during.history).toEqual(before.history);
+    expect(during.picks).toEqual(before.picks);
+    // A retired model is out of the running, and the answer moves on without it.
+    expect((await d.call('DELETE', `/models/${orion.id}`)).data).toEqual({ result: 'archived' });
+    const after = await d.get<Verdict>(`/verdict/${TRIAGE}`);
+    expect(after.models.map((m) => m.id)).toEqual(before.models.map((m) => m.id).filter((id) => id !== orion.id));
+    expect(after.models.find((m) => m.id === after.decision.pick)?.label).toBe('Nimbus Pro');
+    expect(after.history.every((p) => !(orion.id in p.models))).toBe(true);
+  });
+
   it('will not invent answers for a model it has never heard from', async () => {
     const d = demo();
     const made = await d.call<Model>('POST', '/models', { provider: 'anthropic', model: 'some-model', label: 'Newcomer' });

@@ -91,7 +91,7 @@ export function RunDetailPage({ id }: { id: number }) {
 
       {live && (
         <div className="mb-8 flex items-center gap-4">
-          <span className="text-[14px] font-semibold text-accent">Running</span>
+          <span className="text-[14px] font-semibold text-accent">{run.status === 'queued' ? 'Queued' : 'Running'}</span>
           <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-ink/[0.08]">
             <div className="h-full rounded-full bg-accent transition-[width] duration-700" style={{ width: `${progress * 100}%` }} />
           </div>

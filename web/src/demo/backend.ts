@@ -885,6 +885,8 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
     unscored: ReadonlySet<string>,
     prices: { price_in?: number | null; price_out?: number | null },
   ): Measured | null {
+    // A model counts in a run once it has answered everything it was given (`_candidate` in verdict.py).
+    if (rows.some((r) => r.status === 'pending' || r.status === 'running')) return null;
     const s = summarize(rows, unscored);
     if (!s.attempted) return null;
     const done = rows.filter((r) => r.status === 'done');
@@ -942,6 +944,7 @@ export function createBackend(fixtures: Fixtures, options: BackendOptions = {}) 
       for (const snap of run.models) info.set(snap.id, { label: snap.label, color: snap.color, provider: snap.provider, model: snap.model });
     }
     for (const m of db.models) {
+      if (m.archived) info.delete(m.id); // an archived model is out of the running; its runs stay on the runs page
       const known = info.get(m.id); // today's name, colour and prices; what was run stays as it was
       if (known)
         Object.assign(known, {

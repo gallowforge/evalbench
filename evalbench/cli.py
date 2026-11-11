@@ -101,6 +101,8 @@ def _run(args: argparse.Namespace) -> int:
         suite_id = suite.id
     else:
         suite_id = args.suite
+    if args.bar is not None and not 0 < args.bar <= 1:
+        raise SystemExit(f"--bar is a share from 0 to 1, such as 0.9 for nine in ten; got {args.bar:g}")
     try:
         specs = [parse_model_spec(spec) for spec in args.model]
         prices = [parse_price(p) for p in args.price or []]
@@ -110,8 +112,12 @@ def _run(args: argparse.Namespace) -> int:
         hit = [m for m in specs if m["model"] == model]
         if not hit:
             raise SystemExit(f"--price names '{model}', which is not one of the --model ids")
-        hit[0].update(price_in=price_in, price_out=price_out)
-    model_ids = [create_model(db, m)["id"] for m in specs]
+        for m in hit:  # the same model id at two base URLs shares the price
+            m.update(price_in=price_in, price_out=price_out)
+    try:
+        model_ids = [create_model(db, m)["id"] for m in specs]
+    except ValueError as e:  # a negative or impossible price, said plainly
+        raise SystemExit(str(e)) from None
 
     async def go() -> dict:
         pool, sandbox = ProviderPool(), Sandbox(s.sandbox_url, allow_local=s.sandbox_local or args.allow_local_code)

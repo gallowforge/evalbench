@@ -120,11 +120,16 @@ export function decide(candidates: Candidate[], bar: number = DEFAULT_BAR, objec
 export function money(x: number): string {
   if (x === 0) return '$0';
   if (x < 0.995) return `$${x.toFixed(x >= 0.095 ? 2 : 3)}`;
-  const digits = x < 100 ? 2 : 0;
+  const digits = x < 99.995 ? 2 : 0;
   return `$${x.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 }
 
 /** How many times the price: 22×, 3.4×, 1.2×. */
 export function times(ratio: number): string {
   return `${ratio >= 10 ? Math.round(ratio) : Number(ratio.toFixed(1))}×`;
+}
+
+/** The bar as a percentage, with a decimal only when it has one: 90%, 87.5%. */
+export function share(bar: number): string {
+  return `${Number((bar * 100).toFixed(1))}%`;
 }

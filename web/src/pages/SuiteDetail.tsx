@@ -500,11 +500,12 @@ export function SuiteDetail({ id }: { id: string }) {
                 type="number"
                 min={1}
                 max={100}
+                step="any"
                 placeholder="90"
                 aria-label="The bar, as a percentage of tasks passed"
-                value={draft.bar ? Math.round(draft.bar * 100) : ''}
+                value={draft.bar ? Number((draft.bar * 100).toFixed(1)) : ''}
                 onChange={(e) => {
-                  const n = Math.round(Number(e.target.value));
+                  const n = Math.round(Number(e.target.value) * 10) / 10;
                   setDraft({ ...draft, bar: e.target.value === '' || !(n > 0) ? null : Math.min(n, 100) / 100 });
                 }}
               />

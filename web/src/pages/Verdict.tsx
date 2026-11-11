@@ -10,7 +10,7 @@ import { cx, ErrorNote, isNotFound, Loading, ModelDot, NotFound, PenTick, Sectio
 import { DEMO, REPO_URL } from '../lib/demo';
 import { ms, pct, plural, shortDate, titleCase } from '../lib/format';
 import { headline, holding, judges, type Part, standing } from '../lib/story';
-import { type Decision, DEFAULT_BAR, decide, money, need, type Objective } from '../lib/verdict';
+import { type Decision, DEFAULT_BAR, decide, money, need, type Objective, share } from '../lib/verdict';
 
 /** A sentence from the story layer, with its bold runs. */
 function Say({ parts }: { parts: Part[] }) {
@@ -131,7 +131,13 @@ function Sheet({ id, suites }: { id: string; suites: SuiteSummary[] }) {
               )}
             </div>
             <div className="min-w-0">
-              <FieldChart models={v.models} decision={d} objective={objective} onBar={setChoice} />
+              <FieldChart
+                models={v.models}
+                decision={d}
+                objective={objective}
+                onBar={setChoice}
+                minBar={Math.min(MIN_BAR, Math.floor(v.suite.bar * 100) / 100)}
+              />
               <p className="mt-1 pl-11 text-[13px] text-faint">Every dot is a model. Drag the line: the answer follows the bar.</p>
             </div>
           </header>
@@ -247,22 +253,23 @@ function Controls({
   onObjective: (o: Objective) => void;
 }) {
   const id = useId();
-  const value = Math.round(bar * 100);
-  const min = Math.round(MIN_BAR * 100);
+  const value = Number((bar * 100).toFixed(1));
+  // The slider reaches down to 50%, or to the job's own bar when that is set lower.
+  const min = Math.min(Math.round(MIN_BAR * 100), Math.floor(suiteBar * 100));
   const changed = Math.abs(bar - suiteBar) > 1e-9;
-  const text = `${value}%: ${need(bar, total)} of ${total} right`;
+  const text = `${share(bar)}: ${need(bar, total)} of ${total} right`;
   return (
     <div className="mt-9 max-w-[430px] border-t border-line pt-5 md:mt-11">
       <div className="flex items-baseline justify-between gap-4">
         <label htmlFor={id} className="text-[14.5px] text-ink-2">
-          Good enough is <span className="slab ml-0.5 text-[23px] text-ink">{value}%</span>
+          Good enough is <span className="slab ml-0.5 text-[23px] text-ink">{share(bar)}</span>
           <span className="ml-2 text-muted">
             {need(bar, total)} of {total} right
           </span>
         </label>
         {changed && (
           <button type="button" className="link shrink-0 text-[13px]" onClick={() => onBar(null)}>
-            Back to {Math.round(suiteBar * 100)}%
+            Back to {share(suiteBar)}
           </button>
         )}
       </div>
@@ -275,7 +282,7 @@ function Controls({
         step={1}
         value={value}
         aria-valuetext={text}
-        style={{ '--fill': `${((value - min) / (100 - min)) * 100}%` } as CSSProperties}
+        style={{ '--fill': `${Math.max(0, (value - min) / (100 - min)) * 100}%` } as CSSProperties}
         onChange={(e) => onBar(Number(e.target.value) / 100)}
       />
       <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[14.5px] text-ink-2">
@@ -404,9 +411,14 @@ function Caveats({ v, d }: { v: VerdictData; d: Decision }) {
     points.push({ lead: `${-row.margin} short.`, text: `It needs ${row.need} of ${m.attempted} and gets ${m.passed}.` });
   }
   if (m.interval) {
+    // The range is always worth printing; it is only a warning while it is wide.
+    const wide = m.interval[1] - m.interval[0] >= 0.1;
+    const [low, high] = [pct(m.interval[0]), pct(m.interval[1])];
     points.push({
-      lead: 'A small sample.',
-      text: `On ${plural(m.attempted, 'example')} its true pass rate could be anywhere from ${pct(m.interval[0])} to ${pct(m.interval[1])}. More examples tighten it.`,
+      lead: wide ? 'A small sample.' : 'A tight range.',
+      text: wide
+        ? `On ${plural(m.attempted, 'example')} its true pass rate could be anywhere from ${low} to ${high}. More examples tighten it.`
+        : `On ${plural(m.attempted, 'example')} its true pass rate is between ${low} and ${high}.`,
     });
   }
   if (m.cost === null) {

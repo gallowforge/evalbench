@@ -14,7 +14,7 @@ from evalbench.app import create_app
 from evalbench.cli import main, parse_price
 from evalbench.db import SCHEMA, Database
 from evalbench.suites import SuiteError, dump_suite, parse_suite
-from evalbench.verdict import cost_per_1k, decide, explain, money, need, wilson
+from evalbench.verdict import cost_per_1k, decide, explain, money, need, share, times, wilson
 from tests.conftest import make_settings, wait_for_run
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +66,19 @@ def test_cost_is_worked_out_from_the_tokens_the_run_used():
 
 def test_money():
     assert [money(x) for x in (0, 0.0312, 0.12, 0.7, 2.61, 48.5, 1234.5)] == ["$0", "$0.031", "$0.12", "$0.70", "$2.61", "$48.50", "$1,234"]
+    assert [money(x) for x in (99.99, 99.996)] == ["$99.99", "$100"]
+
+
+def test_the_bar_and_the_price_ratio_are_said_exactly():
+    assert [share(x) for x in (0.9, 0.875, 0.3, 1)] == ["90%", "87.5%", "30%", "100%"]
+    assert [times(x) for x in (21.75, 3.44, 1.2, 10, 1.0)] == ["22x", "3.4x", "1.2x", "10x", "1x"]
+    models = [
+        {"id": 1, "label": "Big", "passed": 8, "attempted": 8, "cost": 0.7, "latency_ms": 2100},
+        {"id": 2, "label": "Small", "passed": 7, "attempted": 8, "cost": 0.5, "latency_ms": 900},
+    ]
+    lines = explain(models, decide(models, 0.875, "cost"))
+    assert lines[0] == "Use Small: 7 of 8 right at the 87.5% bar, $0.50 per 1,000 answers."
+    assert lines[1] == "Big gets 8 of 8, at 1.4x the price."
 
 
 def test_the_terminal_says_which_model_and_why():
@@ -75,11 +88,11 @@ def test_the_terminal_says_which_model_and_why():
         {"id": 3, "label": "Unpriced", "passed": 23, "attempted": 24, "cost": None, "latency_ms": 800},
     ]
     lines = explain(models, decide(models, 0.9, "cost"))
-    assert lines[0] == "Use Small: 22 of 24 right at a 90% bar, $0.12 per 1,000 answers."
+    assert lines[0] == "Use Small: 22 of 24 right at the 90% bar, $0.12 per 1,000 answers."
     assert lines[1] == "Big gets 24 of 24, at 22x the price."
     assert "nothing to spare" in lines[2]
     assert lines[3] == "Not ranked for want of a price: Unpriced."
-    assert explain(models, decide(models, 0.9, "speed"))[0] == "Use Unpriced: 23 of 24 right at a 90% bar, 0.8 s per answer."
+    assert explain(models, decide(models, 0.9, "speed"))[0] == "Use Unpriced: 23 of 24 right at the 90% bar, 0.8 s per answer."
     none = explain(models[1:2], decide(models[1:2], 0.95, "cost"))
     assert none == ["No model reaches the 95% bar.", "Closest: Small with 22 of 24 right, 1 short."]
     assert explain([], decide([], 0.9, "cost")) == ["No graded answers yet, so there is nothing to decide."]
@@ -159,6 +172,40 @@ def test_verdict_on_a_real_run(tmp_path, fake_server):
         assert client.get("/api/verdict/core-battery").json()["models"][0]["cost"] == pytest.approx(g["cost"] * 10)
 
 
+def test_a_run_cut_short_does_not_count_and_an_archived_model_leaves(tmp_path, fake_server):
+    with TestClient(create_app(make_settings(tmp_path))) as client:
+        base = {"provider": "openai-compatible", "base_url": fake_server["url"]}
+        good = client.post("/api/models", json={**base, "model": "good-model", "label": "Good", "price_in": 3, "price_out": 15}).json()
+        bad = client.post("/api/models", json={**base, "model": "bad-model", "label": "Bad", "price_in": 0, "price_out": 0}).json()
+        body = {"suite_id": "core-battery", "model_ids": [good["id"], bad["id"]]}
+        first = client.post("/api/runs", json=body).json()["id"]
+        wait_for_run(client, first)
+        second = client.post("/api/runs", json=body).json()["id"]
+        wait_for_run(client, second)
+        # The second run as it would stand had it been cancelled three answers in, with the weak
+        # model lucky on those three: three of three is 100%, and at no cost it would be the pick.
+        con = sqlite3.connect(tmp_path / "evalbench.db")
+        ids = [r[0] for r in con.execute("SELECT id FROM results WHERE run_id=? AND model_id=? ORDER BY id", (second, bad["id"]))]
+        con.executemany("UPDATE results SET passed=1, score=1 WHERE id=?", [(i,) for i in ids[:3]])
+        con.executemany("UPDATE results SET status='pending', passed=NULL, score=NULL, output=NULL WHERE id=?", [(i,) for i in ids[3:]])
+        con.execute("UPDATE runs SET status='cancelled' WHERE id=?", (second,))
+        con.commit()
+        con.close()
+        v = client.get("/api/verdict/core-battery").json()
+        by_label = {m["label"]: m for m in v["models"]}
+        assert (by_label["Bad"]["passed"], by_label["Bad"]["attempted"], by_label["Bad"]["run_id"]) == (0, 20, first)
+        assert by_label["Good"]["run_id"] == second  # it finished the second run, so that one counts
+        assert v["decision"]["pick"] == good["id"]
+        assert [sorted(p["models"]) for p in v["history"]] == [sorted([str(good["id"]), str(bad["id"])]), [str(good["id"])]]
+        assert v["picks"] == [{"run_id": first, "pick": good["id"]}, {"run_id": second, "pick": good["id"]}]
+        # A model that was retired is out of the running; its runs stay where they were.
+        assert client.delete(f"/api/models/{good['id']}").json() == {"result": "archived"}
+        v = client.get("/api/verdict/core-battery").json()
+        assert [m["label"] for m in v["models"]] == ["Bad"] and v["decision"]["pick"] is None
+        assert v["picks"] == [{"run_id": first, "pick": None}]
+        assert len(client.get("/api/runs").json()) == 2
+
+
 def test_price_spec():
     assert parse_price("claude-haiku-5-5=1/5") == ("claude-haiku-5-5", 1.0, 5.0)
     assert parse_price("qwen3:8b=0/0") == ("qwen3:8b", 0.0, 0.0)
@@ -175,7 +222,7 @@ def test_headless_run_names_the_model_to_use(tmp_path, fake_server, monkeypatch,
     common = ["run", suite, "--model", good, "--model", bad, "--ephemeral", "--allow-local-code"]
     assert main([*common, "--price", "good-model=3/15", "--price", "bad-model=0/0"]) == 0
     out = capsys.readouterr().out
-    assert "Use good-model: 20 of 20 right at a 90% bar, $0.55 per 1,000 answers." in out
+    assert "Use good-model: 20 of 20 right at the 90% bar, $0.55 per 1,000 answers." in out
     assert main([*common, "--json", "--bar", "0.5"]) == 0
     data = json.loads(capsys.readouterr().out)
     assert data["verdict"]["pick"] == "good-model" and data["verdict"]["bar"] == 0.5
@@ -188,3 +235,10 @@ def test_headless_run_names_the_model_to_use(tmp_path, fake_server, monkeypatch,
         main([*common, "--price", "other=1/2"])
     with pytest.raises(SystemExit, match="model=in/out"):
         main([*common, "--price", "good-model"])
+    # A bar or a price that cannot be meant is turned down in a sentence, before anything runs.
+    for wrong in ("90", "0", "-0.5"):
+        with pytest.raises(SystemExit, match="--bar is a share from 0 to 1"):
+            main([*common, "--bar", wrong])
+    with pytest.raises(SystemExit) as refused:
+        main([*common, "--price", "good-model=-1/5"])
+    assert isinstance(refused.value.code, str) and "price" in refused.value.code
