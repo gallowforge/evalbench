@@ -4,14 +4,47 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('evalbench:rater', 'e2e'));
 });
 
-test('overview shows the leaderboard and what changed', async ({ page }) => {
+test('the home page names the model to use, and the answer follows the bar', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('leads the core battery');
-  for (const name of ['Nimbus Pro', 'Atlas 70B', 'Orion Mini', 'Vega 8B']) {
-    await expect(page.getByText(name).first()).toBeVisible();
+  const answer = page.getByRole('heading', { level: 1 });
+  await expect(answer).toContainText('Use Orion Mini');
+  await expect(page.getByText(/22 of 24 right for \$0\.12 per 1,000 answers/).first()).toBeVisible();
+  for (const name of ['Nimbus Pro', 'Atlas 70B', 'Orion Mini', 'Lyra Flash', 'Vega 8B']) {
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible();
   }
-  await expect(page.getByText(/answers graded by/)).toBeVisible();
-  await expect(page.getByRole('heading', { name: /Since run #5/ })).toBeVisible();
+  for (const name of ['Every model', 'Task by task', 'Would the answer hold?']) {
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+  }
+
+  // Ask for more and the pick changes; ask for less and a free model will do.
+  const bar = page.getByRole('slider');
+  await bar.fill('95');
+  await expect(answer).toContainText('Use Nimbus Pro');
+  await bar.fill('80');
+  await expect(answer).toContainText('Use Atlas 70B');
+  await page.getByRole('button', { name: 'Back to 90%' }).click();
+  await expect(answer).toContainText('Use Orion Mini');
+  await page.getByRole('button', { name: 'Fastest' }).click();
+  await expect(page.getByText(/in 625 ms per answer/).first()).toBeVisible();
+
+  // Every job has an answer of its own, and the old scoreboard links still land on it.
+  await page.getByRole('link', { name: 'Core battery' }).first().click();
+  await expect(page).toHaveURL(/\/verdict\/core-battery$/);
+  await expect(answer).toContainText('Use Atlas 70B');
+  await page.goto('/scoreboard/core-battery');
+  await expect(page).toHaveURL(/\/verdict\/core-battery$/);
+  await expect(answer).toContainText('Use Atlas 70B');
+});
+
+test('a job that asks for JSON shows each answer in its fields', async ({ page }) => {
+  await page.goto('/runs/9');
+  await expect(page.getByRole('heading', { name: /Support ticket triage/ })).toBeVisible();
+  await expect(page.locator('tbody button')).toHaveCount(120);
+  await page.goto('/runs/9/tasks/j03-two-problems');
+  await expect(page.locator('article')).toHaveCount(5);
+  for (const field of ['category', 'urgency', 'reply']) {
+    await expect(page.locator('article dt', { hasText: field }).first()).toBeVisible();
+  }
 });
 
 test('a run shows the result matrix and opens answers side by side', async ({ page }) => {

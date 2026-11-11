@@ -59,7 +59,7 @@ test('the theme menu works from the keyboard', async ({ page }) => {
   await page.keyboard.press('Enter');
   await page.keyboard.press('Tab'); // Tab closes it and carries on from the button
   await expect(page.getByRole('menu')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Settings' })).toBeFocused();
+  await expect(page.getByRole('link', { name: 'Data', exact: true })).toBeFocused();
 });
 
 for (const mode of ['dark', 'light'] as const) {
@@ -67,14 +67,18 @@ for (const mode of ['dark', 'light'] as const) {
     test.setTimeout(90_000);
     await page.emulateMedia({ colorScheme: mode });
     const pages: [string, string][] = [
-      ['/', 'overview'],
+      ['/', 'the verdict'],
+      ['/verdict/core-battery', 'the verdict on the other job'],
       ['/rate?run=6', 'judging'],
-      ['/scoreboard', 'scoreboard'],
+      ['/rate?run=9', 'judging answers in fields'],
       ['/runs', 'runs'],
       ['/runs/6', 'run'],
+      ['/runs/9', 'run of five models'],
       ['/runs/6/tasks/c04-summary', 'answers side by side'],
+      ['/runs/9/tasks/j03-two-problems', 'answers in fields'],
       ['/suites', 'suites'],
       ['/suites/core-battery', 'suite'],
+      ['/suites/support-triage', 'suite with a bar and field checks'],
       ['/models', 'models'],
       ['/data', 'data'],
       ['/settings', 'settings'],

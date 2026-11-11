@@ -55,10 +55,11 @@ function CheckEditor({ check, onChange, onRemove }: { check: Check; onChange: (c
   const t = check.type;
   const meta = CHECK_TYPES.find((c) => c.value === t)!;
   return (
-    <div className="rounded-[12px] border border-line-2 bg-panel-2 p-4">
-      <div className="mb-3 flex items-center gap-2">
+    <div className="rounded-[10px] border border-line-2 bg-panel-2 p-4">
+      {/* On a phone the label takes a line of its own, under the kind, the weight and the bin. */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <select
-          className="input h-8 w-auto py-0 text-[12.5px] font-medium"
+          className="input h-8 w-auto min-w-0 flex-1 py-0 text-[12.5px] font-medium sm:flex-none"
           aria-label="Check type"
           value={t}
           onChange={(e) => onChange({ type: e.target.value as Check['type'] })}
@@ -70,7 +71,7 @@ function CheckEditor({ check, onChange, onRemove }: { check: Check; onChange: (c
           ))}
         </select>
         <input
-          className="input h-8 flex-1 py-0 text-[12.5px]"
+          className="input order-last h-8 basis-full py-0 text-[12.5px] sm:order-none sm:flex-1 sm:basis-0"
           placeholder="Label (optional)"
           aria-label="Check label"
           value={check.label ?? ''}
@@ -94,13 +95,32 @@ function CheckEditor({ check, onChange, onRemove }: { check: Check; onChange: (c
       <div className="grid gap-3 md:grid-cols-2">
         {t !== 'length' && (
           <Field label="Grade this part">
-            <select className="input" value={check.extract ?? ''} onChange={(e) => set({ extract: e.target.value || undefined })}>
+            {/* A field is read out of the answer's JSON, so the part is settled while one is named. */}
+            <select
+              className="input"
+              disabled={!!check.field}
+              value={check.field ? 'json' : (check.extract ?? '')}
+              onChange={(e) => set({ extract: e.target.value || undefined })}
+            >
               {EXTRACTS.map((x) => (
                 <option key={x.value} value={x.value}>
                   {x.label}
                 </option>
               ))}
             </select>
+          </Field>
+        )}
+        {t !== 'json' && t !== 'python' && (
+          <Field label="Field of a JSON answer" hint="Optional. A dotted path such as reply or customer.name: the check grades that field alone.">
+            <input
+              className="input font-mono text-[12.5px]"
+              placeholder="the whole answer"
+              value={check.field ?? ''}
+              onChange={(e) => {
+                const field = e.target.value.trim();
+                set(field ? { field, extract: undefined } : { field: undefined });
+              }}
+            />
           </Field>
         )}
         {t === 'exact' && (
@@ -270,7 +290,7 @@ function TaskEditor({
 }) {
   const set = (patch: Partial<Task>) => onChange({ ...task, ...patch });
   return (
-    <div className="space-y-4 border-t border-line bg-ink/[0.012] px-5 py-5">
+    <div className="mb-8 ml-[7px] space-y-4 border-l-2 border-ink/15 pt-1 pb-1 pl-5">
       <div className="grid gap-3 md:grid-cols-[1fr_1.4fr_1fr]">
         <Field label="Id">
           <input className="input font-mono text-[12.5px]" value={task.id} onChange={(e) => set({ id: e.target.value })} />
@@ -303,7 +323,7 @@ function TaskEditor({
         </Field>
       </div>
       <div>
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
           <span className="text-[13.5px] font-semibold text-ink-2">Automatic checks</span>
           <span className="text-[12px] text-faint">The task passes when every check passes</span>
         </div>
@@ -335,13 +355,13 @@ function TaskEditor({
 
 function RubricEditor({ rubric, onChange }: { rubric: RubricDimension[]; onChange: (r: RubricDimension[]) => void }) {
   return (
-    <div className="card p-5">
-      <p className="mb-4 text-[13px] text-muted">
-        Raters score each response from 1 (unusable) to 5 (excellent) on every dimension, then pick the better response and justify it.
+    <div>
+      <p className="mb-5 max-w-[70ch] text-[14px] leading-relaxed text-muted">
+        Judges score each answer from 1 (unusable) to 5 (excellent) on every dimension, then pick the better answer and say why.
       </p>
-      <div className="space-y-2.5">
+      <div className="border-t border-line">
         {rubric.map((d, i) => (
-          <div key={i} className="grid items-start gap-2.5 rounded-[12px] border border-line-2 bg-panel-2 p-3 md:grid-cols-[180px_200px_1fr_auto]">
+          <div key={i} className="grid items-start gap-2.5 border-b border-line py-3 md:grid-cols-[180px_200px_1fr_auto]">
             <input
               className="input font-mono text-[12.5px]"
               aria-label="Dimension id"
@@ -373,7 +393,7 @@ function RubricEditor({ rubric, onChange }: { rubric: RubricDimension[]; onChang
         ))}
       </div>
       <button
-        className="btn-ghost mt-3 h-8 text-[12.5px]"
+        className="btn-ghost mt-4 h-8 text-[12.5px]"
         onClick={() => onChange([...rubric, { id: `dimension_${rubric.length + 1}`, label: 'New dimension', description: '' }])}
       >
         <Plus size={14} /> Add dimension
@@ -444,6 +464,9 @@ export function SuiteDetail({ id }: { id: string }) {
         subtitle={p.description}
         actions={
           <>
+            <Link href={`/verdict/${id}`} className="btn-ghost">
+              The verdict
+            </Link>
             <a className="btn-ghost" {...download(`/suites/${id}/yaml`)}>
               <Download size={14} /> YAML
             </a>
@@ -467,54 +490,81 @@ export function SuiteDetail({ id }: { id: string }) {
       />
 
       {tab === 'tasks' && (
-        <div className="card overflow-hidden">
-          {draft.tasks.map((t, i) => {
-            const isOpen = open === `${i}`;
-            return (
-              <div key={i} className={cx(i > 0 && 'border-t border-line')}>
-                <button
-                  type="button"
-                  onClick={() => setOpen(isOpen ? null : `${i}`)}
-                  className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-ink/[0.02]"
-                >
-                  <ChevronRight size={15} className={cx('shrink-0 text-faint transition-transform', isOpen && 'rotate-90')} />
-                  <span className="hidden w-[150px] shrink-0 truncate font-mono text-[11.5px] text-faint sm:block">{t.id}</span>
-                  {/* On a phone the id moves under the title, so the title gets the width. */}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] text-ink">{t.title || t.prompt.slice(0, 80)}</span>
-                    <span className="block truncate font-mono text-[11px] text-faint sm:hidden">{t.id}</span>
-                  </span>
-                  <span className="chip hidden capitalize sm:inline-flex">{t.category}</span>
-                  <span className="hidden w-[190px] justify-end gap-1 md:flex">
-                    {t.checks.length ? (
-                      [...new Set(t.checks.map((c) => c.type))].map((type) => (
-                        <span key={type} className="rounded-[6px] bg-ink/[0.04] px-1.5 py-0.5 font-mono text-[10.5px] text-muted">
-                          {type === 'not_contains' ? 'avoids' : type}
-                          {t.checks.filter((c) => c.type === type).length > 1 ? ` ×${t.checks.filter((c) => c.type === type).length}` : ''}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-[12px] text-faint">human only</span>
-                    )}
-                  </span>
-                </button>
-                {isOpen && (
-                  <TaskEditor
-                    task={t}
-                    categories={categories}
-                    onChange={(nt) => setDraft({ ...draft, tasks: draft.tasks.map((x, j) => (j === i ? nt : x)) })}
-                    onRemove={() => {
-                      setDraft({ ...draft, tasks: draft.tasks.filter((_, j) => j !== i) });
-                      setOpen(null);
-                    }}
-                  />
-                )}
-              </div>
-            );
-          })}
-          <div className="border-t border-line px-5 py-3">
+        <div>
+          {/* The bar belongs to the job: the verdict starts from it. */}
+          <label className="mb-7 flex flex-wrap items-center gap-x-2.5 gap-y-2 text-[14.5px] text-ink-2">
+            <span>A model is good enough for this job when it passes</span>
+            <span className="inline-flex items-center gap-1.5">
+              <input
+                className="input num h-8 w-[4.25rem] px-2.5 py-0 text-[14px]"
+                type="number"
+                min={1}
+                max={100}
+                placeholder="90"
+                aria-label="The bar, as a percentage of tasks passed"
+                value={draft.bar ? Math.round(draft.bar * 100) : ''}
+                onChange={(e) => {
+                  const n = Math.round(Number(e.target.value));
+                  setDraft({ ...draft, bar: e.target.value === '' || !(n > 0) ? null : Math.min(n, 100) / 100 });
+                }}
+              />
+              <span>% of the tasks.</span>
+            </span>
+            <span className="text-[13px] text-faint">Leave it empty for 90%.</span>
+          </label>
+          <div className="border-t-2 border-ink">
+            {draft.tasks.map((t, i) => {
+              const isOpen = open === `${i}`;
+              const kinds = [...new Set(t.checks.map((c) => c.type))].map((type) => {
+                const n = t.checks.filter((c) => c.type === type).length;
+                return `${type === 'not_contains' ? 'avoids' : type}${n > 1 ? ` ×${n}` : ''}`;
+              });
+              return (
+                <div key={i} className={cx(i > 0 && 'border-t border-line')}>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(isOpen ? null : `${i}`)}
+                    className="group flex w-full items-center gap-3 py-3 text-left"
+                  >
+                    <ChevronRight size={15} className={cx('shrink-0 text-faint transition-transform group-hover:text-ink', isOpen && 'rotate-90')} />
+                    <span className="hidden w-[150px] shrink-0 truncate font-mono text-[11.5px] text-faint sm:block">{t.id}</span>
+                    {/* On a phone the id moves under the title, so the title gets the width. */}
+                    <span className="min-w-0 flex-1">
+                      <span className={cx('block truncate text-[14px] text-ink underline-offset-4 group-hover:underline', isOpen && 'font-semibold')}>
+                        {t.title || t.prompt.slice(0, 80)}
+                      </span>
+                      <span className="block truncate font-mono text-[11px] text-faint sm:hidden">{t.id}</span>
+                    </span>
+                    <span className="hidden w-[120px] shrink-0 truncate text-[13px] capitalize text-muted sm:block">{t.category}</span>
+                    <span className="hidden w-[200px] shrink-0 truncate text-right font-mono text-[11.5px] text-muted md:block">
+                      {/* Two kinds fit and say something; a longer list would be cut off, so it becomes a count. */}
+                      {kinds.length === 0 ? (
+                        <span className="font-sans text-[12.5px] text-faint">human only</span>
+                      ) : kinds.length <= 2 ? (
+                        kinds.join(' · ')
+                      ) : (
+                        <span className="font-sans text-[13px]">{plural(t.checks.length, 'check')}</span>
+                      )}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <TaskEditor
+                      task={t}
+                      categories={categories}
+                      onChange={(nt) => setDraft({ ...draft, tasks: draft.tasks.map((x, j) => (j === i ? nt : x)) })}
+                      onRemove={() => {
+                        setDraft({ ...draft, tasks: draft.tasks.filter((_, j) => j !== i) });
+                        setOpen(null);
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="border-t border-line py-3">
             <button
-              className="btn-quiet h-8 text-[12.5px]"
+              className="btn-quiet -ml-3 h-8 text-[12.5px]"
               onClick={() => {
                 const n = draft.tasks.length + 1;
                 setDraft({

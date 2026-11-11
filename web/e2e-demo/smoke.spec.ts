@@ -2,16 +2,23 @@ import { expect, type Page, test } from '@playwright/test';
 
 // What a visitor to the static demo can reach. Paths are relative to the site's base (/evalbench/).
 const ROUTES: { path: string; shows: RegExp }[] = [
-  { path: '', shows: /leads the core battery/ },
+  { path: '', shows: /Use Orion Mini/ },
+  { path: 'verdict/support-triage', shows: /22 of 24 right/ },
+  { path: 'verdict/core-battery', shows: /Use Atlas 70B/ },
+  // Links to the old scoreboard still land on the answer.
+  { path: 'scoreboard', shows: /Use Orion Mini/ },
+  { path: 'scoreboard/core-battery', shows: /Use Atlas 70B/ },
   { path: 'rate', shows: /Answer A/ },
   { path: 'rate?run=6', shows: /Answer A/ },
-  { path: 'scoreboard', shows: /Nimbus Pro/ },
-  { path: 'scoreboard/core-battery', shows: /Nimbus Pro/ },
-  { path: 'runs', shows: /vega 8b re-quantised/ },
+  { path: 'rate?run=9', shows: /Answer A/ },
+  { path: 'runs', shows: /before launch/ },
   { path: 'runs/6', shows: /Core battery/ },
+  { path: 'runs/9', shows: /Support ticket triage/ },
   { path: 'runs/6/tasks/c04-summary', shows: /Exactly two sentences/ },
-  { path: 'suites', shows: /Core battery/ },
+  { path: 'runs/9/tasks/j03-two-problems', shows: /Urgency is high/ },
+  { path: 'suites', shows: /Support ticket triage/ },
   { path: 'suites/core-battery', shows: /Tasks · 20/ },
+  { path: 'suites/support-triage', shows: /Tasks · 24/ },
   { path: 'models', shows: /nimbus-pro/ },
   { path: 'data', shows: /Preference pairs/ },
   { path: 'settings', shows: /Justification minimum/ },
@@ -106,15 +113,20 @@ test('the site opens at its root, moves between sections under its base path and
   const nav = page.getByRole('navigation', { name: 'Main' });
   for (const [name, path] of [
     ['Runs', '/evalbench/runs'],
-    ['Scoreboard', '/evalbench/scoreboard'],
+    ['Judge', '/evalbench/rate'],
     ['Suites', '/evalbench/suites'],
-    ['Data', '/evalbench/data'],
+    ['Models', '/evalbench/models'],
+    ['Verdict', '/evalbench/'],
   ]) {
     await nav.getByRole('link', { name: new RegExp(`^${name}`) }).click();
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await settled(page);
     await expect(nav.getByRole('link', { name: new RegExp(`^${name}`) })).toHaveAttribute('aria-current', 'page');
   }
+  // Data and settings sit beside the name, out of the row of sections.
+  await page.getByRole('link', { name: 'Data', exact: true }).click();
+  await expect(page).toHaveURL(/\/evalbench\/data$/);
+  await settled(page);
   await page.goto('runs');
   await page
     .getByRole('link', { name: /vega 8b re-quantised/ })
@@ -134,6 +146,29 @@ test('the site opens at its root, moves between sections under its base path and
   expect(problems).toEqual([]);
 });
 
+test('the answer follows the bar, and each job has its own', async ({ page }) => {
+  const problems = watch(page);
+  await page.goto('');
+  await settled(page);
+  const answer = page.getByRole('heading', { level: 1 });
+  await expect(answer).toContainText('Use Orion Mini');
+  const bar = page.getByRole('slider');
+  await bar.fill('95');
+  await expect(answer).toContainText('Use Nimbus Pro');
+  await fits(page);
+  await bar.fill('80');
+  await expect(answer).toContainText('Use Atlas 70B');
+  await page.getByRole('button', { name: 'Back to 90%' }).click();
+  await expect(answer).toContainText('Use Orion Mini');
+  await page.getByRole('link', { name: 'Core battery' }).first().click();
+  await expect(page).toHaveURL(/\/evalbench\/verdict\/core-battery$/);
+  await expect(answer).toContainText('Use Atlas 70B');
+  await page.getByRole('slider').fill('95');
+  await expect(answer).toContainText('No model is good enough yet');
+  await fits(page);
+  expect(problems).toEqual([]);
+});
+
 test('a new run replays the recorded answers, finishes, and is gone after a reload', async ({ page }) => {
   test.setTimeout(90_000);
   const problems = watch(page);
@@ -144,17 +179,19 @@ test('a new run replays the recorded answers, finishes, and is gone after a relo
   await fits(page);
   await dialog.getByRole('button', { name: 'Select all' }).click();
   await dialog.getByRole('button', { name: /^Start/ }).click();
-  await expect(page).toHaveURL(/\/evalbench\/runs\/7$/);
+  // The dialog offers the job that was run last, support triage: 24 examples for each of 5 models.
+  await expect(page).toHaveURL(/\/evalbench\/runs\/10$/);
   // It is seen working, not just done: answers arrive while the run is still going.
   await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible();
   await expect(page.getByText(/^(Queued|Running)$/).first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Stop' })).toHaveCount(0, { timeout: 60_000 });
   await expect(page.getByText('Done', { exact: true }).first()).toBeVisible();
-  await expect(page.locator('tbody button')).toHaveCount(80);
+  await expect(page.locator('tbody button')).toHaveCount(120);
   await fits(page);
   await page.goto('runs');
-  await expect(page.getByRole('link', { name: /#7/ }).first()).toBeHidden();
-  await page.goto('runs/7');
+  await settled(page);
+  await expect(page.getByRole('link', { name: /#10/ })).toHaveCount(0);
+  await page.goto('runs/10');
   await expect(page.getByText('No such run')).toBeVisible();
   expect(problems).toEqual([]);
 });
@@ -176,12 +213,12 @@ test('a rating is kept for the visit and forgotten on reload', async ({ page }) 
   await page.getByRole('button', { name: 'Submit verdict' }).click();
   await expect(progress).toHaveText(new RegExp(`${before + 1} of`));
   // Moving inside the app keeps it; the count and the newest rating on the data page show it.
-  await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Data' }).click();
-  await expect(page.getByText('89 rows')).toBeVisible();
+  await page.getByRole('link', { name: 'Data', exact: true }).click();
+  await expect(page.getByText('240 rows')).toBeVisible();
   await expect(page.getByText(/skips the check/).first()).toBeVisible();
   // A reload starts the visit over, as the notice says.
   await page.reload();
-  await expect(page.getByText('88 rows')).toBeVisible();
+  await expect(page.getByText('239 rows')).toBeVisible();
   await expect(page.getByText(/skips the check/)).toHaveCount(0);
   expect(problems).toEqual([]);
 });
@@ -228,6 +265,7 @@ test('what needs the server says so in a sentence instead of failing', async ({ 
   await page.goto('settings');
   await expect(page.getByText('not needed: the demo has no accounts')).toBeVisible();
   await expect(page.getByText('not used here: the demo shows recorded check results')).toBeVisible();
+  await expect(page.getByText('not needed here: the demo replays recorded answers').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Demo loaded' })).toBeDisabled();
   expect(problems).toEqual([]);
 });

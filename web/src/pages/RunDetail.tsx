@@ -6,7 +6,6 @@ import { api, download, type Result, type RunDetail } from '../api';
 import { cx, ErrorNote, isNotFound, Loading, ModelDot, NotFound, ResultCell, StatusPill } from '../components/ui';
 import { ago, compact, duration, ms, pct, plural } from '../lib/format';
 import { useNow } from '../lib/hooks';
-import { tone } from '../lib/theme';
 
 export function RunDetailPage({ id }: { id: number }) {
   const qc = useQueryClient();
@@ -35,7 +34,8 @@ export function RunDetailPage({ id }: { id: number }) {
   const errors = run.results.filter((r) => r.status === 'error').length;
   const resumable = !live && (run.status === 'interrupted' || run.status === 'cancelled' || errors > 0);
   const cols = run.models.length;
-  const lgCols = Math.min(cols, 4);
+  // Up to six models share one row on a desk, so no model is left alone on a second line.
+  const lgCols = Math.min(cols, 6);
 
   return (
     <>
@@ -49,7 +49,12 @@ export function RunDetailPage({ id }: { id: number }) {
           </h1>
           <div className="mt-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[14.5px] text-muted">
             <StatusPill status={run.status} />
-            {run.label && <span className="chip">{run.label}</span>}
+            {run.label && (
+              <span>
+                <span className="font-semibold text-ink-2">{run.label}</span>
+                <span className="ml-3.5 text-faint">·</span>
+              </span>
+            )}
             {/* Each dot ends the item before it, so a wrapped line never starts with one. */}
             <span>
               {plural(run.tasks.length, 'task')} × {plural(run.models.length, 'model')}
@@ -98,7 +103,7 @@ export function RunDetailPage({ id }: { id: number }) {
       <ErrorNote error={action.error} />
 
       <section
-        className="mb-10 grid grid-cols-1 border-y border-line sm:grid-cols-2 lg:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]"
+        className="grid grid-cols-1 border-t-2 border-ink sm:grid-cols-2 lg:[grid-template-columns:repeat(var(--cols),minmax(0,1fr))]"
         style={{ ['--cols' as string]: lgCols }}
       >
         {run.models.map((m, i) => {
@@ -107,13 +112,13 @@ export function RunDetailPage({ id }: { id: number }) {
             <div
               key={m.id}
               className={cx(
-                'min-w-0 py-6',
+                'min-w-0 py-7',
                 i > 0 && 'border-t border-line',
                 i < 2 ? 'sm:border-t-0' : 'sm:border-t',
-                i % 2 === 1 ? 'sm:border-l sm:pl-6' : 'sm:border-l-0 sm:pl-0 sm:pr-6',
+                i % 2 === 1 ? 'sm:border-l sm:pl-5' : 'sm:border-l-0 sm:pl-0 sm:pr-5',
                 i < lgCols ? 'lg:border-t-0' : 'lg:border-t',
-                i % lgCols !== 0 ? 'lg:border-l lg:pl-6' : 'lg:border-l-0 lg:pl-0',
-                'lg:pr-6',
+                i % lgCols !== 0 ? 'lg:border-l lg:pl-5' : 'lg:border-l-0 lg:pl-0',
+                'lg:pr-5',
               )}
             >
               <div className="flex items-center gap-2 text-[15px] font-semibold">
@@ -121,7 +126,9 @@ export function RunDetailPage({ id }: { id: number }) {
                 <span className="truncate">{m.label}</span>
               </div>
               <div className="mt-4 flex items-baseline gap-2.5">
-                <span className="slab text-[44px] leading-[0.85] font-semibold sm:text-[56px]">{pct(s.pass_rate)}</span>
+                <span className={cx('slab leading-[0.85] font-semibold', cols > 4 ? 'text-[44px] xl:text-[50px]' : 'text-[44px] sm:text-[56px]')}>
+                  {pct(s.pass_rate)}
+                </span>
               </div>
               <div className="mt-2.5 text-[13.5px] text-muted">
                 {s.passed} of {s.attempted} tasks passed
@@ -129,10 +136,10 @@ export function RunDetailPage({ id }: { id: number }) {
               </div>
               <div className="mt-5 space-y-2">
                 {run.categories.map((c) => (
-                  <div key={c} className="grid grid-cols-[86px_minmax(0,1fr)_38px] items-center gap-2.5 text-[12.5px]">
-                    <span className="capitalize text-muted">{c}</span>
-                    <div className="h-[5px] overflow-hidden rounded-full bg-ink/[0.07]">
-                      <div className="h-full rounded-full" style={{ width: `${(s.categories[c] ?? 0) * 100}%`, background: tone(m.color) }} />
+                  <div key={c} className="grid grid-cols-[minmax(0,5.25rem)_minmax(0,1fr)_2.25rem] items-center gap-2 text-[12.5px]">
+                    <span className="truncate capitalize text-muted">{c}</span>
+                    <div className="h-[3px] overflow-hidden rounded-full bg-ink/[0.09]">
+                      <div className="h-full rounded-full bg-ink" style={{ width: `${(s.categories[c] ?? 0) * 100}%` }} />
                     </div>
                     <span className="num text-right font-semibold text-ink-2">{pct(s.categories[c])}</span>
                   </div>
@@ -147,18 +154,18 @@ export function RunDetailPage({ id }: { id: number }) {
         })}
       </section>
 
-      <section className="card overflow-hidden">
-        <div className="flex flex-wrap items-baseline justify-between gap-3 px-6 pt-5 pb-1">
-          <h2 className="text-[17px] font-semibold tracking-[-0.01em]">Every verdict</h2>
-          <span className="text-[13px] text-muted">Click any square to read the answers side by side</span>
+      <section className="border-t border-line pt-9">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <h2 className="text-[19px] leading-[1.25] font-bold tracking-[-0.015em]">Every answer, graded</h2>
+          <span className="text-[13.5px] text-muted">Red failed. Open any mark to read the answers one under another.</span>
         </div>
-        <div className="overflow-x-auto px-4 pb-5">
+        <div className="-mx-2 mt-1 overflow-x-auto">
           <table className="w-full border-separate" style={{ borderSpacing: '8px 5px' }}>
             <thead>
               <tr>
                 <th className="hidden sm:table-cell" />
                 {run.models.map((m) => (
-                  <th key={m.id} className="pt-3 pb-1 text-[13px] font-semibold text-ink-2 sm:min-w-[110px]">
+                  <th key={m.id} className="pt-3 pb-1 text-[13px] font-semibold text-ink-2 sm:min-w-[96px]">
                     <span className="inline-flex items-center gap-1.5">
                       <ModelDot color={m.color} size={8} />
                       {m.label}

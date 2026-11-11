@@ -14,7 +14,7 @@ async function autofill(page: Page, values: Record<string, string>) {
   }, values);
 }
 
-const signedIn = (page: Page) => expect(page.getByRole('heading', { level: 1 })).toContainText('leads the core battery');
+const signedIn = (page: Page) => expect(page.getByRole('heading', { level: 1 })).toContainText('Use Orion Mini');
 
 /** The sign-in card in the device's dark theme, then in light. */
 async function bothThemes(page: Page, where: string) {

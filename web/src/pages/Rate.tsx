@@ -3,8 +3,8 @@ import { Check, ChevronDown, Eye, EyeOff, Scale, SkipForward } from 'lucide-reac
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
 import { api, type Model, type NextPair, type Overview, type Pair, type RatingRow, type RunListItem } from '../api';
-import { Markdown } from '../components/Markdown';
-import { cx, Empty, ErrorNote, Loading, ModelDot, PageHeader, PenRing, PenTick, Segmented } from '../components/ui';
+import { Answer, Markdown } from '../components/Markdown';
+import { cx, Empty, ErrorNote, Loading, ModelDot, PageHeader, PenRing, PenTick, Section, Segmented } from '../components/ui';
 import { plural } from '../lib/format';
 import { useMeta, useRater } from '../lib/hooks';
 import { tone } from '../lib/theme';
@@ -24,33 +24,67 @@ const STOPS = [
 const SCALE_HINT = ['', 'Unusable', 'Major problems', 'Acceptable', 'Good', 'Excellent'];
 const sideColor = (s: Side) => (s === 'a' ? 'var(--color-side-a)' : 'var(--color-side-b)');
 
-function RaterGate({ onSave }: { onSave: (name: string) => void }) {
+const HOW = [
+  'You read two answers to the same task. The names are hidden and the order is shuffled, so nothing but the answers can sway you.',
+  'You score each one on the job\u2019s rubric, say which is better and by how much, and give the reason in a sentence.',
+  'When the queue is empty the labels turn over. Your verdicts become the judges\u2019 ranking on the verdict page.',
+];
+
+function RaterGate({ onSave, waiting }: { onSave: (name: string) => void; waiting: Overview['rating'] }) {
   const [name, setName] = useState('');
+  const queued = waiting.filter((w) => w.total > 0);
   return (
-    <div className="card mx-auto max-w-[480px] p-8">
-      <div className="slab text-[30px] leading-tight font-semibold">Who is judging?</div>
-      <p className="mt-2 text-[14.5px] leading-relaxed text-muted">
-        A name or initials, kept in this browser. It signs your verdicts and keeps your queue apart from other judges.
-      </p>
-      <form
-        className="mt-6 flex gap-2.5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (name.trim()) onSave(name);
-        }}
+    <div>
+      <Section
+        first
+        title="Who is judging?"
+        note="A name or initials, kept in this browser. It signs your verdicts and keeps your queue apart from other judges."
       >
-        <input
-          className="input"
-          autoFocus
-          aria-label="Your name or initials"
-          placeholder="e.g. sam"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <button className="btn-primary" disabled={!name.trim()}>
-          Start judging
-        </button>
-      </form>
+        <form
+          className="flex max-w-[460px] gap-2.5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (name.trim()) onSave(name);
+          }}
+        >
+          <input
+            className="input"
+            autoFocus
+            aria-label="Your name or initials"
+            placeholder="e.g. sam"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <button className="btn-primary shrink-0" disabled={!name.trim()}>
+            Start judging
+          </button>
+        </form>
+      </Section>
+      {queued.length > 0 && (
+        <Section title="What is waiting" note="Pairs of answers that nobody has compared yet.">
+          <div>
+            {queued.map((w, i) => (
+              <div key={w.suite_id} className={cx('flex items-baseline justify-between gap-6 py-3.5', i === 0 ? 'pt-0' : 'border-t border-line')}>
+                <span className="min-w-0 truncate text-[16px] font-semibold tracking-[-0.01em]">{w.title}</span>
+                <span className="shrink-0 text-[13.5px] text-muted">
+                  <span className="slab mr-1.5 text-[22px] leading-none font-semibold text-ink">{w.remaining}</span>
+                  of {plural(w.total, 'pair')} to judge
+                </span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
+      <Section title="How it goes">
+        <ol className="max-w-[64ch] space-y-4">
+          {HOW.map((step, i) => (
+            <li key={i} className="grid grid-cols-[2rem_minmax(0,1fr)] items-baseline text-[15px] leading-relaxed text-ink-2">
+              <span className="slab text-[19px] leading-none font-semibold text-faint">{i + 1}</span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
+      </Section>
     </div>
   );
 }
@@ -163,7 +197,7 @@ export function Rate() {
     return (
       <>
         <PageHeader title="Judge blind" subtitle="Two answers to the same task, names hidden, order shuffled. Score each, give a verdict, say why." />
-        <RaterGate onSave={setRater} />
+        <RaterGate onSave={setRater} waiting={overview.data?.rating ?? []} />
       </>
     );
   }
@@ -172,7 +206,7 @@ export function Rate() {
     return (
       <>
         <PageHeader title="Judge blind" />
-        <div className="card">
+        <div className="border-t-2 border-ink">
           <Empty
             icon={<Scale size={20} />}
             title="Nothing to judge yet"
@@ -337,7 +371,7 @@ function TastingCard({
         )}
       </header>
       <div className="flex-1 px-7 pt-5 pb-7">
-        <Markdown text={pair[side].output} />
+        <Answer text={pair[side].output} />
       </div>
       <footer className="border-t border-line bg-panel-2 px-7 pt-4 pb-6">
         <div className="mb-1 text-[12.5px] font-semibold text-muted">Score this answer, 1 to 5</div>

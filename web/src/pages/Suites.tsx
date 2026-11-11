@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { api, type SuitePayload, type SuiteSummary } from '../api';
 import { YamlEditor } from '../components/LazyYaml';
-import { Empty, ErrorNote, Loading, Modal, PageHeader } from '../components/ui';
+import { cx, Empty, ErrorNote, Loading, Modal, PageHeader } from '../components/ui';
 import { DEMO, SUITES_READ_ONLY } from '../lib/demo';
 import { ago, plural } from '../lib/format';
 
@@ -54,7 +54,7 @@ export function Suites() {
     <>
       <PageHeader
         title="Suites"
-        subtitle="A suite is a set of tasks with automatic checks and a rubric for human raters. Edit them here or keep them as YAML in git."
+        subtitle="A suite is one job written down: its tasks, the checks that grade each answer and the rubric for human judges. Edit it here or keep it as YAML in git."
         actions={
           <>
             <input
@@ -89,46 +89,52 @@ export function Suites() {
       {q.isLoading && <Loading />}
       <ErrorNote error={q.error} />
       {q.data?.length === 0 && (
-        <div className="card">
+        <div className="border-t-2 border-ink">
           <Empty icon={<FileStack size={18} />} title="No suites">
             Create one or import a YAML file.
           </Empty>
         </div>
       )}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {q.data?.map((s) => (
-          <Link key={s.id} href={`/suites/${s.id}`} className="card group flex flex-col p-5 transition-colors hover:border-line-2 hover:bg-panel-2">
-            <div className="flex items-start justify-between gap-3">
+      {q.data && q.data.length > 0 && (
+        <div className="border-t-2 border-ink">
+          {q.data.map((s, i) => (
+            <Link
+              key={s.id}
+              href={`/suites/${s.id}`}
+              className={cx('group grid gap-x-12 gap-y-4 py-8 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_140px]', i > 0 && 'border-t border-line')}
+            >
               <div className="min-w-0">
-                <div className="truncate text-[15px] font-semibold">{s.title}</div>
-                <div className="mt-0.5 font-mono text-[11.5px] text-faint">
-                  {s.id} · v{s.version}
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="text-[20px] leading-[1.2] font-bold tracking-[-0.02em] underline-offset-4 group-hover:underline">{s.title}</span>
+                  <span className="font-mono text-[12px] text-faint">
+                    {s.id} · v{s.version}
+                  </span>
                 </div>
+                <p className="mt-2.5 line-clamp-3 max-w-[58ch] text-[14px] leading-relaxed text-muted">{s.description || 'No description.'}</p>
               </div>
-              <span className="num shrink-0 rounded-full bg-ink/[0.05] px-2.5 py-1 text-[12px] text-ink-2">{plural(s.tasks, 'task')}</span>
-            </div>
-            <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-muted">{s.description || 'No description.'}</p>
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {Object.entries(s.categories).map(([c, n]) => (
-                <span key={c} className="chip capitalize">
-                  {c} <span className="num text-faint">{n}</span>
-                </span>
-              ))}
-            </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {Object.entries(s.check_types).map(([c, n]) => (
-                <span key={c} className="chip border-transparent bg-ink/[0.025] font-mono text-[11px] text-faint">
-                  {CHECK_LABEL[c] ?? c} ×{n}
-                </span>
-              ))}
-            </div>
-            <div className="mt-auto flex items-center justify-between border-t border-line pt-3.5 text-[12px] text-faint" style={{ marginTop: 18 }}>
-              <span>{s.runs ? `${plural(s.runs, 'run')} · last ${ago(s.last_run?.created_at)}` : 'Never run'}</span>
-              <span>edited {ago(s.updated_at)}</span>
-            </div>
-          </Link>
-        ))}
-      </div>
+              <dl className="grid grid-cols-[5.5rem_minmax(0,1fr)] content-start gap-x-3 gap-y-2 text-[13.5px]">
+                <dt className="text-faint">{plural(s.tasks, 'task')}</dt>
+                <dd className="text-ink-2">
+                  {Object.entries(s.categories)
+                    .map(([c, n]) => `${c} ${n}`)
+                    .join(' · ')}
+                </dd>
+                <dt className="text-faint">Graded by</dt>
+                <dd className="text-ink-2">
+                  {Object.entries(s.check_types)
+                    .map(([c, n]) => `${CHECK_LABEL[c] ?? c} ×${n}`)
+                    .join(' · ') || 'human judges only'}
+                </dd>
+              </dl>
+              <div className="text-[13px] leading-relaxed text-muted md:text-right">
+                <div className="font-semibold text-ink-2">{s.runs ? plural(s.runs, 'run') : 'Never run'}</div>
+                {s.runs > 0 && <div>latest {ago(s.last_run?.created_at)}</div>}
+                <div className="text-faint">edited {ago(s.updated_at)}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
       <Modal
         open={open}
         onClose={() => setOpen(false)}

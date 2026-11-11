@@ -3,16 +3,21 @@ import { AlertTriangle, ArrowLeft, Check, ChevronDown, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'wouter';
 import { api, type Result, type RunDetail, type TaskAnswers } from '../api';
-import { Markdown, Raw } from '../components/Markdown';
+import { Answer, Markdown, Raw } from '../components/Markdown';
 import { cx, ErrorNote, isNotFound, Loading, ModelDot, NotFound, Segmented } from '../components/ui';
 import { compact, ms } from '../lib/format';
-import { tone } from '../lib/theme';
 
+/** Passing is the quiet case; only what failed takes the red. */
 function dotFor(r?: Result) {
-  if (!r || r.status !== 'done') return 'bg-ink/15';
-  if (r.passed === null) return 'bg-ink/30';
-  if (r.passed) return 'bg-good';
-  return (r.score ?? 0) > 0 ? 'bg-warn' : 'bg-bad';
+  if (!r || r.status !== 'done') return 'border border-ink/25';
+  if (r.passed === null || r.passed) return 'bg-ink/25';
+  return (r.score ?? 0) > 0 ? 'bg-warn' : 'bg-mark';
+}
+
+function outcome(r?: Result): { word: string; cls: string } | null {
+  if (!r || r.status !== 'done' || r.passed === null) return null;
+  if (r.passed) return { word: 'Passed', cls: 'text-muted' };
+  return (r.score ?? 0) > 0 ? { word: 'Partly right', cls: 'font-semibold text-warn' } : { word: 'Failed', cls: 'font-semibold text-mark-ink' };
 }
 
 export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
@@ -49,7 +54,7 @@ export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
                       href={`/runs/${runId}/tasks/${t.id}`}
                       className={cx(
                         'flex items-center gap-2 rounded-[8px] px-2.5 py-[7px] text-[13.5px] transition-colors',
-                        t.id === taskId ? 'bg-ink text-panel' : 'text-ink-2 hover:bg-ink/[0.05]',
+                        t.id === taskId ? 'bg-ink/[0.08] font-semibold text-ink' : 'text-ink-2 hover:bg-ink/[0.04]',
                       )}
                     >
                       <span className="min-w-0 flex-1 truncate">{t.title}</span>
@@ -67,8 +72,11 @@ export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
       </aside>
 
       <div className="min-w-0">
-        <div className="mb-3 flex items-center gap-2.5">
-          <span className="chip capitalize">{task.category}</span>
+        <Link href={`/runs/${runId}`} className="mb-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-muted hover:text-ink lg:hidden">
+          <ArrowLeft size={15} /> Run {runId}
+        </Link>
+        <div className="mb-3 flex items-baseline gap-2.5">
+          <span className="text-[13.5px] font-semibold capitalize text-muted">{task.category}</span>
           <span className="font-mono text-[12.5px] text-faint">{task.id}</span>
         </div>
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
@@ -84,7 +92,7 @@ export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
           />
         </div>
 
-        <div className="mb-8 border-l-[3px] border-ink/15 pl-5">
+        <div className="mb-10 border-l-[3px] border-ink/15 pl-5">
           <button
             type="button"
             className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-muted hover:text-ink"
@@ -94,18 +102,19 @@ export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
           </button>
           {showPrompt && (
             <>
+              {/* The system prompt is long and the same for a whole job, so it waits behind its label. */}
               {task.system && (
-                <div className="mb-3 text-[13.5px] text-muted">
-                  <span className="font-semibold text-ink-2">System: </span>
-                  {task.system}
-                </div>
+                <details className="mb-3 max-w-[86ch] text-[13.5px] text-muted">
+                  <summary className="cursor-pointer font-semibold text-ink-2 hover:text-ink">System prompt</summary>
+                  <div className="mt-2 leading-relaxed whitespace-pre-wrap">{task.system}</div>
+                </details>
               )}
               <div className="max-w-[86ch]">
                 <Markdown text={task.prompt} className="prose-answer text-[15.5px] text-ink" />
               </div>
               {task.reference && (
-                <div className="mt-4 max-w-[86ch] rounded-[10px] border border-good/25 bg-good-tint px-4 py-3 text-[14px] text-ink-2">
-                  <span className="font-semibold text-good">Reference: </span>
+                <div className="mt-4 max-w-[86ch] text-[14px] text-ink-2">
+                  <span className="font-semibold text-ink">Reference answer: </span>
                   {task.reference}
                 </div>
               )}
@@ -113,44 +122,48 @@ export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
           )}
         </div>
 
-        <div className="grid gap-5" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${answers.length > 3 ? 300 : 340}px, 1fr))` }}>
-          {answers.map((a) => {
+        {/* One answer under another, each with its model and its checks in the margin: any number of
+            models reads the same way, and the answers keep a line length worth reading. */}
+        <div>
+          {answers.map((a, i) => {
             const m = modelOf(a.model_id);
+            const out = outcome(byKey.get(`${task.id}:${a.model_id}`));
             return (
-              <article key={a.id} className="card relative flex min-w-0 flex-col overflow-hidden">
-                <div className="absolute inset-x-0 top-0 h-[4px]" style={{ background: tone(m.color) }} />
-                <header className="px-6 pt-6 pb-4">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <ModelDot color={m.color} size={10} />
-                      <span className="truncate text-[16.5px] font-semibold tracking-[-0.01em]">{m.label}</span>
-                    </span>
-                    <span className="shrink-0 text-[12.5px] text-muted">
-                      {ms(a.latency_ms)} · {compact(a.output_tokens)} tokens
-                    </span>
+              <article
+                key={a.id}
+                className={cx(
+                  'grid min-w-0 gap-x-10 gap-y-5 py-8 md:grid-cols-[230px_minmax(0,1fr)]',
+                  i === 0 ? 'border-t-2 border-ink' : 'border-t border-line',
+                )}
+              >
+                <header className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <ModelDot color={m.color} size={10} />
+                    <span className="truncate text-[16.5px] font-semibold tracking-[-0.01em]">{m.label}</span>
+                  </div>
+                  <div className="mt-1.5 text-[12.5px] text-muted">
+                    {out && <span className={out.cls}>{out.word} · </span>}
+                    {ms(a.latency_ms)} · {compact(a.output_tokens)} tokens
                   </div>
                   {a.checks.length > 0 && (
-                    <ul className="mt-4 space-y-1.5">
-                      {a.checks.map((c, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-[13.5px]" title={c.detail}>
-                          <span
-                            className={cx(
-                              'mt-[2px] grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full',
-                              c.passed ? 'bg-good-tint text-good' : 'bg-bad-tint text-bad-ink',
-                            )}
-                          >
-                            {c.passed ? <Check size={11} strokeWidth={3.4} /> : <X size={11} strokeWidth={3.4} />}
-                          </span>
+                    <ul className="mt-4 space-y-2">
+                      {a.checks.map((c, j) => (
+                        <li key={j} className="flex items-start gap-2 text-[13px] leading-snug" title={c.detail}>
+                          {c.passed ? (
+                            <Check size={14} strokeWidth={2.6} className="mt-[2px] shrink-0 text-faint" />
+                          ) : (
+                            <X size={14} strokeWidth={3} className="mt-[2px] shrink-0 text-mark-ink" />
+                          )}
                           <span className="min-w-0">
-                            <span className={cx('font-semibold', c.passed ? 'text-ink-2' : 'text-bad-ink')}>{c.label}</span>
-                            <span className="text-muted"> · {c.detail}</span>
+                            <span className={cx('font-semibold', c.passed ? 'text-ink-2' : 'text-mark-ink')}>{c.label}</span>
+                            <span className="block text-muted">{c.detail}</span>
                           </span>
                         </li>
                       ))}
                     </ul>
                   )}
                 </header>
-                <div className="flex-1 border-t border-line px-6 py-5">
+                <div className="min-w-0 max-w-[78ch]">
                   {a.status === 'error' ? (
                     <div className="flex items-start gap-2 text-[14px] text-serious">
                       <AlertTriangle size={16} className="mt-0.5 shrink-0" /> {a.error}
@@ -160,7 +173,7 @@ export function Compare({ runId, taskId }: { runId: number; taskId: string }) {
                   ) : view === 'raw' ? (
                     <Raw text={a.output ?? ''} />
                   ) : (
-                    <Markdown text={a.output ?? ''} />
+                    <Answer text={a.output ?? ''} />
                   )}
                 </div>
               </article>

@@ -2,67 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, KeyRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { api, type Model, type RunListItem, type SuiteSummary } from '../api';
-import { ago, duration, pct } from '../lib/format';
-import { useNow } from '../lib/hooks';
-import { cx, ErrorNote, Field, ModelDot, Modal, StatusPill } from './ui';
-import { tone } from '../lib/theme';
-
-export function RunRow({ run }: { run: RunListItem; compact?: boolean }) {
-  const now = useNow();
-  const live = run.active || run.status === 'running';
-  const progress = run.progress.total ? run.progress.finished / run.progress.total : 0;
-  return (
-    <Link
-      href={`/runs/${run.id}`}
-      className="group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-8 gap-y-3 rounded-[12px] px-5 py-4 transition-colors hover:bg-ink/[0.035] md:grid-cols-[230px_minmax(0,1fr)_110px]"
-    >
-      <div className="min-w-0">
-        <div className="flex items-baseline gap-2.5">
-          <span className="slab text-[20px] leading-none font-semibold text-faint">#{run.id}</span>
-          <span className="truncate text-[15px] font-semibold text-ink">{run.label || run.suite_title}</span>
-        </div>
-        <div className="mt-1.5 flex items-center gap-2.5 text-[13px] text-muted">
-          <StatusPill status={run.status} />
-          <span className="truncate">{run.label ? run.suite_title : `${run.tasks} tasks`}</span>
-        </div>
-      </div>
-      <div className="col-span-2 grid grid-cols-2 gap-x-6 gap-y-3 md:col-span-1 lg:grid-cols-4">
-        {run.models.map((m) => (
-          <div key={m.id} className="min-w-0">
-            <div className="flex items-baseline justify-between gap-2">
-              <span className="flex min-w-0 items-center gap-1.5 text-[13px] text-ink-2">
-                <ModelDot color={m.color} size={7} />
-                <span className="truncate">{m.label}</span>
-              </span>
-              <span className="slab text-[17px] leading-none font-semibold text-ink">{pct(m.pass_rate)}</span>
-            </div>
-            <div className="mt-2 h-[4px] overflow-hidden rounded-full bg-ink/[0.07]">
-              <div className="h-full rounded-full" style={{ width: `${(m.pass_rate ?? 0) * 100}%`, background: tone(m.color) }} />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="col-start-2 row-start-1 text-right md:col-auto md:row-auto">
-        {live ? (
-          <div className="ml-auto w-28">
-            <div className="num text-[13px] font-semibold text-accent">
-              {run.progress.finished}/{run.progress.total}
-            </div>
-            <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-ink/[0.07]">
-              <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${progress * 100}%` }} />
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="text-[13px] text-ink-2">{ago(run.created_at, now)}</div>
-            <div className="num mt-0.5 text-[12px] text-faint">{duration(run.started_at, run.finished_at, now)}</div>
-          </>
-        )}
-      </div>
-    </Link>
-  );
-}
+import { api, type Model, type SuiteSummary } from '../api';
+import { cx, ErrorNote, Field, ModelDot, Modal } from './ui';
 
 export function NewRunModal({ open, onClose, suiteId }: { open: boolean; onClose: () => void; suiteId?: string }) {
   const [, navigate] = useLocation();
@@ -74,7 +15,9 @@ export function NewRunModal({ open, onClose, suiteId }: { open: boolean; onClose
   const [label, setLabel] = useState('');
 
   useEffect(() => {
-    if (!suite && suites.data?.length) setSuite(suiteId ?? suites.data[0].id);
+    // Without a suite to start from, offer the one that was run last: it is the job in hand.
+    const latest = [...(suites.data ?? [])].sort((a, b) => (b.last_run?.created_at ?? '').localeCompare(a.last_run?.created_at ?? ''))[0];
+    if (!suite && latest) setSuite(suiteId ?? latest.id);
   }, [suites.data, suite, suiteId]);
 
   const start = useMutation({

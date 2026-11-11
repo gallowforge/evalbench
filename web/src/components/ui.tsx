@@ -31,6 +31,41 @@ export function PageHeader({
   );
 }
 
+/**
+ * One ruled section of a sheet: its name in the margin, its content beside it. Pages are built
+ * from these instead of boxes, so the eye follows one left edge down the page. `tight` is for the
+ * working pages, where the sections are short and many.
+ */
+export function Section({
+  title,
+  note,
+  first,
+  tight,
+  children,
+}: {
+  title: ReactNode;
+  note?: ReactNode;
+  first?: boolean;
+  tight?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={cx(
+        'grid gap-x-12 md:grid-cols-[190px_minmax(0,1fr)]',
+        tight ? 'gap-y-4 py-8 md:py-10' : 'gap-y-6 py-11 md:py-14',
+        first ? 'border-t-2 border-ink' : 'border-t border-line',
+      )}
+    >
+      <div>
+        <h2 className="text-[19px] leading-[1.25] font-bold tracking-[-0.015em] text-balance">{title}</h2>
+        {note && <div className="mt-2 max-w-[44ch] text-[13.5px] leading-relaxed text-muted">{note}</div>}
+      </div>
+      <div className="min-w-0">{children}</div>
+    </section>
+  );
+}
+
 /** A titled sheet. `pad={false}` for lists that run edge to edge. */
 export function Card({
   children,
@@ -173,8 +208,9 @@ export function ResultCell({ result, onClick, active }: { result?: Result; onCli
     body = <span className="text-[12px]">–</span>;
     title = 'No automatic checks';
   } else if (result.passed) {
-    body = <Check size={15} strokeWidth={2.8} />;
-    tone = 'border-transparent bg-good-tint text-good';
+    // Passing is the expected case, so it stays quiet: the eye should land on what failed.
+    body = <Check size={14} strokeWidth={2.4} />;
+    tone = 'border-transparent bg-ink/[0.07] text-muted';
     title = 'All checks passed';
   } else if ((result.score ?? 0) > 0) {
     const passed = result.checks.filter((c) => c.passed).length;
@@ -187,7 +223,7 @@ export function ResultCell({ result, onClick, active }: { result?: Result; onCli
     title = `${passed} of ${result.checks.length} checks passed`;
   } else {
     body = <X size={15} strokeWidth={2.8} />;
-    tone = 'border-transparent bg-bad-tint text-bad-ink';
+    tone = 'border-transparent bg-mark text-white';
     title = 'Failed';
   }
   return (
@@ -196,9 +232,9 @@ export function ResultCell({ result, onClick, active }: { result?: Result; onCli
       title={title}
       onClick={onClick}
       className={cx(
-        'grid h-9 w-full min-w-12 place-items-center rounded-[8px] border transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-6px_rgb(var(--shade)/0.4)]',
+        'grid h-8 w-full min-w-12 place-items-center rounded-[5px] border transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-6px_rgb(var(--shade)/0.4)]',
         tone,
-        active && 'ring-2 ring-accent ring-offset-2 ring-offset-panel',
+        active && 'ring-2 ring-accent ring-offset-2 ring-offset-bg',
       )}
     >
       {body}

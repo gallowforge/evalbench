@@ -6,7 +6,7 @@ import { api, type Board, type Overview, type SuiteSummary, type Verdict as Verd
 import { HistoryChart, RatingBar, WinMatrix } from '../components/charts';
 import { FieldChart, MIN_BAR } from '../components/field';
 import { NewRunModal } from '../components/runs';
-import { cx, ErrorNote, isNotFound, Loading, ModelDot, NotFound, PenTick, Segmented } from '../components/ui';
+import { cx, ErrorNote, isNotFound, Loading, ModelDot, NotFound, PenTick, Section, Segmented } from '../components/ui';
 import { DEMO, REPO_URL } from '../lib/demo';
 import { ms, pct, plural, shortDate, titleCase } from '../lib/format';
 import { headline, holding, judges, type Part, standing } from '../lib/story';
@@ -26,24 +26,6 @@ function Say({ parts }: { parts: Part[] }) {
         ),
       )}
     </>
-  );
-}
-
-/** One ruled section of the sheet: its name in the margin, its content beside it. */
-function Section({ title, note, first, children }: { title: string; note?: ReactNode; first?: boolean; children: ReactNode }) {
-  return (
-    <section
-      className={cx(
-        'grid gap-x-12 gap-y-6 py-11 md:grid-cols-[190px_minmax(0,1fr)] md:py-14',
-        first ? 'border-t-2 border-ink' : 'border-t border-line',
-      )}
-    >
-      <div>
-        <h2 className="text-[19px] leading-[1.25] font-bold tracking-[-0.015em] text-balance">{title}</h2>
-        {note && <div className="mt-2 max-w-[44ch] text-[13.5px] leading-relaxed text-muted">{note}</div>}
-      </div>
-      <div className="min-w-0">{children}</div>
-    </section>
   );
 }
 
@@ -127,6 +109,7 @@ function Sheet({ id, suites }: { id: string; suites: SuiteSummary[] }) {
             <div>
               <h1 className={cx('leading-[0.96] font-bold tracking-[-0.045em] [overflow-wrap:anywhere]', size)}>
                 {lead}
+                {rest && ' '}
                 {rest && <span className="block">{rest}</span>}
               </h1>
               <div className="mt-6 max-w-[36ch] space-y-1 text-[18px] leading-[1.5] text-ink-2 md:mt-7 md:text-[20px]">
@@ -551,7 +534,7 @@ function Evidence({ v, d }: { v: VerdictData; d: Decision }) {
             {names('flex w-[92px] md:hidden')}
             <div className="min-w-0 flex-1">
               <div className="label mb-2 flex h-5 items-baseline gap-1.5 px-[3px]">
-                {titleCase(g.category)} <span className="num font-medium text-quiet">{g.tasks.length}</span>
+                {titleCase(g.category)} <span className="num font-medium text-faint">{g.tasks.length}</span>
               </div>
               <div className="flex">
                 {g.tasks.map((t) => {
@@ -662,7 +645,7 @@ function Judges({ v, d, toJudge }: { v: VerdictData; d: Decision; toJudge: numbe
               title="A Bradley-Terry rating fitted to every blind verdict, with a 95% bootstrap interval. 1000 is the average model; 400 points is 10 to 1 odds of being preferred."
             >
               <span>Rating, with its 95% range</span>
-              <span className="num font-medium normal-case tracking-normal text-quiet">1000 is average</span>
+              <span className="num font-medium normal-case tracking-normal text-faint">1000 is average</span>
             </div>
             {rated.map(({ m, h }) => (
               <div
@@ -779,6 +762,13 @@ function Steps() {
   );
 }
 
+const COMMAND: [string, string?][] = [
+  ['evalbench run triage.yaml \\'],
+  ['  --model anthropic:claude-haiku-5-5 \\'],
+  ['  --model openai-compatible:qwen3-8b@', 'http://localhost:1234/v1 \\'],
+  ['  --bar 0.9 --require-pick'],
+];
+
 function OwnJob() {
   return (
     <div>
@@ -787,10 +777,15 @@ function OwnJob() {
         <div className="text-[14.5px] text-ink-2">
           The same verdict from a terminal or a CI job. It exits non-zero when no model clears the bar, so a release can wait on it.
         </div>
-        <pre className="mt-3 overflow-x-auto rounded-[10px] bg-ink/[0.05] px-4 py-3.5 font-mono text-[13px] leading-[1.7] text-ink">
-          {
-            'evalbench run triage.yaml \\\n  --model anthropic:claude-haiku-5-5 \\\n  --model openai-compatible:qwen3-8b@http://localhost:1234/v1 \\\n  --bar 0.9 --require-pick'
-          }
+        {/* One block per line of the command: on a phone a long line folds after the @, under a hanging indent. */}
+        <pre className="mt-3 rounded-[10px] bg-ink/[0.05] px-4 py-3.5 font-mono text-[12px] leading-[1.7] whitespace-pre-wrap text-ink sm:text-[13px]">
+          {COMMAND.map(([head, tail]) => (
+            <span key={head} className="block pl-[6ch] -indent-[6ch]">
+              {head}
+              {tail && <wbr />}
+              {tail}
+            </span>
+          ))}
         </pre>
         {DEMO && (
           <a href={REPO_URL} className="link mt-4 inline-flex items-center gap-1 text-[14px]">

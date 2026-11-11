@@ -53,7 +53,7 @@
   --color-on-side: #ffffff;
 
   --color-ink-hover: #2c2d33;
-  --color-mark-ink: #d23c2a;
+  --color-mark-ink: #bf3220; /* failure in words: the mark's red, deepened until small text is AA on paper */
   --color-azure: #2457f0; /* the brand's face-down card, the same in both themes */
   --color-tile: #17181c;
   --color-card-face: #fffdf8;

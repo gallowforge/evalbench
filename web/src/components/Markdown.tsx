@@ -7,7 +7,8 @@ import python from 'highlight.js/lib/languages/python';
 import typescript from 'highlight.js/lib/languages/typescript';
 import yaml from 'highlight.js/lib/languages/yaml';
 import { Marked } from 'marked';
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
+import { fields } from '../lib/answer';
 
 hljs.registerLanguage('python', python);
 hljs.registerLanguage('javascript', javascript);
@@ -74,6 +75,26 @@ DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
 export function Markdown({ text, className = 'prose-answer' }: { text: string; className?: string }) {
   const html = useMemo(() => DOMPurify.sanitize(marked.parse(text ?? '', { async: false }) as string, SANITIZE), [text]);
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+/**
+ * An answer as a reader wants it. A model that was asked for one JSON object answers in fields,
+ * so those are set out as fields; everything else is Markdown. The text as sent is one click away
+ * wherever the raw view is offered.
+ */
+export function Answer({ text }: { text: string }) {
+  const parts = useMemo(() => fields(text), [text]);
+  if (!parts) return <Markdown text={text} />;
+  return (
+    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 gap-y-2.5">
+      {parts.map(([key, value]) => (
+        <Fragment key={key}>
+          <dt className="max-w-[14ch] truncate pt-[4px] font-mono text-[12px] text-muted">{key}</dt>
+          <dd className="min-w-0 text-[15px] leading-[1.68] [overflow-wrap:anywhere] text-ink-2">{value}</dd>
+        </Fragment>
+      ))}
+    </dl>
+  );
 }
 
 export function Raw({ text }: { text: string }) {
